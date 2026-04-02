@@ -4,11 +4,10 @@ namespace App\Http\Responses;
 
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse as RegistrationResponseContract;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpFoundation\Response;
 
 class RoleBasedRegistrationResponse implements RegistrationResponseContract
 {
-    public function toResponse($request): Response
+    public function toResponse($request): \Illuminate\Http\RedirectResponse|\Livewire\Features\SupportRedirects\Redirector
     {
         $user = Auth::user();
 
