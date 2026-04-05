@@ -11,10 +11,6 @@ class Login extends BaseLogin
     {
         $user = Auth::user();
 
-        if ($user && $user->role === 'admin') {
-            return '/admin';
-        }
-
-        return '/user';
+        return '/dashboard';
     }
 }

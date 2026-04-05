@@ -11,7 +11,7 @@ class RoleBasedRegistrationResponse implements RegistrationResponseContract
     {
         $user = Auth::user();
 
-        if ($user && $user->role === 'admin') {
+        if ($user && $user->hasRole('super_admin')) {
             return redirect()->to('/admin');
         }
 

@@ -11,10 +11,6 @@ class RoleBasedLoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
-        if ($user && $user->role === 'admin') {
-            return redirect()->to('/admin');
-        }
-
-        return redirect()->to('/user');
+        return redirect()->to('/dashboard');
     }
 }
