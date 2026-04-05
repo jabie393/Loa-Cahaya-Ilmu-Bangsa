@@ -30,7 +30,7 @@ class AuthPanelProvider extends PanelProvider
             ->login(\App\Filament\Auth\Pages\Login::class)
             ->registration(\App\Filament\Auth\Pages\Register::class)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
             ->discoverResources(in: app_path('Filament/Auth/Resources'), for: 'App\Filament\Auth\Resources')
             ->discoverPages(in: app_path('Filament/Auth/Pages'), for: 'App\Filament\Auth\Pages')
