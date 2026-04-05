@@ -25,7 +25,7 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->id('admin')
-            ->path('admin')
+            ->path('dashboard')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Blue,
