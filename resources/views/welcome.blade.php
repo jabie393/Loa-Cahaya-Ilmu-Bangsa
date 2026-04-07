@@ -59,7 +59,7 @@
                 @if (Route::has('login'))
                     <div class="flex items-center gap-4">
                         @auth
-                            <a href="{{ auth()->user()->role === 'admin' ? url('/admin') : url('/user') }}"
+                            <a href="/dashboard"
                                class="bg-primary text-on-primary shadow-primary/20 font-headline scale-95 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-lg transition-transform active:scale-90">
                                 Dashboard
                             </a>

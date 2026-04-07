@@ -5,15 +5,11 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class AdminDashboardWidget extends BaseWidget
 {
-    public static function canView(): bool
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        return $user && $user->hasRole('super_admin');
-    }
+    use HasWidgetShield;
 
     protected function getStats(): array
     {
