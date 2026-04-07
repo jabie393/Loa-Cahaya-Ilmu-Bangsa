@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "bezhansalleh/filament-shield": "^4.2",
+        "diogogpinto/filament-auth-ui-enhancer": "^2.0",
         "filament/filament": "^5.4",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0"

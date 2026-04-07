@@ -191,7 +191,7 @@
                         <span class="material-symbols-outlined text-primary transition-transform group-hover:rotate-180">expand_more</span>
                     </button>
                     <div class="text-on-surface-variant px-8 pb-6 leading-relaxed">
-                        Untuk civitas akademika dari universitas mitra, layanan kurasi ini sepenuhnya bebas biaya sebagai bagian dari fasilitas institusi.
+                        
                     </div>
                 </div>
             </div>
@@ -211,9 +211,9 @@
                 <div class="relative z-10 mx-auto max-w-3xl">
                     <h2 class="font-headline mb-6 text-4xl font-extrabold text-white md:text-5xl">Siap untuk Memvalidasi Prestasi Anda?</h2>
                     <p class="mb-10 text-lg text-white/80">Dapatkan Letter of Acceptance resmi dengan proses yang transparan dan profesional melalui LOA Curator.</p>
-                    <button class="text-primary font-headline hover:bg-surface-bright rounded-xl bg-white px-10 py-5 text-xl font-bold shadow-2xl transition-colors">
+                    <a href="/register" class="text-primary font-headline hover:bg-surface-bright rounded-xl bg-white px-10 py-5 text-xl font-bold shadow-2xl transition-colors">
                         Mulai Pengajuan
-                    </button>
+                    </a>
                 </div>
             </div>
         </section>

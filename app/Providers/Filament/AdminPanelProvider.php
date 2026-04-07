@@ -20,6 +20,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Enums\UserMenuPosition;
 use Filament\Auth\Pages\EditProfile;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -63,7 +65,11 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
-            ]);            
+                FilamentShieldPlugin::make(),
+                AuthUIEnhancerPlugin::make()
+                    ->formPanelPosition('right')
+                    ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg')
+            ])
+        ;
     }
 }
