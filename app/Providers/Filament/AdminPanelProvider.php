@@ -19,6 +19,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Enums\UserMenuPosition;
+use Filament\Auth\Pages\EditProfile;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -35,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->profile()
+            ->profile(EditProfile::class, false)
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
