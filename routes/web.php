@@ -7,7 +7,6 @@ Route::get('/', function () {
 });
 
 // Rute bayangan 'login' agar Laravel tidak error ketika ada mekanisme fallback internal yang mencari nama route ini.
-// Filament sebenarnya mengelola halamannya sendiri di /login (via AuthPanelProvider).
+// Filament sebenarnya mengelola halamannya sendiri di /dashboard/login (via AdminPanelProvider).
 Route::redirect('/login-redirect', '/login')->name('login');
 Route::redirect('/register-redirect', '/register')->name('register');
-
