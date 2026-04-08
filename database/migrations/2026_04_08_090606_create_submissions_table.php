@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('submissions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable();
 
             // Data utama
             $table->string('author_name');
@@ -21,6 +22,7 @@ return new class extends Migration {
 
             // Detail tambahan
             $table->string('volume')->nullable();
+            $table->string('publication_link')->nullable();
             $table->date('date_of_loa')->nullable();
 
             // File (path gambar)

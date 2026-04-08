@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
+    'user_id',
     'author_name',
     'title',
     'institution',
     'email',
     'journal_id',
     'volume',
+    'publication_link',
     'date_of_loa',
     'proof_of_payment',
     'status',
@@ -28,11 +30,17 @@ class Submission extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'journal_id' => 'integer',
             'date_of_loa' => 'date',
             'submission_date' => 'date',
             'approved_date' => 'date',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function journal(): BelongsTo
