@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'email',
     'journal_id',
     'volume',
+    'publication_link',
     'date_of_loa',
     'proof_of_payment',
     'status',

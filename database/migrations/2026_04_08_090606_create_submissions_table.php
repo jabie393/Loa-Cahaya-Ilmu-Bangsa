@@ -21,6 +21,7 @@ return new class extends Migration {
 
             // Detail tambahan
             $table->string('volume')->nullable();
+            $table->string('publication_link')->nullable();
             $table->date('date_of_loa')->nullable();
 
             // File (path gambar)
