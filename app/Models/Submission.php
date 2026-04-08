@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable([
     'author_name',
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 ])]
 class Submission extends Model
 {
-    use HasFactory;
+    use HasFactory, HasRoles;
 
     protected function casts(): array
     {
