@@ -53,6 +53,7 @@ class CreateSubmission extends CreateRecord
                             Select::make('journal_id')
                                 ->label('Jurnal (Pilih Salah satu)')
                                 ->relationship('journal', 'name')
+                                ->default(request()->query('journal_id'))
                                 ->required(),
                             TextInput::make('volume')
                                 ->label('Volume (Lihat di Masing-masing jurnal)')

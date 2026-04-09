@@ -10,6 +10,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
 use Filament\Schemas\Components\Callout;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewSubmission extends Page
 {
@@ -33,9 +34,14 @@ class ReviewSubmission extends Page
                 ->icon('heroicon-o-check-circle')
                 ->requiresConfirmation()
                 ->action(function () {
+                    if ($this->record->proof_of_payment) {
+                        Storage::disk('public')->delete($this->record->proof_of_payment);
+                    }
+
                     $this->record->update([
                         'status' => 'Approved',
                         'approved_date' => now(),
+                        'proof_of_payment' => null,
                     ]);
 
                     Notification::make()

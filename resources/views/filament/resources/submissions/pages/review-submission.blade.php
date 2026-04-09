@@ -110,7 +110,9 @@
                 <div class="space-y-4">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bukti Pembayaran</h4>
                     <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                        @if ($record->proof_of_payment)
+                        @if ($record->status === 'Approved')
+                            <p class="text-gray-500 dark:text-gray-400">Pembayaran sudah disetujui</p>
+                        @elseif ($record->proof_of_payment)
                             <div class="group relative">
                                 <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
                                      alt="Bukti Pembayaran"
@@ -120,7 +122,7 @@
                                             onclick="my_modal_2.showModal()">Lihat</button>
                                     <dialog id="my_modal_2"
                                             class="modal">
-                                        <div class="modal-box max-w-4xl h-auto">
+                                        <div class="modal-box h-auto max-w-4xl">
                                             <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
                                                  alt="Bukti Pembayaran"
                                                  class="h-full w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
@@ -131,7 +133,7 @@
                                         </form>
                                     </dialog>
 
-                                    
+
                                 </div>
 
                             </div>

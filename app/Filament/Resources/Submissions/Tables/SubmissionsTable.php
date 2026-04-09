@@ -37,7 +37,7 @@ class SubmissionsTable
                 TextColumn::make('proof_of_payment')
                     ->label('Bukti Pembayaran')
                     ->badge()
-                    ->state(fn (Submission $record): string => $record->proof_of_payment ? 'Paid' : 'Unpaid')
+                    ->state(fn (Submission $record): string => ($record->proof_of_payment || $record->status === 'Approved') ? 'Paid' : 'Unpaid')
                     ->color(fn (string $state): string => $state === 'Paid' ? 'success' : 'danger')
                     ->icon(fn (string $state): string => $state === 'Paid' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                     ->searchable(),

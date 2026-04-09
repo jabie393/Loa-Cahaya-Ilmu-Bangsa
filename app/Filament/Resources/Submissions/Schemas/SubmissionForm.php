@@ -13,6 +13,7 @@ use Filament\Schemas\Components\Section;
 
 class SubmissionForm
 {
+    
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -69,6 +70,7 @@ class SubmissionForm
                     Section::make('Pembayaran')
                         ->columnSpan(2)
                         ->description('Bukti Pembayaran')
+                        ->visible(fn ($record) => $record?->status !== 'Approved' )
                         ->schema([
                             FileUpload::make('proof_of_payment')
                                 ->label('Upload Bukti Pembayaran')
