@@ -49,16 +49,16 @@
                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Informasi Penulis & Publikasi</h4>
                 <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                     <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Judul Artikel</span>
+                        <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->title }}</span>
+                    </div>
+                    <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Nama Penulis</span>
                         <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->author_name }}</span>
                     </div>
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Email</span>
                         <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->email }}</span>
-                    </div>
-                    <div class="wrap-break-word flex flex-col">
-                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Judul Artikel</span>
-                        <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->title }}</span>
                     </div>
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Instansi</span>
@@ -87,11 +87,14 @@
             <div class="space-y-4">
                 @if ($record->status === 'Approved')
                     <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Status</h4>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Letter of Acceptance (LOA)</h4>
                         <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                            <div class="group relative">
-                                <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->status }}</span>
-                            </div>
+                            <a href="#" target="_blank" class="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 px-6 rounded-xl shadow-sm transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download LOA PDF
+                            </a>
                         </div>
                     </div>
                 @else
@@ -103,7 +106,7 @@
                             <div class="group relative">
                                 <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
                                      alt="Bukti Pembayaran"
-                                     class="max-h-[350px] max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+                                     class="max-h-[250px] max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
                                 <div class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 opacity-0 backdrop-blur-[2px] transition duration-300 group-hover:opacity-100">
                                     <a href="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
                                        target="_blank"
@@ -123,7 +126,7 @@
                                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
                                 </div>
-                                <p class="text-xs font-medium italic text-gray-400">Belum ada file bukti pembayaran</p>
+                                <p class="text-xs font-medium italic text-gray-400">Belum ada file bukti pembayaran, silahkan edit untuk di tambah.</p>
                             </div>
                         @endif
                     </div>
