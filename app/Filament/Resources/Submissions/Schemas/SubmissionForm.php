@@ -9,9 +9,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Filament\Schemas\Components\Wizard;
-use Filament\Schemas\Components\Wizard\Step;
-use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Section;
 
 class SubmissionForm
@@ -49,7 +46,6 @@ class SubmissionForm
                             ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
                             TextInput::make('publication_link')
                                 ->label('Publication Link')
-                                ->url()
                                 ->required(),
                             
                             

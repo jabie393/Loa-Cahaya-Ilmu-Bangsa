@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Journals\Schemas;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Filament\Forms\Components\FileUpload;
 
 class JournalsForm
 {
@@ -16,6 +17,12 @@ class JournalsForm
                     ->required(),
                 TextInput::make('slug')
                     ->label('Slug')
+                    ->required(),
+                TextInput::make('image')
+                    ->label('Image')
+                    ->required(),
+                TextInput::make('link')
+                    ->label('Link')
                     ->required(),
             ]);
     }

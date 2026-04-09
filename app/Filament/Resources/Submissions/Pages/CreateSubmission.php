@@ -13,7 +13,8 @@ use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\View;
 use Filament\Forms\Components\Checkbox;
-
+use Filament\Schemas\Components\Section;
+use Filament\Actions\Action;
 
 class CreateSubmission extends CreateRecord
 {
@@ -26,54 +27,58 @@ class CreateSubmission extends CreateRecord
         return [
             Step::make('Form LOA')
                 ->schema([
-                    Hidden::make('user_id')
-                        ->default(Auth::user()->id),
-                    TextInput::make('author_name')
-                        ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
-                        ->default(Auth::user()->name)
-                        ->required(),
-                    TextInput::make('email')
-                        ->label('Email (1 Saja)')
-                        ->default(Auth::user()->email)
-                        ->email()
-                        ->required(),
-            
-                            
-                    TextInput::make('title')
-                        ->label('Judul (Diisi Huruf Besar)')
-                        ->required(),
-                    TextInput::make('institution')
-                        ->label('Instansi (Jangan disingkat)')
-                        ->required(),
-                    Select::make('journal_id')
-                        ->label('Jurnal (Pilih Salah satu)')
-                        ->relationship('journal', 'name')
-                        ->required(),
-                    TextInput::make('volume')
-                        ->label('Volume (Lihat di Masing-masing jurnal)')
-                        ->required(),
-                    TextInput::make('publication_link')
-                        ->label('Publication Link'),
-                    DatePicker::make('date_of_loa')
-                        ->label('Tanggal LOA')
-                        ->required(),
-
-                    Hidden::make('submission_date')
-                        ->default(now()),                
+                    Section::make('Informasi Penulis')
+                        ->columnSpan(3)
+                        ->description('Informasi Penulis')
+                        ->schema([
+                            Hidden::make('user_id')
+                                ->default(Auth::user()->id),
+                            TextInput::make('author_name')
+                                ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
+                                ->default(Auth::user()->name)
+                                ->required(),
+                            TextInput::make('email')
+                                ->label('Email (1 Saja)')
+                                ->default(Auth::user()->email)
+                                ->email()
+                                ->required(),
                     
-                    Hidden::make('status')
-                        ->default('Pending'),
-                ])->columns(2),
-            
-            Step::make('Pembayaran')
-                ->schema([
-                    View::make('filament.pages.payment-info'),
-                    FileUpload::make('proof_of_payment')
-                        ->label('Upload Bukti Pembayaran')
-                        ->directory('proof-of-payment')
-                        ->visibility('public')
-                        ->disk('public'),
-                ]),
+                                    
+                            TextInput::make('title')
+                                ->label('Judul (Diisi Huruf Besar)')
+                                ->required(),
+                            TextInput::make('institution')
+                                ->label('Instansi (Jangan disingkat)')
+                                ->required(),
+                            Select::make('journal_id')
+                                ->label('Jurnal (Pilih Salah satu)')
+                                ->relationship('journal', 'name')
+                                ->required(),
+                            TextInput::make('volume')
+                                ->label('Volume (Lihat di Masing-masing jurnal)')
+                                ->required(),
+                            DatePicker::make('date_of_loa')
+                                ->label('Tanggal LOA')
+                                ->required(),    
+                            TextInput::make('publication_link')
+                                ->label('Publication Link'),
+                            Hidden::make('submission_date')
+                                ->default(now()),                
+                            
+                            Hidden::make('status')
+                                ->default('Pending'),
+                    ]),
+                    Section::make('Pembayaran')
+                        ->columnSpan(2)
+                        ->description('Bukti Pembayaran')
+                        ->schema([
+                            FileUpload::make('proof_of_payment')
+                                ->label('Upload Bukti Pembayaran')
+                                ->directory('proof-of-payment')
+                                ->disk('public')
+                                ->image()
+                        ]),
+                ])->columns(5),
             Step::make('Konfirmasi')
                 ->schema([
                     View::make('filament.pages.Confirmation'),
@@ -81,7 +86,6 @@ class CreateSubmission extends CreateRecord
                         ->label('LoA Berlaku Jika Dilengkapi Bukti Pembayaran dan Link Terbitan, Dengan ini saya bersedia naskah saya ditarik apabila dikemudian hari terdapat kecurangan dalam pengerjaannya')
                         ->accepted(),
                 ]),    
-                    
         ];
     }
 }

@@ -18,20 +18,24 @@ class SubmissionsTable
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable(),
                 TextColumn::make('title')
-                    ->wrap()
+                    ->words(10)
                     ->searchable(),
                 TextColumn::make('author_name')
+                ->words(5)
                     ->searchable(),
                 TextColumn::make('institution')
-                    ->wrap()
+                    ->words(5)
                     ->searchable(),
                 TextColumn::make('journal.name')
                     ->searchable(),
                 TextColumn::make('volume')
                     ->searchable(),
                 TextColumn::make('proof_of_payment')
-                    ->label('Pembayaran')
+                    ->label('Bukti Pembayaran')
                     ->badge()
                     ->state(fn (Submission $record): string => $record->proof_of_payment ? 'Paid' : 'Unpaid')
                     ->color(fn (string $state): string => $state === 'Paid' ? 'success' : 'danger')
@@ -66,6 +70,12 @@ class SubmissionsTable
                     ->color('primary')
                     ->url(fn (Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
+                Action::make('Tanya admin')
+                ->label('Tanya Admin')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('primary')
+                ->url(fn (Submission $record) => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $record->id)
+                ->openUrlInNewTab(),
             ])
             
             ->toolbarActions([
@@ -73,5 +83,7 @@ class SubmissionsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+
+            
     }
 }

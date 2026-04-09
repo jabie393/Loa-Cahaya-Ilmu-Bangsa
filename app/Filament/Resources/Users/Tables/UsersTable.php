@@ -24,6 +24,11 @@ class UsersTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('phone')
+                    ->label('Nomor Telepon')
+                    ->searchable()
+                    ->sortable(),
+
                 TextColumn::make('roles.name')
                     ->label('Role')
                     ->badge()

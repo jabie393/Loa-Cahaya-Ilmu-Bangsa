@@ -11,7 +11,7 @@
                           stroke-width="2"
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Please review the submission details and payment proof below.</p>
+                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Silahkan review data pengajuan dan bukti pembayaran di bawah ini.</p>
             </div>
         @endif
         @if ($record->status == 'Approved')
@@ -25,7 +25,7 @@
                           stroke-width="2"
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-success-900 dark:text-success-100 text-md font-medium">Submission has been approved.</p>
+                <p class="text-success-900 dark:text-success-100 text-md font-medium">Pengajuan Anda telah disetujui.</p>
             </div>
         @endif
         @if ($record->proof_of_payment == null)
@@ -39,7 +39,7 @@
                           stroke-width="2"
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-warning-900 dark:text-warning-100 text-md font-medium">Please upload the proof of payment.</p>
+                <p class="text-warning-900 dark:text-warning-100 text-md font-medium">Silahkan upload bukti pembayaran.</p>
             </div>
         @endif
 
@@ -89,9 +89,17 @@
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Letter of Acceptance (LOA)</h4>
                         <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                            <a href="#" target="_blank" class="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-500 text-white font-bold py-3 px-6 rounded-xl shadow-sm transition">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            <a href="#"
+                               target="_blank"
+                               class="bg-primary-600 hover:bg-primary-500 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-sm transition">
+                                <svg class="h-5 w-5"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path stroke-linecap="round"
+                                          stroke-linejoin="round"
+                                          stroke-width="2"
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                 </svg>
                                 Download LOA PDF
                             </a>
@@ -108,10 +116,24 @@
                                      alt="Bukti Pembayaran"
                                      class="max-h-[250px] max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
                                 <div class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 opacity-0 backdrop-blur-[2px] transition duration-300 group-hover:opacity-100">
-                                    <a href="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
-                                       target="_blank"
-                                       class="bg-primary-600 hover:bg-primary-500 rounded-full px-4 py-2 text-[12px] font-bold uppercase tracking-wider text-white shadow-lg">Lihat Ukuran Penuh</a>
+                                    <button class="btn"
+                                            onclick="my_modal_2.showModal()">Lihat</button>
+                                    <dialog id="my_modal_2"
+                                            class="modal">
+                                        <div class="modal-box max-w-4xl h-auto">
+                                            <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
+                                                 alt="Bukti Pembayaran"
+                                                 class="h-full w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+                                        </div>
+                                        <form method="dialog"
+                                              class="modal-backdrop">
+                                            <button>close</button>
+                                        </form>
+                                    </dialog>
+
+                                    
                                 </div>
+
                             </div>
                         @else
                             <div class="py-10 text-center">

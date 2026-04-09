@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
 
 class JournalsTable
 {
@@ -20,6 +21,14 @@ class JournalsTable
                     ->sortable(),
                 TextColumn::make('slug')
                     ->label('Slug')
+                    ->searchable()
+                    ->sortable(),
+                ImageColumn::make('image')
+                    ->label('Image')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('link')
+                    ->label('Link')
                     ->searchable()
                     ->sortable(),
 

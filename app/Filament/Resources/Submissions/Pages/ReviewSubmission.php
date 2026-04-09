@@ -47,7 +47,12 @@ class ReviewSubmission extends Page
                 })
                 ->visible(fn () => $this->record->status !== 'Approved' && Auth::user()?->hasRole('super_admin')),
             EditAction::make(),
-            
+            Action::make('Tanya admin')
+                ->label('Tanya Admin')
+                ->icon('heroicon-o-chat-bubble-left-right')
+                ->color('primary')
+                ->url(fn () => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
+                ->openUrlInNewTab()
         ];
     }
 }

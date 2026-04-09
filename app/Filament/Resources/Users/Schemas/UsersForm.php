@@ -28,10 +28,14 @@ class UsersForm
                     ->dehydrated(fn($state) => filled($state)) // prevents sending empty values to the database (so it doesn’t overwrite existing password).
                     ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null) // if user types something, hash it; otherwise leave as null.
                     ->label(__('Password')),
+                    
+                TextInput::make('phone')
+                    ->label('Nomor Telepon')
+                    ->required(),
 
                 Select::make('roles')
                     ->label('Role')
-                    ->relationship('roles', 'name', fn($query) => $query->where('name', '!=', 'super_admin'))
+                    ->relationship('roles', 'name')
                     ->preload()
                     ->required()
                     ->live(),
