@@ -67,6 +67,7 @@ class SubmissionsTable
                     ->url(fn (Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
             ])
+            
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

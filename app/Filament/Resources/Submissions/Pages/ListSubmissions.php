@@ -10,10 +10,14 @@ class ListSubmissions extends ListRecords
 {
     protected static string $resource = SubmissionResource::class;
 
+    protected string $view = 'filament.pages.list-submissions';
+
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+            ->label('Buat Pengajuan Baru')
+            ->icon('heroicon-o-plus'),
         ];
     }
 }
