@@ -13,7 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BezhanSalleh\FilamentShield\Traits\HasResourceShield;
 
 class JournalsResource extends Resource
 {

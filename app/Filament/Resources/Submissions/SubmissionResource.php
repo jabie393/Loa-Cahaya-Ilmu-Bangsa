@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class SubmissionResource extends Resource
 {
@@ -21,7 +22,18 @@ class SubmissionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'submissions';
+    protected static ?string $recordTitleAttribute = 'title';
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()->hasRole('super_admin')) {
+            return $query;
+        }
+
+        return $query->where('user_id', Auth::id());
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -46,6 +58,8 @@ class SubmissionResource extends Resource
             'index' => ListSubmissions::route('/'),
             'create' => CreateSubmission::route('/create'),
             'edit' => EditSubmission::route('/{record}/edit'),
+            'review' => Pages\ReviewSubmission::route('/{record}/review'),
+            'view' => Pages\ReviewSubmission::route('/{record}/view'),
         ];
     }
 }

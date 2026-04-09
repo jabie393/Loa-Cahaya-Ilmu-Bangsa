@@ -8,24 +8,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable([
-    'user_id',
-    'author_name',
-    'title',
-    'institution',
-    'email',
-    'journal_id',
-    'volume',
-    'publication_link',
-    'date_of_loa',
-    'proof_of_payment',
-    'status',
-    'submission_date',
-    'approved_date',
-])]
 class Submission extends Model
 {
     use HasFactory, HasRoles;
+
+    protected $fillable = [
+        'user_id',
+        'author_name',
+        'title',
+        'institution',
+        'email',
+        'journal_id',
+        'volume',
+        'publication_link',
+        'date_of_loa',
+        'proof_of_payment',
+        'status',
+        'submission_date',
+        'approved_date',
+    ];
 
     protected function casts(): array
     {
