@@ -43,9 +43,9 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 gap-6 pb-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 pb-6 md:grid-cols-5">
             <!-- Review Data Left Column -->
-            <div class="space-y-4">
+            <div class="space-y-4 md:col-span-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Informasi Penulis & Publikasi</h4>
                 <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                     <div class="wrap-break-word flex flex-col">
@@ -84,7 +84,7 @@
             </div>
 
             <!-- Review Right Column -->
-            <div class="space-y-4">
+            <div class="space-y-4 md:col-span-2">
                 @if ($record->status === 'Approved')
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Letter of Acceptance (LOA)</h4>
