@@ -10,6 +10,8 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionApproved;
 
 class ReviewSubmission extends Page
 {
@@ -42,6 +44,9 @@ class ReviewSubmission extends Page
                         'approved_date' => now(),
                         'proof_of_payment' => null,
                     ]);
+
+                    // Send approval email to the submission email address
+                    Mail::to($this->record->email)->send(new SubmissionApproved($this->record));
 
                     Notification::make()
                         ->title('Submission Approved')
