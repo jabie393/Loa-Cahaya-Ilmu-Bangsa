@@ -89,7 +89,7 @@
 
 <body class="max-h-landscape flex h-fit min-h-screen w-full items-center justify-center bg-white lg:bg-gray-200 lg:p-10 print:bg-white print:p-0">
     <button onclick="window.print()"
-            class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+            class="bg-cert-navy fixed bottom-8 right-8 z-100 flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5"
              viewBox="0 0 20 20"

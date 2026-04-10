@@ -45,7 +45,7 @@
                     </div>
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Link Publikasi</span>
-                        <a href="$get('publication_link') ?? '#'"
+                        <a href="{{ $get('publication_link') ?? '#' }}"
                            target="_blank"
                            class="text-primary-600 dark:text-primary-400 truncate text-xs font-medium">{{ $get('publication_link') ?? 'Belum diisi' }}</a>
                     </div>
