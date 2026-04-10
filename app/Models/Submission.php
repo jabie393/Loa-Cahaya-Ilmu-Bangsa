@@ -48,4 +48,21 @@ class Submission extends Model
     {
         return $this->belongsTo(Journal::class);
     }
+
+    public function getTemplateView(): string
+    {
+        $journal = $this->journal;
+        if (!$journal) {
+            return 'filament.loa_pdf.default';
+        }
+
+        $slug = $journal->slug;
+        $mapping = [
+            'medicnutricia' => 'Medic Nutricia',
+        ];
+
+        $folderName = $mapping[$slug] ?? \Illuminate\Support\Str::studly($slug);
+        
+        return "filament.loa_pdf.LOA_{$folderName}.LOA_{$folderName}";
+    }
 }

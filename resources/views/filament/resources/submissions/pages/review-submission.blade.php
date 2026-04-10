@@ -28,7 +28,7 @@
                 <p class="text-success-900 dark:text-success-100 text-md font-medium">Pengajuan Anda telah disetujui.</p>
             </div>
         @endif
-        @if ($record->proof_of_payment == null)
+        @if ($record->proof_of_payment == null && $record->status == 'Pending')
             <div class="bg-warning-50 dark:bg-warning-900/20 border-warning-100 dark:border-warning-900/30 flex items-center gap-3 rounded-xl border p-4">
                 <svg class="text-warning-600 dark:text-warning-400 h-6 w-6"
                      fill="none"
@@ -89,7 +89,7 @@
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Letter of Acceptance (LOA)</h4>
                         <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                            <a href="#"
+                            <a href="{{ route('public.loa.preview', ['record' => $record, 'print' => 1]) }}"
                                target="_blank"
                                class="bg-primary-600 hover:bg-primary-500 inline-flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-sm transition">
                                 <svg class="h-5 w-5"
@@ -107,54 +107,56 @@
                     </div>
                 @else
                 @endif
-                <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bukti Pembayaran</h4>
-                    <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                        @if ($record->status === 'Approved')
-                            <p class="text-gray-500 dark:text-gray-400">Pembayaran sudah disetujui</p>
-                        @elseif ($record->proof_of_payment)
-                            <div class="group relative">
-                                <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
-                                     alt="Bukti Pembayaran"
-                                     class="max-h-[250px] max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
-                                <div class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 opacity-0 backdrop-blur-[2px] transition duration-300 group-hover:opacity-100">
-                                    <button class="btn"
-                                            onclick="my_modal_2.showModal()">Lihat</button>
-                                    <dialog id="my_modal_2"
-                                            class="modal">
-                                        <div class="modal-box h-auto max-w-4xl">
-                                            <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
-                                                 alt="Bukti Pembayaran"
-                                                 class="h-full w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
-                                        </div>
-                                        <form method="dialog"
-                                              class="modal-backdrop">
-                                            <button>close</button>
-                                        </form>
-                                    </dialog>
+                @if ($record->status === 'Approved')
+                @else
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bukti Pembayaran</h4>
+                        <div class="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                            @if ($record->proof_of_payment && $record->status !== 'Approved')
+                                <div class="group relative">
+                                    <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
+                                         alt="Bukti Pembayaran"
+                                         class="max-h-[250px] max-w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+                                    <div class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 opacity-0 backdrop-blur-[2px] transition duration-300 group-hover:opacity-100">
+                                        <button class="btn"
+                                                onclick="my_modal_2.showModal()">Lihat</button>
+                                        <dialog id="my_modal_2"
+                                                class="modal">
+                                            <div class="modal-box h-auto max-w-4xl">
+                                                <img src="{{ Storage::disk('public')->url($record->proof_of_payment) }}"
+                                                     alt="Bukti Pembayaran"
+                                                     class="h-full w-full rounded-lg border border-gray-200 shadow-md dark:border-gray-600">
+                                            </div>
+                                            <form method="dialog"
+                                                  class="modal-backdrop">
+                                                <button>close</button>
+                                            </form>
+                                        </dialog>
 
+
+                                    </div>
 
                                 </div>
-
-                            </div>
-                        @else
-                            <div class="py-10 text-center">
-                                <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-900/50">
-                                    <svg class="h-8 w-8 text-gray-300"
-                                         fill="none"
-                                         stroke="currentColor"
-                                         viewBox="0 0 24 24">
-                                        <path stroke-linecap="round"
-                                              stroke-linejoin="round"
-                                              stroke-width="2"
-                                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
+                            @else
+                                <div class="py-10 text-center">
+                                    <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-50 dark:bg-gray-900/50">
+                                        <svg class="h-8 w-8 text-gray-300"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             viewBox="0 0 24 24">
+                                            <path stroke-linecap="round"
+                                                  stroke-linejoin="round"
+                                                  stroke-width="2"
+                                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-xs font-medium italic text-gray-400">Belum ada file bukti pembayaran, silahkan edit untuk di tambah.</p>
                                 </div>
-                                <p class="text-xs font-medium italic text-gray-400">Belum ada file bukti pembayaran, silahkan edit untuk di tambah.</p>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
-                </div>
+                @endif
+
             </div>
         </div>
     </div>

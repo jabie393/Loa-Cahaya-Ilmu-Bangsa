@@ -61,21 +61,38 @@ class SubmissionsTable
                 Action::make('review')
                     ->label('Review')
                     ->icon('heroicon-o-eye')
-                    ->color('success')
+                    ->color('warning')
+                    ->outlined()
+                    ->button()
                     ->url(fn (Submission $record): string => SubmissionResource::getUrl('review', ['record' => $record]))
                     ->visible(fn (Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved'),
                 Action::make('view')
                     ->label('View')
                     ->icon('heroicon-o-eye')
                     ->color('primary')
+                    ->outlined()
+                    ->button()
                     ->url(fn (Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record])),
-                EditAction::make(),
+                EditAction::make()
+                ->button()
+                ->outlined(),
                 Action::make('Tanya admin')
                 ->label('Tanya Admin')
+                ->button()
+                ->outlined()
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->color('primary')
                 ->url(fn (Submission $record) => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $record->id)
                 ->openUrlInNewTab(),
+                Action::make('download')
+                ->label('Download LOA PDF')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('info')
+                ->button()
+                ->outlined()
+                ->url(fn (Submission $record) => route('public.loa.preview', ['record' => $record, 'print' => 1]))
+                ->openUrlInNewTab()
+                ->visible(fn (Submission $record) => $record->status === 'Approved'),
             ])
             
             ->toolbarActions([

@@ -1,0 +1,310 @@
+<html>
+
+<head>
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com" />
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+          rel="stylesheet" />
+    <meta content="text/html; charset=UTF-8"
+          http-equiv="content-type" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "var(--color-primary)",
+                        secondary: "var(--color-secondary)",
+                        background: "var(--color-background)",
+                        primary_opacity: "var(--color-primary_opacity)",
+                    },
+                    fontFamily: {
+                        lato: ["Lato", "sans-serif"],
+                        garamond: ["EB Garamond", "serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style type="text/tailwindcss">
+        @import url(https://themes.googleusercontent.com/fonts/css?kit=1n8us-eEzYYhbTLMubR0ZA1KNGra13VIU0iL8fHG2AX-SYK_Ln3uQOimoUBe-l5o);
+
+        /* Base layer fully removed; cascading utilities set on body instead */
+        @page {
+            size: A4;
+            margin: 0;
+            max-height: A4;
+        }
+
+        @media print {
+            body {
+                @apply bg-[#FAF9F6];
+            }
+
+            .print-a4 {
+                margin: 0px !important;
+                box-shadow: none !important;
+                min-height: 0 !important;
+                height: auto !important;
+                width: 100% !important;
+                overflow: hidden !important;
+            }
+        }
+
+        :root {
+            --color-primary: #2d4a3e;
+            --color-secondary: #b89b5e;
+            --color-background: white;
+            --color-primary_opacity: #2d4a3e;
+        }
+
+        .divider-gradient {
+            background: linear-gradient(to right,
+                    transparent,
+                    #b89b5e,
+                    transparent);
+        }
+    </style>
+</head>
+
+<body class="print-a4 bg-background mx-auto my-[10mm] box-border max-h-[297mm] w-[210mm] px-[72pt] pb-[72pt] pt-[20pt] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+    <div class="border-secondary top-20 flex justify-between border-b">
+        <div class="flex w-full flex-col justify-between">
+            <div>
+                <div class="text-center">
+                    <p class="text-primary font-lato text-[6.7pt] font-light uppercase tracking-[0.4em]">
+                        Jurnal Pertanian, Peternakan, Perikanan
+                    </p>
+                    <p class="text-primary font-lato mb-[-4pt] text-4xl font-[1000] tracking-[-0.05em]">
+                        HIBRIDA
+                    </p>
+                    <div class="divider-gradient mx-auto my-4 h-0.5 w-1/3"></div>
+                </div>
+                <div class="my-4 flex items-center justify-center gap-2 text-center">
+                    <span class="bg-secondary h-[1px] w-8 opacity-50"></span>
+                    <p class="text-primary font-lato text-[10pt] font-bold tracking-[0.2em]">
+                        CAHAYA ILMU BANGSA INSTITUTE
+                    </p>
+                    <span class="bg-secondary h-[1px] w-8 opacity-50"></span>
+                </div>
+            </div>
+            <div class="flex justify-between pb-5">
+                <div>
+                    <p class="font-lato text-[7pt]">
+                        Biro Penelitian, Publikasi, dan Pengabdian Kepada
+                        Masyarakat
+                    </p>
+                    <p class="font-lato text-[7pt]">
+                        KEMENKUMHAM AHU-0018912-AH.01.14
+                    </p>
+                </div>
+                <div>
+                    <p class="font-lato text-[7pt]">
+                        Perum Puri Kartika Asri Blok 2 A2 Malang
+                    </p>
+                    <p class="font-lato text-[7pt]">
+                        e-mail:
+                        <a href="mailto:admin@cahayailmubangsa.institute">
+                            admin@cahayailmubangsa.institute
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5">
+        <p class="flex justify-between text-left leading-[1.079]">
+            <span class="text-primary font-lato text-[10pt] font-bold">
+                NO: 2025/CIB/LOA
+            </span>
+            <span class="text-primary font-lato text-[10pt] font-bold">
+                {{ $record->approved_date?->format('d F Y') }}
+            </span>
+        </p>
+        <div class="pt-5">
+            <p class="text-center leading-[1.079]">
+                <span class="font-lato text-primary mb-5 inline-block border-b pb-4 text-2xl font-light uppercase tracking-[0.2em]">
+                    LETTER OF ACCEPTANCE
+                </span>
+            </p>
+        </div>
+        <p class="pb-5 text-left text-center italic leading-[1.079]">
+            <span class="text-primary font-garamond x text-[13pt] font-bold">
+                Assalamualaikum Wr. Wb.
+            </span>
+        </p>
+        <p class="text-left leading-[1.079]">
+            <span class="font-garamond text-[12pt] text-gray-700">
+                Bersama surat ini, kami menerangkan bahwa artikel dengan
+                keterangan naskah berikut
+            </span>
+        </p>
+    </div>
+
+    <!-- Content -->
+    <div class="border-secondary m-auto flex flex-col border-y bg-[#fcfaf588] px-5 py-2 tracking-widest">
+        <div class="mb-4 flex flex-col">
+            <div class="w-[91.9pt] align-top">
+                <p class="text-left">
+                    <span class="text-primary font-lato text-[9pt] font-bold uppercase tracking-[0.2em]">
+                        Judul :
+                    </span>
+                </p>
+            </div>
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="font-garamond text-[10pt] font-bold text-black">
+                        {{ $record->title }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        <div class="mb-5 flex">
+            <div class="flex w-full flex-col">
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                            Author :
+                        </span>
+                    </p>
+                </div>
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="font-garamond text-[10pt] font-bold text-black">
+                            {{ $record->author_name }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex w-full flex-col">
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                            Korespondensi :
+                        </span>
+                    </p>
+                </div>
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <a href="mailto:[EMAIL_ADDRESS]"
+                           class="font-garamond text-[10pt] font-bold text-black">
+                            {{ $record->email }}
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="mb-5 flex flex-col">
+            <div class="w-[91.9pt] align-top">
+                <p class="text-left">
+                    <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                        Instansi :
+                    </span>
+                </p>
+            </div>
+            <div class="w-[367.9pt] align-top">
+                <p class="text-left">
+                    <span class="font-garamond text-[10pt] font-bold text-black">
+                        {{ $record->institution }}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <div class="mb-5 flex">
+            <div class="flex w-full flex-col">
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                            Jurnal :
+                        </span>
+                    </p>
+                </div>
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="font-garamond text-[10pt] font-bold text-black">
+                            {{ $record->journal->name }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="flex w-full flex-col">
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                            Volume :
+                        </span>
+                    </p>
+                </div>
+                <div class="w-full align-top">
+                    <p class="text-left">
+                        <span class="font-garamond text-[10pt] font-bold text-black">
+                            {{ $record->volume }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-5 flex flex-col">
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
+                        Link Terbitan :
+                    </span>
+                </p>
+            </div>
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <a href="{{ $record->publication_link }}"
+                       class="font-garamond text-[10pt] font-bold text-black">
+                        {{ $record->publication_link }}
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="pb-5 pt-5">
+        <p class="pb-[8pt] pt-0 text-left text-justify leading-[1.079]">
+            <span class="font-garamond text-[10pt] font-bold text-black">
+                Berstatus ACCEPTED untuk dipublish. Keputusan ini dibuat
+                sebagai tanda bahwa naskah yang bersangkutan telah lolos
+                plagiarism checker. Dan LoA ini dibuat sebagai bukti bahwa
+                author telah menyelesaikan APC yang telah ditetapkan oleh
+                pengelola jurnal. LOA Berlaku jika dilengkapi link dan pdf
+                publish. Hubungi kami di
+                admin_jurnal@cahayailmubangsa.institute jika ada pertanyaan
+                lebih lanjut, terima kasih.
+            </span>
+        </p>
+    </div>
+    <div class="pb-5">
+        <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">
+            <span class="font-garamond text-[10pt] font-bold text-black">
+                Malang, {{ $record->approved_date?->format('d F Y') }}
+            </span>
+        </p>
+        <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">
+            <span class="inline-block h-[73.33px] w-[73.33px] overflow-hidden">
+                <img alt=""
+                     src="{{ asset('assets/qrcode.png') }}"
+                     class="h-[73.33px] w-[73.33px]"
+                     title="" />
+            </span>
+        </p>
+        <p class="ml-[318.9pt] text-left leading-[1.079]">
+            <span class="font-garamond text-[10pt] font-bold text-black">
+                Drs. H. M. Ubaidillah Maheri, M.Pd., PhD
+            </span>
+        </p>
+        <p class="ml-[318.9pt] text-left leading-[1.079]">
+            <span class="font-garamond font-bold">Director</span>
+        </p>
+    </div>
+</body>
+
+</html>

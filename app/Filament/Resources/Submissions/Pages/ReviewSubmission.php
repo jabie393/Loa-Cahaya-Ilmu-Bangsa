@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
-use Filament\Schemas\Components\Callout;
 use Illuminate\Support\Facades\Storage;
 
 class ReviewSubmission extends Page
@@ -58,7 +57,7 @@ class ReviewSubmission extends Page
                 ->icon('heroicon-o-chat-bubble-left-right')
                 ->color('primary')
                 ->url(fn () => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
-                ->openUrlInNewTab()
+                ->openUrlInNewTab(),
         ];
     }
 }

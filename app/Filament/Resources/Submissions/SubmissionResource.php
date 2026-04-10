@@ -22,7 +22,7 @@ class SubmissionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'title';
+    protected static ?string $recordTitleAttribute = 'id';
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -60,6 +60,7 @@ class SubmissionResource extends Resource
             'edit' => EditSubmission::route('/{record}/edit'),
             'review' => Pages\ReviewSubmission::route('/{record}/review'),
             'view' => Pages\ReviewSubmission::route('/{record}/view'),
+            'preview' => Pages\PreviewLoa::route('/{record}/preview'),
         ];
     }
 }
