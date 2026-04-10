@@ -62,6 +62,7 @@ class SubmissionResource extends Resource
             'view' => Pages\ReviewSubmission::route('/{record}/view'),
             'preview' => Pages\PreviewLoa::route('/{record}/preview'),
             'preview_ac' => Pages\PreviewCertificate::route('/{record}/ac'),
+            'preview_pfc' => Pages\PreviewPfc::route('/{record}/pfc'),
         ];
     }
 }

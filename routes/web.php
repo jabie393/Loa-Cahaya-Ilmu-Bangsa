@@ -44,3 +44,20 @@ Route::get('/ac/preview/{record}', function (App\Models\Submission $record) {
     ]);
 })->name('public.ac.preview');
 
+Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
+    if ($record->status !== 'Approved') {
+        abort(403, 'Sertifikat tidak tersedia.');
+    }
+    
+    $content = view('filament.pfc.pfc_pdf', ['record' => $record])->render();
+    
+    return view('layouts.public-loa', [
+        'slot' => new \Illuminate\Support\HtmlString($content . (
+            request()->has('print') 
+            ? '<script>setTimeout(() => { window.print(); }, 1000);</script>' 
+            : ''
+        ))
+    ]);
+})->name('public.pfc.preview');
+
+

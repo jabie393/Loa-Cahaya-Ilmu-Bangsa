@@ -91,11 +91,11 @@ class SubmissionsTable
                     ->url(fn (Submission $record) => route('public.ac.preview', ['record' => $record, 'print' => 1]))
                     ->openUrlInNewTab()
                     ->visible(fn (Submission $record) => $record->status === 'Approved'),
-                    Action::make('download')
+                    Action::make('download_pfc')
                     ->label('Download PFC')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('info')
-                    ->url(fn (Submission $record) => route('public.ac.preview', ['record' => $record, 'print' => 1]))
+                    ->url(fn (Submission $record) => route('public.pfc.preview', ['record' => $record, 'print' => 1]))
                     ->openUrlInNewTab()
                     ->visible(fn (Submission $record) => $record->status === 'Approved'),
                 ])

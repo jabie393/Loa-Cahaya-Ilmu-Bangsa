@@ -135,7 +135,7 @@
                                     </p>
                                 </div>
                             </a>
-                            <a href="{{ route('public.loa.preview', ['record' => $record, 'print' => 1]) }}"
+                            <a href="{{ route('public.pfc.preview', ['record' => $record, 'print' => 1]) }}"
                                target="_blank"
                                class="h-25 hover:border-primary hover:scale-101 group flex w-full items-center gap-2 rounded-xl border-l-4 border-gray-400 px-6 py-6 font-bold shadow-sm transition duration-300 dark:bg-gray-900 dark:text-white">
                                 <div class="color-white group-hover:bg-primary-500 rounded-lg bg-gray-200 p-2 transition duration-300">
