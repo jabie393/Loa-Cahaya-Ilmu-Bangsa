@@ -4,72 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submission Approved</title>
-    <!-- Custom style to keep button text intact -->
-    <style>
-        /* Optional: subtle custom styling to preserve exact button text appearance */
-        .btn-inline {
-            transition: all 0.2s ease;
-        }
-    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-white to-green-50 font-sans antialiased">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
 
-    <!-- Main container: centered card with soft shadow -->
-    <div class="max-w-3xl mx-auto my-12 p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+    <!-- Main container with inline CSS -->
+    <div style="max-width: 600px; margin: 20px auto; padding: 30px; background-color: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
         
         <!-- Logo/Header Section -->
-        <div class="text-center mb-8">
-            <img src="http://127.0.0.1:8000/images/logo.png" alt="LOA Cahaya Ilmu Bangsa Logo" style="max-width: 120px; height: auto; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://aset.warunayama.org/images/logo.png" alt="LOA Cahaya Ilmu Bangsa Logo" style="max-width: 120px; height: auto;">
         </div>
         
         <!-- Header with accent border -->
-        <div class="border-l-8 border-green-500 pl-6 py-2 mb-8">
-            <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Selamat! Pengajuan LOA Anda Telah Disetujui</h1>
+        <div style="border-left: 8px solid #22c55e; padding-left: 20px; margin-bottom: 30px;">
+            <h1 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0;">Selamat! Publikasi Ilmiah Anda Telah Disetujui</h1>
         </div>
 
         <!-- Greeting -->
-        <p class="text-gray-700 text-lg mb-4">Halo {{ $user->name }},</p>
+        <p style="font-size: 16px; color: #4b5563; margin-bottom: 15px;">Halo {{ $user->name }},</p>
 
         <!-- Approval message -->
-        <div class="bg-blue-50 p-5 rounded-xl mb-6 text-gray-700 border-l-4 border-blue-400">
-            <p>Kami dengan senang hati menginformasikan bahwa pengajuan Letter of Acceptance (LOA) Anda telah disetujui oleh admin.</p>
+        <div style="background-color: #e0f2fe; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #0284c7; color: #475569;">
+            <p style="margin: 0;">Kami dengan senang hati menginformasikan bahwa pengajuan Letter of Acceptance (LOA) Anda telah disetujui oleh admin.</p>
         </div>
 
         <!-- Detail Section -->
-        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-gray-200 pb-2 mb-4">Detail Pengajuan:</h2>
+        <h2 style="font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">Detail Pengajuan:</h2>
         
-        <!-- Card-like list with soft background -->
-        <div class="bg-gray-50 rounded-xl p-5 mb-6">
-            <ul class="space-y-2 text-gray-700">
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Judul:</span> {{ $submission->title }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Nama Penulis:</span> {{ $submission->author_name }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Institusi:</span> {{ $submission->institution }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Jurnal:</span> {{ $submission->journal->name ?? 'N/A' }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Volume:</span> {{ $submission->volume }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Tanggal LOA:</span> {{ $submission->date_of_loa->format('d M Y') }}</li>
-                <li class="flex flex-wrap"><span class="font-semibold w-36">Tanggal Disetujui:</span> {{ $submission->approved_date->format('d M Y') }}</li>
+        <!-- Card-like list with inline CSS -->
+        <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Judul:</span>
+                    <span style="color: #4b5563;">{{ $submission->title }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Nama Penulis:</span>
+                    <span style="color: #4b5563;">{{ $submission->author_name }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Institusi:</span>
+                    <span style="color: #4b5563;">{{ $submission->institution }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Jurnal:</span>
+                    <span style="color: #4b5563;">{{ $submission->journal->name ?? 'N/A' }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Volume:</span>
+                    <span style="color: #4b5563;">{{ $submission->volume }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Tanggal LOA:</span>
+                    <span style="color: #4b5563;">{{ $submission->date_of_loa->format('d M Y') }}</span>
+                </li>
+                <li style="display: flex; flex-wrap: wrap;">
+                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Tanggal Disetujui:</span>
+                    <span style="color: #4b5563;">{{ $submission->approved_date->format('d M Y') }}</span>
+                </li>
             </ul>
         </div>
 
         <!-- Download/Print info -->
-        <p class="text-gray-700 mb-5">Silakan unduh atau cetak LOA & sertifikat Anda dari sistem kami.</p>
+        <p style="color: #4b5563; margin-bottom: 20px;">Silakan unduh atau cetak LOA & sertifikat Anda dari sistem kami.</p>
 
-        <!-- Buttons container: using flex wrap, exactly same text and links -->
-        <div class="flex flex-wrap gap-3 mb-8">
-            <a href="http://127.0.0.1:8000/loa/preview/{{ $submission->id }}" 
-               class="inline-block px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 btn-inline">Letter of Acceptance</a>
-            <a href="http://127.0.0.1:8000/ac/preview/{{ $submission->id }}?" 
-               class="inline-block px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 btn-inline">Author's Certificate</a>
-            <a href="http://127.0.0.1:8000/pfc/preview/{{ $submission->id }}" 
-               class="inline-block px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 btn-inline">Plagiarism-Free Certificate</a>
+        <!-- Buttons container with inline CSS -->
+        <div style="margin-bottom: 25px;">
+            <a href="{{ url('/loa/preview/' . $submission->id) }}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; font-weight: 600; border-radius: 6px; margin-right: 10px; margin-bottom: 10px; transition: background-color 0.2s;">Letter of Acceptance</a>
+            <a href="{{ url('/ac/preview/' . $submission->id) }}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #16a34a; color: white; text-decoration: none; font-weight: 600; border-radius: 6px; margin-right: 10px; margin-bottom: 10px; transition: background-color 0.2s;">Author's Certificate</a>
+            <a href="{{ url('/pfc/preview/' . $submission->id) }}" 
+               style="display: inline-block; padding: 12px 24px; background-color: #dc2626; color: white; text-decoration: none; font-weight: 600; border-radius: 6px; margin-bottom: 10px; transition: background-color 0.2s;">Plagiarism-Free Certificate</a>
         </div>
 
         <!-- Closing remarks -->
-        <p class="text-gray-700">Terima kasih atas partisipasi Anda dalam LOA Cahaya Ilmu Bangsa.</p>
+        <p style="color: #4b5563; margin-bottom: 15px;">Terima kasih atas partisipasi Anda dalam LOA Cahaya Ilmu Bangsa.</p>
 
         <!-- Signature -->
-        <div class="mt-6 pt-4 border-t border-gray-200 text-gray-600">
-            <p>Salam,<br>Tim LOA Cahaya Ilmu Bangsa</p>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
+            <p style="margin: 0;">Salam,<br>Tim LOA Cahaya Ilmu Bangsa</p>
         </div>
     </div>
 
