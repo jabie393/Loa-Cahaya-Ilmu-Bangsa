@@ -16,8 +16,8 @@ class ShieldSeeder extends Seeder
         $tenants = '[]';
         $users = '[]';
         $userTenantPivot = '[]';
-        $rolesWithPermissions = '[{"name":"super_admin","guard_name":"web","permissions":["ViewAny:Role","View:Role","Create:Role","Update:Role","Delete:Role","DeleteAny:Role","Restore:Role","ForceDelete:Role","ForceDeleteAny:Role","RestoreAny:Role","Replicate:Role","Reorder:Role","View:Dashboard"]}]';
-        $directPermissions = '[]';
+        $rolesWithPermissions = '[{"name":"super_admin","guard_name":"web","permissions":["ViewAny:Role","View:Role","Create:Role","Update:Role","Delete:Role","DeleteAny:Role","Restore:Role","ForceDelete:Role","ForceDeleteAny:Role","RestoreAny:Role","Replicate:Role","Reorder:Role","ViewAny:Journal","View:Journal","Create:Journal","Update:Journal","Delete:Journal","DeleteAny:Journal","Restore:Journal","ForceDelete:Journal","ForceDeleteAny:Journal","RestoreAny:Journal","Replicate:Journal","Reorder:Journal","ViewAny:Submission","View:Submission","Create:Submission","Update:Submission","Delete:Submission","DeleteAny:Submission","Restore:Submission","ForceDelete:Submission","ForceDeleteAny:Submission","RestoreAny:Submission","Replicate:Submission","Reorder:Submission","ViewAny:User","View:User","Create:User","Update:User","Delete:User","DeleteAny:User","Restore:User","ForceDelete:User","ForceDeleteAny:User","RestoreAny:User","Replicate:User","Reorder:User","View:MyCertificates","View:AdminDashboardWidget","View:UserDashboardWidget"]},{"name":"panel_user","guard_name":"web","permissions":["ViewAny:Submission","View:Submission","Create:Submission","Update:Submission","Delete:Submission","DeleteAny:Submission","Restore:Submission","ForceDelete:Submission","ForceDeleteAny:Submission","RestoreAny:Submission","Replicate:Submission","Reorder:Submission","View:MyCertificates"]}]';
+        $directPermissions = '{"51":{"name":"View:Dashboard","guard_name":"web"}}';
 
         // 1. Seed tenants first (if present)
         if (! blank($tenants) && $tenants !== '[]') {
