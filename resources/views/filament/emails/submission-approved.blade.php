@@ -16,7 +16,7 @@
         </div>
         
         <!-- Header with accent border -->
-        <div style="border-left: 8px solid #22c55e; padding-left: 20px; margin-bottom: 30px;">
+        <div style="border-left: 8px solid #ee4d2d; padding-left: 20px; margin-bottom: 30px;">
             <h1 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0;">Selamat! Publikasi Ilmiah Anda Telah Disetujui</h1>
         </div>
 
