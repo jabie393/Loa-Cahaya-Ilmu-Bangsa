@@ -12,12 +12,12 @@
         
         <!-- Logo/Header Section -->
         <div style="text-align: center; margin-bottom: 30px;">
-            <img src="https://aset.warunayama.org/images/logo.png" alt="LOA Cahaya Ilmu Bangsa Logo" style="max-width: 120px; height: auto;">
+            <img src="https://aset.warunayama.org/images/logo.png" alt="LOA Cahaya Ilmu Bangsa Logo" style="max-width: 58px; height: auto;">
         </div>
         
         <!-- Header with accent border -->
         <div style="border-left: 8px solid #ee4d2d; padding-left: 20px; margin-bottom: 30px;">
-            <h1 style="font-size: 28px; font-weight: bold; color: #1f2937; margin: 0;">Selamat! Publikasi Ilmiah Anda Telah Disetujui</h1>
+            <h1 style="font-size: 22px; font-weight: bold; color: #1f2937; margin: 0;">Selamat! Publikasi Ilmiah Anda Telah Disetujui</h1>
         </div>
 
         <!-- Greeting -->
