@@ -1,13 +1,13 @@
 <x-filament-panels::page>
     <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        @foreach($this->getJurnals() as $jurnal)
-            <div class="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(37,99,235,0.08)] dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+        @foreach ($this->getJurnals() as $jurnal)
+            <div class="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_40px_80px_rgba(37,99,235,0.08)] dark:border-slate-800 dark:bg-slate-900">
                 <!-- Cover Image Container -->
                 <div class="relative aspect-[3/4] overflow-hidden">
-                    <img src="{{ $jurnal['image'] }}" 
+                    <img src="{{ $jurnal['image'] }}"
                          alt="{{ $jurnal['name'] }}"
                          class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110">
-                    
+
                     <!-- Overlay Gradient -->
                     <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
                 </div>
@@ -19,11 +19,13 @@
                     </h3>
                     <!-- Buttons Group -->
                     <div class="mt-auto grid grid-cols-2 gap-3">
-                        <a href="{{ $jurnal['link'] }}" class="relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition-all duration-300 hover:bg-blue-700 active:scale-95 shadow-[0_10px_20px_rgba(37,99,235,0.2)]">
+                        <a href="{{ $jurnal['link'] }}"
+                           class="relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-[0_10px_20px_rgba(37,99,235,0.2)] transition-all duration-300 hover:bg-blue-700 active:scale-95">
                             Situs Jurnal
                         </a>
-                        <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('create', ['journal_id' => $jurnal['id']]) }}" class="flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-900 transition-all duration-300 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 active:scale-95 dark:border-slate-800 dark:bg-slate-800 dark:text-white">
-                            Request
+                        <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('create', ['journal_id' => $jurnal['id']]) }}"
+                           class="flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-900 transition-all duration-300 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 active:scale-95 dark:border-slate-800 dark:bg-slate-800 dark:text-white">
+                            Ajukan
                         </a>
                     </div>
                 </div>

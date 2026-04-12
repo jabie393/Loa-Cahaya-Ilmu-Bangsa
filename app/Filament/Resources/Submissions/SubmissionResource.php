@@ -24,6 +24,20 @@ class SubmissionResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
 
+
+    public static function getNavigationBadge(): ?string
+    {
+        if (Auth::user()->hasRole('super_admin')) {
+            $count = static::getModel()::where('status', 'pending')->count();
+        } else {
+            $count = static::getModel()::where('user_id', Auth::id())
+                ->where('status', 'approved')
+                ->count();
+        }
+
+        return $count > 0 ? (string) $count : null;
+    }
+
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $query = parent::getEloquentQuery();

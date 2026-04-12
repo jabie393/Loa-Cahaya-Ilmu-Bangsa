@@ -14,6 +14,7 @@ use Filament\Auth\Pages\EditProfile as BaseEditProfile;
 
 class EditProfile extends BaseEditProfile
 {
+    
     public function form(Schema $schema): Schema
     {
         return $schema

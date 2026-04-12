@@ -21,15 +21,9 @@
     </style>
 
     <div class="font-manrope space-y-10">
-        <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-                <h1 class="text-primary-600 dark:text-primary-400 text-3xl font-extrabold tracking-tight">Papan Sertifikat Digital</h1>
-                <p class="text-md mt-2 max-w-xl leading-relaxed text-gray-500 dark:text-gray-400">
-                    Koleksi sertifikat resmi atas publikasi artikel Anda. Di sini Anda dapat mengunduh Letter of Acceptance (LoA), Sertifikat Penulis, dan Sertifikat Bebas Plagiarisme untuk setiap karya yang telah disetujui.
-                </p>
-            </div>
+        <header class="flex flex-col gap-4 md:flex-row md:items-end md:justify-end">
             <div class="flex items-center gap-3">
-                <span class="rounded-full bg-gray-100 px-4 py-2 text-xs font-bold uppercase tracking-widest text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                <span class="rounded-full badge badge-primary bg-primary-50 text-primary-500 px-4 py-2 text-xs font-bold uppercase tracking-widest">
                     {{ $submissions->count() }} Sertifikat
                 </span>
             </div>
@@ -75,7 +69,7 @@
                                     <span class="text-[10px] font-medium text-gray-500">{{ $record->approved_date?->format('d M Y') }}</span>
                                 </div>
                             </div>
-                            <span class="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
+                            <span class="flex badge badge-primary items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
                                 <svg class="h-3 w-3"
                                      fill="currentColor"
                                      viewBox="0 0 20 20">

@@ -8,6 +8,6 @@ class RoleBasedRegistrationResponse implements RegistrationResponseContract
 {
     public function toResponse($request): \Illuminate\Http\RedirectResponse|\Livewire\Features\SupportRedirects\Redirector
     {
-        return redirect()->to('/dashboard');
+        return redirect()->to('/journal');
     }
 }

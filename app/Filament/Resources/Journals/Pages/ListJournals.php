@@ -10,6 +10,11 @@ class ListJournals extends ListRecords
 {
     protected static string $resource = JournalsResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Journal List';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

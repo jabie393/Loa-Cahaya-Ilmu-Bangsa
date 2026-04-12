@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
-use Filament\Pages\Dashboard;
+use App\Filament\Pages\Journal;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 
@@ -197,7 +197,7 @@ return [
         'subject' => 'class',
         'prefix' => 'view',
         'exclude' => [
-            Dashboard::class,
+            Journal::class,
         ],
     ],
 

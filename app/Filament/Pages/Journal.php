@@ -3,19 +3,17 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
-use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use BackedEnum;
 use Filament\Support\Icons\Heroicon;
-use App\Models\Journal;
+use App\Models\Journal as JournalModel;
 
-class Jurnal extends Page
+class Journal extends Page
 {
-    use HasPageShield;
-    protected string $view = 'filament.pages.jurnal';
+    protected string $view = 'filament.pages.Journal';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BookOpen;
 
     public function getJurnals(): array
     {
-        return Journal::all()->toArray();
+        return JournalModel::all()->toArray();
     }
 }

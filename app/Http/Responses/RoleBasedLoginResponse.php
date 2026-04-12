@@ -11,6 +11,6 @@ class RoleBasedLoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
-        return redirect()->to('/dashboard');
+        return redirect()->to('/journal');
     }
 }
