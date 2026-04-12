@@ -9,7 +9,7 @@ use App\Models\Journal as JournalModel;
 
 class Journal extends Page
 {
-    protected string $view = 'filament.pages.Journal';
+    protected string $view = 'filament.pages.journal';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BookOpen;
 
     public function getJurnals(): array

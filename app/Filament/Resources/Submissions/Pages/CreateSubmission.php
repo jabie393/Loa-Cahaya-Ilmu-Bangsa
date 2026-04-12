@@ -38,7 +38,7 @@ class CreateSubmission extends CreateRecord
                                 ->default(Auth::user()->name)
                                 ->required(),
                             TextInput::make('email')
-                                ->label('Email (1 Saja)')
+                                ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
                                 ->default(Auth::user()->email)
                                 ->email()
                                 ->required(),

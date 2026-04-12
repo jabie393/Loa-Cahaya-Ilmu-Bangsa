@@ -75,7 +75,7 @@
                 @if (Route::has('login'))
                     <div class="flex items-center gap-4">
                         @auth
-                            <a href="/dashboard"
+                            <a href="/journal"
                                class="bg-primary text-on-primary shadow-primary/20 font-headline scale-95 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-lg transition-transform active:scale-90">
                                 Dashboard
                             </a>
@@ -120,7 +120,7 @@
                 </p>
                 
                 <div class="flex flex-col items-center gap-4 sm:flex-row">
-                    <a href="{{ auth()->check() ? '/dashboard' : '/register' }}"
+                    <a href="{{ auth()->check() ? '/journal' : '/register' }}"
                        class="editorial-gradient font-headline shadow-primary/30 group flex items-center gap-3 rounded-2xl px-8 py-4 text-lg font-bold text-white transition-all hover:scale-105 hover:shadow-xl">
                         Ajukan LOA Sekarang
                         <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
