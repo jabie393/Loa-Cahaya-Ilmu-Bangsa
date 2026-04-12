@@ -76,6 +76,7 @@ class CreateSubmission extends CreateRecord
                             FileUpload::make('proof_of_payment')
                                 ->label('Upload Bukti Pembayaran')
                                 ->directory('proof-of-payment')
+                                ->required()
                                 ->disk('public')
                                 ->image()
                         ]),
