@@ -68,7 +68,7 @@
         </div>
 
         <!-- Closing remarks -->
-        <p style="color: #4b5563; margin-bottom: 15px;">Silakan revisi pengajuan sesuai alasan penolakan untuk mengajukan ulang, atau hubungi tim kami jika Anda memiliki pertanyaan lebih lanjut.</p>
+        <p style="color: #4b5563; margin-bottom: 15px;">Silakan revisi pengajuan sesuai alasan penolakan untuk mengajukan ulang sebelum pengajuan dihapus otomatis oleh sistem pada {{ $submission->rejected_date->addDays(7)->format('d M Y') }}, atau hubungi tim kami jika Anda memiliki pertanyaan lebih lanjut.</p>
 
         <!-- Signature -->
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
