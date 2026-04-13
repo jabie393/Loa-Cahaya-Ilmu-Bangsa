@@ -85,16 +85,42 @@
         </svg>
         Download Certificate
     </button>
+    
     <style data-purpose="layout-refinement">
+        :root {
+            --cert-width: 1100px;
+            --cert-height: 770px;
+        }
+
         .certificate-container {
-            width: 1100px;
-            height: 770px;
+            width: var(--cert-width);
+            height: var(--cert-height);
+            min-width: var(--cert-width);
+            min-height: var(--cert-height);
             position: relative;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            font-size: 16px; /* Lock rem units inside the certificate */
+            transform-origin: center center;
         }
 
-        /* Decorative Corner Elements using CSS clipping/shapes or SVG positioning */
+        /* Prevent layout shifts on different screens by scaling the entire container */
+        @media screen and (max-width: 1140px) {
+            .certificate-scale-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 1.5rem;
+                width: 100%;
+                min-height: 100dvh;
+                overflow: hidden;
+            }
+            .certificate-container {
+                transform: scale(calc((100vw - 40px) / var(--cert-width)));
+            }
+        }
+
+        /* Decorative Corner Elements */
         .corner-top-left {
             position: absolute;
             top: 0;
@@ -116,10 +142,12 @@
     </style>
 </head>
 
-<body class="max-h-landscape flex h-fit min-h-screen w-fit w-full items-center justify-center bg-white lg:bg-gray-200 lg:p-10 print:bg-white print:p-0">
-    <!-- BEGIN: Certificate Layout -->
-    <main class="certificate-container bg-pattern print-a4 relative border-[12px] border-white bg-white"
-          data-purpose="main-certificate-frame">
+<body class="flex min-h-screen w-full items-center justify-center bg-white lg:bg-gray-200 print:bg-white print:p-0">
+    <!-- BEGIN: Scale Wrapper for Responsive View -->
+    <div class="certificate-scale-wrapper">
+        <!-- BEGIN: Certificate Layout -->
+        <main class="certificate-container bg-pattern print-a4 relative border-[12px] border-white bg-white"
+              data-purpose="main-certificate-frame">
         <!-- BEGIN: Decorative Corners -->
         <!-- Top Left Corner -->
         <div class="corner-top-left">
@@ -207,6 +235,7 @@
         <!-- END: Certificate Content -->
     </main>
     <!-- END: Certificate Layout -->
+    </div>
 </body>
 
 </html>

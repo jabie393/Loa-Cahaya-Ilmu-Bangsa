@@ -43,32 +43,29 @@
                 background-color: white !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                height: 100vh !important;
-                width: 100vw !important;
                 margin: 0 !important;
                 padding: 0 !important;
             }
 
             .print-a4 {
-                margin: 0 !important;
+                margin: 0 auto !important;
                 box-shadow: none !important;
-                padding: 0 !important;
                 width: 210mm !important;
                 height: 297mm !important;
                 border: none !important;
+                display: flex !important;
+                flex-direction: column !important;
             }
         }
 
         .certificate-page {
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             background-color: white;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
+            border: 1px solid #e2e8f0;
         }
 
         .dot-line {
@@ -78,16 +75,23 @@
         }
 
         .decorative-band {
-            height: 12%;
+            height: 10%;
             width: 100%;
             position: absolute;
             left: 0;
             pointer-events: none;
         }
     </style>
+    <style data-purpose="layout-sync">
+        @media screen {
+            .certificate-page {
+                margin: 20px auto;
+            }
+        }
+    </style>
 </head>
 
-<body class="max-h-landscape flex h-fit min-h-screen w-full items-center justify-center bg-white lg:bg-gray-200 lg:p-10 print:bg-white print:p-0">
+<body class="font-sans print-a4 mx-auto my-[10mm] box-border h-[297mm] max-h-[297mm] w-[210mm] bg-white shadow-[0_0_10px_rgba(0,0,0,0.2)] print:m-0 print:shadow-none">
     <button onclick="window.print()"
             class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -101,7 +105,7 @@
         Download PFC
     </button>
     
-    <main class="certificate-page print-a4 text-cert-navy relative flex flex-col items-center justify-center px-16 pb-48 pt-40"
+    <main class="relative flex flex-col h-full items-center px-[72pt] pb-[72pt] pt-[105.8pt]"
           data-purpose="certificate-main-layout">
         <div class="decorative-band top-0"
              data-purpose="header-graphics">
