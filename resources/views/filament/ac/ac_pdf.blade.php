@@ -85,38 +85,37 @@
         </svg>
         Download Certificate
     </button>
-    
-    <style data-purpose="layout-refinement">
-        :root {
-            --cert-width: 1100px;
-            --cert-height: 770px;
-        }
 
+    <style data-purpose="layout-refinement">
         .certificate-container {
-            width: var(--cert-width);
-            height: var(--cert-height);
-            min-width: var(--cert-width);
-            min-height: var(--cert-height);
+            width: 297mm;
+            height: 210mm;
+            min-width: 297mm;
+            min-height: 210mm;
+            flex-shrink: 0;
+            background-color: white;
             position: relative;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            font-size: 16px; /* Lock rem units inside the certificate */
+            font-size: 16px;
+            /* Lock rem units inside the certificate */
             transform-origin: center center;
         }
 
         /* Prevent layout shifts on different screens by scaling the entire container */
-        @media screen and (max-width: 1140px) {
+        @media screen and (max-width: 1180px) {
             .certificate-scale-wrapper {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                padding: 1.5rem;
+                padding: 2rem;
                 width: 100%;
                 min-height: 100dvh;
                 overflow: hidden;
             }
+
             .certificate-container {
-                transform: scale(calc((100vw - 40px) / var(--cert-width)));
+                transform: scale(calc((100vw - 64px) / 1123)); /* 1123px is approx 297mm */
             }
         }
 
@@ -142,99 +141,100 @@
     </style>
 </head>
 
-<body class="flex min-h-screen w-full items-center justify-center bg-white lg:bg-gray-200 print:bg-white print:p-0">
+<body class="flex min-h-screen w-fit mx-auto items-center justify-center bg-white lg:bg-gray-200 print:bg-white print:p-0">
     <!-- BEGIN: Scale Wrapper for Responsive View -->
     <div class="certificate-scale-wrapper">
         <!-- BEGIN: Certificate Layout -->
         <main class="certificate-container bg-pattern print-a4 relative border-[12px] border-white bg-white"
               data-purpose="main-certificate-frame">
-        <!-- BEGIN: Decorative Corners -->
-        <!-- Top Left Corner -->
-        <div class="corner-top-left">
-            <svg fill="none"
-                 viewbox="0 0 400 400"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 0H400L0 250V0Z"
-                      fill="#003354"></path>
-                <path d="M0 0H280L0 180V0Z"
-                      fill="#005b8e"></path>
-                <path d="M100 0L0 130V150L120 0H100Z"
-                      fill="#D4AF37"></path>
-                <path d="M300 0L0 380V400L320 0H300Z"
-                      fill="#D4AF37"></path>
-            </svg>
-        </div>
-        <!-- Bottom Right Corner (reused and rotated via CSS) -->
-        <div class="corner-bottom-right">
-            <svg fill="none"
-                 viewbox="0 0 400 400"
-                 xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 0H400L0 250V0Z"
-                      fill="#003354"></path>
-                <path d="M0 0H280L0 180V0Z"
-                      fill="#005b8e"></path>
-                <path d="M100 0L0 130V150L120 0H100Z"
-                      fill="#D4AF37"></path>
-                <path d="M300 0L0 380V400L320 0H300Z"
-                      fill="#D4AF37"></path>
-            </svg>
-        </div>
-        <!-- END: Decorative Corners -->
-        <!-- BEGIN: Certificate Content -->
-        <div class="relative z-20 flex h-full flex-col items-center justify-center px-24 py-16 text-center">
-            <!-- Header Section -->
-            <header class="mb-6">
-                <h1 class="text-cert-navy mb-2 text-6xl font-extrabold uppercase tracking-widest">
-                    Certificate
-                </h1>
-                <h2 class="text-cert-navy text-3xl font-bold uppercase tracking-[0.3em]">
-                    Penghargaan
-                </h2>
-                <h2 class="text-cert-navy text-lg font-bold uppercase tracking-[0.3em]">
-                    No : {{ $record->created_at->format('Y') }}/CIB{{ sprintf('%03d', $record->journal->id) }}/AC{{ sprintf('%03d', $record->id) }}
-                </h2>
-            </header>
-            <!-- Presentation Text -->
-            <p class="mb-8 font-serif text-xl italic text-gray-800">
-                Diberikan Kepada :
-            </p>
-            <!-- Recipient Name -->
-            <div class="mb-8">
-                <h3 class="text-cert-navy font-serif text-4xl leading-tight">
-                    {{ $record->author_name }}
-                </h3>
+            <!-- BEGIN: Decorative Corners -->
+            <!-- Top Left Corner -->
+            <div class="corner-top-left">
+                <svg fill="none"
+                     viewbox="0 0 400 400"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 0H400L0 250V0Z"
+                          fill="#003354"></path>
+                    <path d="M0 0H280L0 180V0Z"
+                          fill="#005b8e"></path>
+                    <path d="M100 0L0 130V150L120 0H100Z"
+                          fill="#D4AF37"></path>
+                    <path d="M300 0L0 380V400L320 0H300Z"
+                          fill="#D4AF37"></path>
+                </svg>
             </div>
-            <!-- Achievement Description -->
-            <div class="mb-10 max-w-3xl">
-                <p class="text-justify text-lg font-bold leading-relaxed text-gray-900">
-                    Telah mempublikasikan karya tulis ilmiah pada jurnal
-                    yang diterbitkan oleh Cahaya Ilmu Bangsa Institute SK
-                    KEMENKUMHAM AHU-0018912-AH.01.14. Demikian Sertifikat
-                    ini dibuat untuk dipergunakan sebagaimana mestinya.
-                </p>
+            <!-- Bottom Right Corner (reused and rotated via CSS) -->
+            <div class="corner-bottom-right">
+                <svg fill="none"
+                     viewbox="0 0 400 400"
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 0H400L0 250V0Z"
+                          fill="#003354"></path>
+                    <path d="M0 0H280L0 180V0Z"
+                          fill="#005b8e"></path>
+                    <path d="M100 0L0 130V150L120 0H100Z"
+                          fill="#D4AF37"></path>
+                    <path d="M300 0L0 380V400L320 0H300Z"
+                          fill="#D4AF37"></path>
+                </svg>
             </div>
-
-            <!-- Signatures Section -->
-            <footer class="mt-auto flex w-full flex-col items-center justify-center px-12">
-                <p class="pb-5 text-justify text-lg font-bold leading-relaxed text-gray-900">
-                    Telah ditanda-tangani secara online
+            <!-- END: Decorative Corners -->
+            <!-- BEGIN: Certificate Content -->
+            <div class="relative z-20 flex h-full flex-col items-center justify-center px-24 py-16 text-center">
+                <!-- Header Section -->
+                <header class="mb-6">
+                    <h1 class="text-cert-navy mb-2 text-6xl font-extrabold uppercase tracking-widest">
+                        Certificate
+                    </h1>
+                    <h2 class="text-cert-navy text-3xl font-bold uppercase tracking-[0.3em]">
+                        Penghargaan
+                    </h2>
+                    <h2 class="text-cert-navy text-lg font-bold uppercase tracking-[0.3em]">
+                        No : {{ $record->created_at->format('Y') }}/CIB{{ sprintf('%03d', $record->journal->id) }}/AC{{ sprintf('%03d', $record->id) }}
+                    </h2>
+                </header>
+                <!-- Presentation Text -->
+                <p class="mb-8 font-serif text-xl italic text-gray-800">
+                    Diberikan Kepada :
                 </p>
-
-                <!-- Manager Signature -->
-                <div class="flex w-64 flex-col items-center">
-                    <img src="{{ asset('assets/qrcode.png') }}"
-                         alt="" class="w-20 h-20"/>
-                    <div class="border-cert-gold my-2 w-full border-b-2">
-                    </div>
-                    <p class="text-lg font-bold text-gray-800">
-                        Buyung Nasution. Ph.D
+                <!-- Recipient Name -->
+                <div class="mb-8">
+                    <h3 class="text-cert-navy font-serif text-4xl leading-tight">
+                        {{ $record->author_name }}
+                    </h3>
+                </div>
+                <!-- Achievement Description -->
+                <div class="mb-10 max-w-3xl">
+                    <p class="text-justify text-lg font-bold leading-relaxed text-gray-900">
+                        Telah mempublikasikan karya tulis ilmiah pada jurnal
+                        yang diterbitkan oleh Cahaya Ilmu Bangsa Institute SK
+                        KEMENKUMHAM AHU-0018912-AH.01.14. Demikian Sertifikat
+                        ini dibuat untuk dipergunakan sebagaimana mestinya.
                     </p>
                 </div>
-            </footer>
-        </div>
-        <!-- END: Certificate Content -->
-    </main>
-    <!-- END: Certificate Layout -->
+
+                <!-- Signatures Section -->
+                <footer class="mt-auto flex w-full flex-col items-center justify-center px-12">
+                    <p class="pb-5 text-justify text-lg font-bold leading-relaxed text-gray-900">
+                        Telah ditanda-tangani secara online
+                    </p>
+
+                    <!-- Manager Signature -->
+                    <div class="flex w-64 flex-col items-center">
+                        <img src="{{ asset('assets/qrcode.png') }}"
+                             alt=""
+                             class="h-20 w-20" />
+                        <div class="border-cert-gold my-2 w-full border-b-2">
+                        </div>
+                        <p class="text-lg font-bold text-gray-800">
+                            Buyung Nasution. Ph.D
+                        </p>
+                    </div>
+                </footer>
+            </div>
+            <!-- END: Certificate Content -->
+        </main>
+        <!-- END: Certificate Layout -->
     </div>
 </body>
 
