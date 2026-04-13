@@ -62,8 +62,11 @@ class SubmissionsTable
                     ->sortable(),
                 TextColumn::make('approved_date')
                     ->date()
-                    ->sortable()
-                    ->visible(fn () => Auth::user()?->hasRole('super_admin')),
+                    ->sortable(),
+                TextColumn::make('rejected_date')
+                    ->label('Rejection Date')
+                    ->date()
+                    ->sortable(),
             ])
             ->filters([
                 //
