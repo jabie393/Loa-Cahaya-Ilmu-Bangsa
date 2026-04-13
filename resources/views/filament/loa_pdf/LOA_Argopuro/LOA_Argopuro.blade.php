@@ -15,6 +15,11 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        primary: '#1d428a',
+                        secondary: '#930007',
+                        background: 'white',
+                    },
                     fontFamily: {
                         baumans: ["Baumans", "system-ui"],
                         bahnschrift: ["Bahnschrift", "sans-serif"],
