@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use App\Mail\SubmissionApproved;
+use App\Mail\SubmissionRejected;
 
 class ReviewSubmission extends Page
 {
@@ -107,6 +108,8 @@ class ReviewSubmission extends Page
                         'rejection_reason' => $data['rejection_reason'],
                         'rejected_date' => now(),
                     ]);
+
+                    Mail::to($this->record->email)->send(new SubmissionRejected($this->record));
 
                     Notification::make()
                         ->title('Submission Rejected')
