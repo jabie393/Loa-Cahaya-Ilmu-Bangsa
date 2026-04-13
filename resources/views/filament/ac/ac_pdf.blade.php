@@ -17,6 +17,8 @@
           rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Montserrat:wght@400;700;800&amp;family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;display=swap"
           rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -33,6 +35,40 @@
                     },
                 },
             },
+        };
+
+        window.downloadPDF = async function() {
+            const { jsPDF } = window.jspdf;
+            const element = document.querySelector('[data-purpose="main-certificate-frame"]');
+            const btn = document.querySelector('#download-btn');
+            
+            btn.style.opacity = '0.5';
+            btn.innerText = 'Processing...';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+                pdf.save(`Certificate-{{ $record->author_name }}.pdf`);
+            } catch (e) {
+                console.error(e);
+                window.print();
+            } finally {
+                btn.style.opacity = '1';
+                btn.innerText = 'Download PDF';
+            }
         };
     </script>
     <style type="text/tailwindcss">
@@ -73,7 +109,8 @@
         }
     </style>
 
-    <button onclick="window.print()"
+    <button id="download-btn"
+            onclick="downloadPDF()"
             class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5"

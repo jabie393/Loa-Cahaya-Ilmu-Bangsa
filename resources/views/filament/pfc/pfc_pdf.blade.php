@@ -14,6 +14,8 @@
           rel="preconnect" />
     <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;family=Great+Vibes&amp;family=Montserrat:wght@300;400&amp;display=swap"
           rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -31,11 +33,46 @@
                 },
             },
         };
+
+        window.downloadPDF = async function() {
+            const { jsPDF } = window.jspdf;
+            const element = document.querySelector('[data-purpose="certificate-main-layout"]');
+            const btn = document.querySelector('#download-btn');
+            
+            btn.style.opacity = '0.5';
+            btn.innerText = 'Processing...';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                pdf.save(`Plagiarism_Free_Certificate_{{ $record->author_name }}.pdf`);
+            } catch (e) {
+                console.error(e);
+                window.print(); // Fallback
+            } finally {
+                btn.style.opacity = '1';
+                btn.innerText = 'Download PFC';
+            }
+        };
     </script>
     <style type="text/tailwindcss">
         @page {
-            size: portrait;
+            size: A4;
             margin: 0;
+            max-height: A4;
         }
 
         @media print {
@@ -91,8 +128,9 @@
     </style>
 </head>
 
-<body class="font-sans print-a4 mx-auto my-[10mm] box-border h-[297mm] max-h-[297mm] w-[210mm] bg-white shadow-[0_0_10px_rgba(0,0,0,0.2)] print:m-0 print:shadow-none">
-    <button onclick="window.print()"
+<body class="font-sans  mx-auto my-[10mm] box-border h-[297mm] max-h-[297mm] w-[210mm] bg-white shadow-[0_0_10px_rgba(0,0,0,0.2)] print:m-0 print:shadow-none">
+    <button id="download-btn"
+            onclick="downloadPDF()"
             class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5"
@@ -102,10 +140,10 @@
                   d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
                   clip-rule="evenodd" />
         </svg>
-        Download PFC
+        Download PDF
     </button>
     
-    <main class="relative flex flex-col h-full items-center px-[72pt] pb-[72pt] pt-[105.8pt]"
+    <main class="relative print-a4 flex flex-col h-full items-center px-[72pt] pb-[72pt] pt-[105.8pt]"
           data-purpose="certificate-main-layout">
         <div class="decorative-band top-0"
              data-purpose="header-graphics">
