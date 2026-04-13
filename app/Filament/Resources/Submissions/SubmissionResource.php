@@ -31,7 +31,7 @@ class SubmissionResource extends Resource
             $count = static::getModel()::where('status', 'pending')->count();
         } else {
             $count = static::getModel()::where('user_id', Auth::id())
-                ->where('status', 'approved')
+                ->where('status', 'Rejected')
                 ->count();
         }
 

@@ -39,6 +39,16 @@ class UsersTable
                         default => 'gray',
                     }),
 
+                TextColumn::make('pending_submissions_count')
+                    ->label('Pending Submission')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('rejected_submissions_count')
+                    ->label('Rejected Submission')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('created_at')
                     ->label('Dibuat Pada')
                     ->dateTime('d M Y H:i')

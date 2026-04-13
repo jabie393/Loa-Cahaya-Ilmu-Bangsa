@@ -24,8 +24,10 @@ class Submission extends Model
         'date_of_loa',
         'proof_of_payment',
         'status',
+        'rejection_reason',
         'submission_date',
         'approved_date',
+        'rejected_date',
     ];
 
     protected function casts(): array
@@ -36,6 +38,7 @@ class Submission extends Model
             'date_of_loa' => 'date',
             'submission_date' => 'date',
             'approved_date' => 'date',
+            'rejected_date' => 'date',
         ];
     }
 

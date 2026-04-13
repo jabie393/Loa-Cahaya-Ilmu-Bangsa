@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <div class="space-y-6">
-        @if (Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
+        @if (Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->status !== 'Rejected')
             <div class="bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-900/30 flex items-center gap-3 rounded-xl border p-4">
                 <svg class="text-primary-600 dark:text-primary-400 h-6 w-6"
                      fill="none"
@@ -26,6 +26,28 @@
                           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <p class="text-success-900 dark:text-success-100 text-md font-medium">Pengajuan Anda telah disetujui.</p>
+            </div>
+        @endif
+        @if ($record->status == 'Rejected')
+            <div class="bg-danger-50 dark:bg-danger-900/20 border-danger-100 dark:border-danger-900/30 flex flex-col gap-3 rounded-xl border p-4">
+                <div class="flex items-center gap-3">
+                    <svg class="text-danger-600 dark:text-danger-400 h-6 w-6"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-danger-900 dark:text-danger-100 text-md font-medium">Pengajuan Anda ditolak.</p>
+                </div>
+                @if ($record->rejection_reason)
+                    <div class="ml-9 space-y-2">
+                        <p class="text-danger-800 dark:text-danger-200 text-sm font-semibold">Alasan Penolakan:</p>
+                        <p class="text-danger-700 dark:text-danger-300 text-sm">{{ $record->rejection_reason }}</p>
+                    </div>
+                @endif
             </div>
         @endif
         @if ($record->proof_of_payment == null && $record->status == 'Pending')

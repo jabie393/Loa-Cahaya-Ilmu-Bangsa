@@ -13,6 +13,8 @@ use App\Filament\Resources\Submissions\SubmissionResource;
 use Illuminate\Support\Facades\Auth;
 use Filament\Actions\ActionGroup;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
 
 
 
@@ -42,8 +44,18 @@ class SubmissionsTable
                     ->icon(fn (string $state): string => $state === 'Paid' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                     ->searchable(),
                 TextColumn::make('status')
-                    ->color(fn (string $state): string => $state === 'Pending' ? 'primary' : 'success')
-                    ->icon(fn (string $state): string => $state === 'Pending' ? 'heroicon-o-clock' : 'heroicon-o-check-circle')
+                    ->color(fn (string $state): string => match($state) {
+                        'Pending' => 'primary',
+                        'Approved' => 'success',
+                        'Rejected' => 'danger',
+                        default => 'gray'
+                    })
+                    ->icon(fn (string $state): string => match($state) {
+                        'Pending' => 'heroicon-o-clock',
+                        'Approved' => 'heroicon-o-check-circle',
+                        'Rejected' => 'heroicon-o-x-circle',
+                        default => 'heroicon-o-question-mark-circle'
+                    })
                     ->badge(),
                 TextColumn::make('submission_date')
                     ->date()

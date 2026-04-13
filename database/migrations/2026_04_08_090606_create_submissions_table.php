@@ -29,11 +29,13 @@ return new class extends Migration {
             $table->string('proof_of_payment')->nullable();
 
             // Status
-            $table->enum('status', ['Pending', 'Approved'])->default('Pending');
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+            $table->text('rejection_reason')->nullable();
 
             // Tanggal
             $table->date('submission_date')->nullable();
             $table->date('approved_date')->nullable();
+            $table->date('rejected_date')->nullable();
 
             $table->timestamps();
         });
