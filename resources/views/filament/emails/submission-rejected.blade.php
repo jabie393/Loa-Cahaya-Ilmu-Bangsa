@@ -30,7 +30,7 @@
 
         <!-- Rejection reason -->
         <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-            <h3 style="font-size: 16px; font-weight: bold; color: #1f2937; margin-bottom: 10px;">Alasan Penolakan:</h3>
+            <h3 style="font-size: 16px; font-weight: bold; color: #1f2937; margin-top: 0; margin-bottom: 10px;">Alasan Penolakan:</h3>
             <p style="color: #4b5563; margin: 0;">{{ $submission->rejection_reason }}</p>
         </div>
 
@@ -68,7 +68,7 @@
         </div>
 
         <!-- Closing remarks -->
-        <p style="color: #4b5563; margin-bottom: 15px;">Jika Anda memiliki pertanyaan atau ingin mengajukan ulang, silakan hubungi tim kami.</p>
+        <p style="color: #4b5563; margin-bottom: 15px;">Silakan revisi pengajuan sesuai alasan penolakan untuk mengajukan ulang, atau hubungi tim kami jika Anda memiliki pertanyaan lebih lanjut.</p>
 
         <!-- Signature -->
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px;">
