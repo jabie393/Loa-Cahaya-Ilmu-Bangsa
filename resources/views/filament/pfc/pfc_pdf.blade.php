@@ -101,7 +101,6 @@
         Download PFC
     </button>
     
-
     <main class="certificate-page print-a4 text-cert-navy relative flex flex-col items-center justify-center px-16 pb-48 pt-40"
           data-purpose="certificate-main-layout">
         <div class="decorative-band top-0"
