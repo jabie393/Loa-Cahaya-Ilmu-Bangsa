@@ -10,6 +10,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Components\Grid;
+use Filament\Infolists\Components\TextEntry;
 
 class SubmissionForm
 {
@@ -18,40 +22,118 @@ class SubmissionForm
     {
         return $schema
             ->components([
-                    Section::make('Form Submission')
-                            ->columnSpan(3)
-                            ->description('Data Submission')
+                    TextEntry::make('status')
+                            ->badge()
+                            ->color(fn ($record): string => match ($record->status) {
+                                'Pending' => 'warning',
+                                'Approved' => 'success',
+                                'Rejected' => 'danger',
+                            })
+                            ->columnSpanFull(),                    
+                            Section::make('Form Submission')
+                            ->columnSpan(fn ($record) => $record?->status === 'Approved' ? 6 : 4)
+                            ->description('Data form submission')
                             ->schema([
                             Hidden::make('user_id')
                                 ->default(Auth::user()->id),
                             TextInput::make('author_name')
                                 ->default(Auth::user()->name)
                                 ->required()
-                                ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
+                                ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                             TextInput::make('email')
                                 ->label('Email address')
                                 ->email()
                                 ->required()
-                                ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
+                                ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                             
                             TextInput::make('title')
+                                ->columnSpanFull()
                                 ->required()
-                                ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
+                                ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                             TextInput::make('institution')
+                                ->columnSpanFull()
                                 ->required()
-                                ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
+                                ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                             Select::make('journal_id')
                                 ->relationship('journal', 'name')
-                                ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
-                            TextInput::make('volume')
-                            ->disabled(fn () => ! Auth::user()?->hasRole('super_admin')),
+                                ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
+                            Grid::make(3)
+                                ->schema([
+                                    TextInput::make('vol')
+                                        ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
+                                        ->live()
+                                        ->formatStateUsing(function ($record) {
+                                            if ($record && $record->volume) {
+                                                if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
+                                                    return $matches[1] ?? null;
+                                                }
+                                            }
+                                            return null;
+                                        })
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+
+
+                                    TextInput::make('no')
+                                        ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
+                                        ->live()
+                                        ->formatStateUsing(function ($record) {
+                                            if ($record && $record->volume) {
+                                                if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
+                                                    return $matches[2] ?? null;
+                                                }
+                                            }
+                                            return null;
+                                        })
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+
+
+                                    TextInput::make('year')
+                                        ->disabled(fn ($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
+                                        ->live()
+                                        ->formatStateUsing(function ($record) {
+                                            if ($record && $record->volume) {
+                                                if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
+                                                    return $matches[3] ?? null;
+                                                }
+                                            }
+                                            return null;
+                                        })
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+
+                                    Hidden::make('volume')
+                                ]),
+                            DatePicker::make('date_of_loa')
+                                ->native(false)
+                                ->label('Tanggal LOA')
+                                ->required(),
                             TextInput::make('publication_link')
+                                ->columnSpanFull()
                                 ->label('Publication Link')
                                 ->required(),
                             
-                            
                             DatePicker::make('submission_date')
                                 ->default(now())
+                                ->native(false)
                                 ->disabled()
                                 ->visible(fn () => Auth::user()?->hasRole('super_admin')),
                             Hidden::make('submission_date')
@@ -79,7 +161,7 @@ class SubmissionForm
                                 ->image()
                                 ->required(),
                         ]),
-                    ])->columns(5);
+                    ])->columns(6);
                     
                 
     }

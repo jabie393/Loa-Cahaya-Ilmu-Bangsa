@@ -14,7 +14,12 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\View;
 use Filament\Forms\Components\Checkbox;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 use Filament\Actions\Action;
+
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+
 
 class CreateSubmission extends CreateRecord
 {
@@ -28,7 +33,7 @@ class CreateSubmission extends CreateRecord
             Step::make('Form LOA')
                 ->schema([
                     Section::make('Informasi Penulis')
-                        ->columnSpan(3)
+                        ->columnSpan(4)
                         ->description('Informasi Penulis')
                         ->schema([
                             Hidden::make('user_id')
@@ -45,9 +50,11 @@ class CreateSubmission extends CreateRecord
                     
                                     
                             TextInput::make('title')
+                                ->columnSpanFull()
                                 ->label('Judul (Diisi Huruf Besar)')
                                 ->required(),
                             TextInput::make('institution')
+                                ->columnSpanFull()
                                 ->label('Instansi (Jangan disingkat)')
                                 ->required(),
                             Select::make('journal_id')
@@ -55,20 +62,52 @@ class CreateSubmission extends CreateRecord
                                 ->relationship('journal', 'name')
                                 ->default(request()->query('journal_id'))
                                 ->required(),
-                            TextInput::make('volume')
-                                ->label('Volume (Lihat di Masing-masing jurnal)')
-                                ->required(),
+                            Grid::make(3)
+                                ->schema([
+                                    TextInput::make('vol')
+                                        ->live() // or ->reactive() in v2
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+                                    TextInput::make('no')
+                                        ->live() // or ->reactive() in v2
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+                                    TextInput::make('year')
+                                        ->live() // or ->reactive() in v2
+                                        ->afterStateUpdated(function (Get $get, Set $set) {
+                                            $vol = $get('vol') ?? '';
+                                            $no = $get('no') ?? '';
+                                            $year = $get('year') ?? '';
+                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
+                                        }),
+
+                                    Hidden::make('volume')
+                                ]),
+
                             DatePicker::make('date_of_loa')
+                                ->native(false)
+                                ->displayFormat('d-m-Y')
                                 ->label('Tanggal LOA')
                                 ->required(),    
                             TextInput::make('publication_link')
+                                ->columnSpanFull()
                                 ->label('Publication Link'),
                             Hidden::make('submission_date')
                                 ->default(now()),                
                             
                             Hidden::make('status')
                                 ->default('Pending'),
-                    ]),
+                    ])->columns(2),
                     Section::make('Pembayaran')
                         ->columnSpan(2)
                         ->description('Bukti Pembayaran')
@@ -80,7 +119,7 @@ class CreateSubmission extends CreateRecord
                                 ->disk('public')
                                 ->image()
                         ]),
-                ])->columns(5),
+                ])->columns(6),
             Step::make('Konfirmasi')
                 ->schema([
                     View::make('filament.pages.Confirmation'),
