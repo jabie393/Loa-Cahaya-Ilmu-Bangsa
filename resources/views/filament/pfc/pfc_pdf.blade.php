@@ -201,7 +201,7 @@
             </div>
             <div class="mx-auto max-w-lg space-y-8">
                 <p class="text-justify font-serif text-base italic leading-relaxed text-gray-700">
-                    Kepandanya diberikan predikat <span class="font-bold">Sangat Baik</span> dengan Plagiarisme dibawah 30%. Sertifikat ini berlaku jika dilengkapi dengan LoA. Demikian untuk dipergunakan sebagaimana mestinya.
+                    Kepandanya diberikan predikat <span class="font-bold">Sangat Baik</span> dengan Plagiarisme dibawah 20%. Sertifikat ini berlaku jika dilengkapi dengan LoA. Demikian untuk dipergunakan sebagaimana mestinya, dan akan diperbaiki jika terdapat kekeliruan.
                 </p>
             </div>
         </section>
