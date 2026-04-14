@@ -111,7 +111,7 @@
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Certificates</h4>
                         <div class="flex min-h-[200px] flex-col items-center justify-around gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
-                            <a href="{{ route('public.loa.preview', ['record' => $record, 'print' => 1]) }}"
+                            <a href="{{ route('public.loa.preview', ['record' => $record, 'download' => 1]) }}"
                                target="_blank"
                                class="h-25 hover:border-primary hover:scale-101 group flex w-full items-center gap-2 rounded-xl border-l-4 border-gray-400 px-6 py-6 font-bold shadow-sm transition duration-300 dark:bg-gray-900 dark:text-white">
                                 <div class="color-white group-hover:bg-primary-500 rounded-lg bg-gray-200 p-2 transition duration-300">
@@ -134,7 +134,7 @@
                                     </p>
                                 </div>
                             </a>
-                            <a href="{{ route('public.ac.preview', ['record' => $record, 'print' => 1]) }}"
+                            <a href="{{ route('public.ac.preview', ['record' => $record, 'download' => 1]) }}"
                                target="_blank"
                                class="h-25 hover:border-primary hover:scale-101 group flex w-full items-center gap-2 rounded-xl border-l-4 border-gray-400 px-6 py-6 font-bold shadow-sm transition duration-300 dark:bg-gray-900 dark:text-white">
                                 <div class="color-white group-hover:bg-primary-500 rounded-lg bg-gray-200 p-2 transition duration-300">
@@ -157,7 +157,7 @@
                                     </p>
                                 </div>
                             </a>
-                            <a href="{{ route('public.pfc.preview', ['record' => $record, 'print' => 1]) }}"
+                            <a href="{{ route('public.pfc.preview', ['record' => $record, 'download' => 1]) }}"
                                target="_blank"
                                class="h-25 hover:border-primary hover:scale-101 group flex w-full items-center gap-2 rounded-xl border-l-4 border-gray-400 px-6 py-6 font-bold shadow-sm transition duration-300 dark:bg-gray-900 dark:text-white">
                                 <div class="color-white group-hover:bg-primary-500 rounded-lg bg-gray-200 p-2 transition duration-300">
