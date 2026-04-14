@@ -337,7 +337,7 @@
             </div>
             <div class="pb-5">
                 <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">
-                    <span class="font-noto text-[11pt] font-bold text-black">
+                    <span class="font-noto text-[9pt] font-bold text-black">
                         Malang, {{ $record->approved_date?->format('d F Y') }}
                     </span>
                 </p>
@@ -350,11 +350,11 @@
                     </span>
                 </p>
                 <p class="ml-[318.9pt] py-0 text-left leading-[1.079]">
-                    <span class="font-playfair text-[11pt] font-bold text-black">
+                    <span class="font-playfair text-[9pt] text-nowrap font-bold text-black">
                         Drs. H. M. Danam Priambodo, M.Pd., Ph.D.
                     </span>
                 </p>
-                <p class="ml-[318.9pt] py-0 text-left leading-[1.079]">
+                <p class="ml-[318.9pt] py-0 text-left text-[9pt] leading-[1.079]">
                     <span class="font-playfair font-bold">Director</span>
                 </p>
             </div>
