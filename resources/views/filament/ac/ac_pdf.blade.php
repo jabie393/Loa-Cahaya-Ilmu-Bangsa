@@ -38,10 +38,12 @@
         };
 
         window.downloadPDF = async function() {
-            const { jsPDF } = window.jspdf;
+            const {
+                jsPDF
+            } = window.jspdf;
             const element = document.querySelector('[data-purpose="main-certificate-frame"]');
             const btn = document.querySelector('#download-btn');
-            
+
             btn.style.opacity = '0.5';
             btn.innerText = 'Processing...';
 
@@ -111,7 +113,7 @@
 
     <button id="download-btn"
             onclick="downloadPDF()"
-            class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+            class="bg-cert-navy fixed right-8 top-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5"
              viewBox="0 0 20 20"
@@ -152,7 +154,8 @@
             }
 
             .certificate-container {
-                transform: scale(calc((100vw - 64px) / 1123)); /* 1123px is approx 297mm */
+                transform: scale(calc((100vw - 64px) / 1123));
+                /* 1123px is approx 297mm */
             }
         }
 
@@ -178,7 +181,7 @@
     </style>
 </head>
 
-<body class="flex min-h-screen w-fit mx-auto items-center justify-center bg-white lg:bg-gray-200 print:bg-white print:p-0">
+<body class="mx-auto flex min-h-screen w-fit items-center justify-center bg-white lg:bg-gray-200 print:bg-white print:p-0">
     <!-- BEGIN: Scale Wrapper for Responsive View -->
     <div class="certificate-scale-wrapper">
         <!-- BEGIN: Certificate Layout -->

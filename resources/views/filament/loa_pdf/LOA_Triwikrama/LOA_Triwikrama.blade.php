@@ -11,14 +11,16 @@
     <meta content="text/html; charset=UTF-8"
           http-equiv="content-type" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: "var(--color-primary)",
-                        secondary: "var(--color-secondary)",
-                        background: "var(--color-background)",
+                        primary: '#0095e2',
+                        secondary: '#1d428a',
+                        background: '#faf9f6',
                     },
                     fontFamily: {
                         space: ["Space Grotesk", "sans-serif"],
@@ -26,9 +28,44 @@
                 },
             },
         };
+
+        window.downloadPDF = async function() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const element = document.querySelector('#capture-area');
+            const btn = document.querySelector('#download-btn');
+
+            btn.style.opacity = '0.5';
+            btn.innerText = 'Processing...';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                pdf.save(`LOA-{{ $record->author_name }}.pdf`);
+            } catch (e) {
+                console.error(e);
+                window.print();
+            } finally {
+                btn.style.opacity = '1';
+                btn.innerText = 'Download PDF';
+            }
+        };
     </script>
     <style type="text/tailwindcss">
-        /* Base layer fully removed; cascading utilities set on body instead */
         @page {
             size: A4;
             margin: 0;
@@ -37,7 +74,7 @@
 
         @media print {
             body {
-                @apply bg-[#FAF9F6];
+                background-color: transparent;
             }
 
             .print-a4 {
@@ -49,16 +86,12 @@
                 overflow: hidden !important;
             }
         }
-
-        :root {
-            --color-primary: #0095e2;
-            --color-secondary: #1d428a;
-            --color-background: white;
-        }
     </style>
 </head>
-<button onclick="window.print()"
-        class="bg-primary fixed bottom-8 right-8 z-50 flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+
+<button id="download-btn"
+        onclick="downloadPDF()"
+        class="bg-primary fixed right-8 top-8 z-50 flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
     <svg xmlns="http://www.w3.org/2000/svg"
          class="h-5 w-5"
          viewBox="0 0 20 20"
@@ -70,7 +103,9 @@
     Download PDF
 </button>
 
-<body class="font-space print-a4 bg-background mx-auto my-[10mm] box-border max-h-[297mm] w-[210mm] px-[72pt] pb-[72pt] pt-[20pt] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+<body class="font-space print-a4 bg-background mx-auto my-[25mm] box-border max-h-[297mm] w-[210mm] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+    <div id="capture-area"
+         class="relative h-[297mm] w-[210mm] bg-white px-[72pt] pb-[72pt] pt-[20pt]">
     <div class="top-20 flex w-full flex-col justify-between py-5">
         <p class="font-space mb-[2pt] text-[20pt] font-[1000]">
             CAHAYA ILMU BANGSA INSTITUTE
@@ -78,10 +113,10 @@
         <p class="font-manrope text-[7pt] font-bold">
             Biro Penelitian, Publikasi, dan Pengabdian Kepada Masyarakat
         </p>
-        <div class="bg-primary my-2 h-[10px] w-full"></div>
+        <div class="bg-primary my-2 w-full"></div>
         <div class="flex justify-between">
             <div>
-                <h2 class="font-space mb-[-5pt] text-[20pt] font-bold">
+                <h2 class="font-space text-[20pt] font-bold">
                     Triwikrama
                 </h2>
                 <p>Jurnal Ilmu Sosial</p>
@@ -216,6 +251,7 @@
             Dr. Hilmi Yahya, M.Pd., PhD
         </p>
         <p class="font-space font-bold text-black">Director</p>
+    </div>
     </div>
 </body>
 

@@ -10,17 +10,63 @@
           rel="stylesheet" />
     <meta content="text/html; charset=UTF-8"
           http-equiv="content-type" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1b4332',
+                        secondary: '#2d6a4f',
+                        background: '#faf9f6',
+                    },
+                    fontFamily: {
+                        newsreader: ["Newsreader", "serif"],
+                        merriweather: ["Merriweather", "serif"],
+                    },
+                },
+            },
+        };
+
+        window.downloadPDF = async function() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const element = document.querySelector('#capture-area');
+            const btn = document.querySelector('#download-btn');
+
+            btn.style.opacity = '0.5';
+            btn.innerText = 'Processing...';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                pdf.save(`LOA-{{ $record->author_name }}.pdf`);
+            } catch (e) {
+                console.error(e);
+                window.print();
+            } finally {
+                btn.style.opacity = '1';
+                btn.innerText = 'Download PDF';
+            }
+        };
+    </script>
     <style type="text/tailwindcss">
-        @theme {
-            --color-primary: #1b4332;
-            --color-secondary: #2d6a4f;
-            --color-background: #faf9f6;
-
-            --font-newsreader: "Newsreader", "serif";
-            --font-merriweather: "Merriweather", "serif";
-        }
-
         @page {
             size: A4;
             margin: 0;
@@ -42,13 +88,24 @@
         }
     </style>
 </head>
-<button onclick="window.print()" class="fixed bottom-8 right-8 z-50 bg-primary text-white px-6 py-3 rounded-xl shadow-2xl hover:scale-105 transition-transform active:scale-95 print:hidden font-bold flex items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+
+<button id="download-btn"
+        onclick="downloadPDF()"
+        class="bg-primary fixed right-8 top-8 z-50 flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         viewBox="0 0 20 20"
+         fill="currentColor">
+        <path fill-rule="evenodd"
+              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+              clip-rule="evenodd" />
     </svg>
     Download PDF
 </button>
-<body class="font-newsreader print-a4 bg-background mx-auto my-[10mm] box-border max-h-[297mm] w-[210mm] px-[72pt] pb-[72pt] pt-[20pt] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+
+<body class="font-newsreader print-a4 bg-background mx-auto my-[25mm] box-border max-h-[297mm] w-[210mm] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+    <div id="capture-area"
+         class="relative h-[297mm] w-[210mm] bg-white px-[72pt] pb-[72pt] pt-[20pt]">
     <div class="text-center">
         <p class="text-primary font-newsreader mb-[-2pt] text-[20pt] font-bold">
             CAHAYA ILMU BANGSA INSTITUTE
@@ -78,7 +135,7 @@
                 </p>
             </div>
             <div class="flex items-end">
-                <img src="https://cibangsa.com/public/journals/14/journalThumbnail_en.jpg"
+                <img src="{{ asset('assets/cover/Tashdiq.jpg') }}"
                      alt=""
                      class="w-[70px]" />
             </div>
@@ -199,6 +256,7 @@
             Dr. Khoirul Umam, M.Pd.I
         </p>
         <p class="font-newsreader font-bold text-black">Director</p>
+    </div>
     </div>
 </body>
 
