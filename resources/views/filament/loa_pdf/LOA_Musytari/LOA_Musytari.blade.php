@@ -11,14 +11,16 @@
     <meta content="text/html; charset=UTF-8"
           http-equiv="content-type" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: "var(--color-primary)",
-                        secondary: "var(--color-secondary)",
-                        background: "var(--color-background)",
+                        primary: '#008769',
+                        secondary: '#1a1c1e',
+                        background: '#faf9f6',
                     },
                     fontFamily: {
                         space: ["Space Grotesk", "sans-serif"],
@@ -26,18 +28,52 @@
                 },
             },
         };
+
+        window.downloadPDF = async function() {
+            const {
+                jsPDF
+            } = window.jspdf;
+            const element = document.querySelector('#capture-area');
+            const btn = document.querySelector('#download-btn');
+
+            btn.style.opacity = '0.5';
+            btn.innerText = 'Processing...';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                pdf.save(`LOA-{{ $record->author_name }}.pdf`);
+            } catch (e) {
+                console.error(e);
+                window.print();
+            } finally {
+                btn.style.opacity = '1';
+                btn.innerText = 'Download PDF';
+            }
+        };
     </script>
     <style type="text/tailwindcss">
-        /* Base layer fully removed; cascading utilities set on body instead */
         @page {
             size: A4;
             margin: 0;
-            max-height: A4;
         }
 
         @media print {
             body {
-                @apply bg-[#FAF9F6];
+                background-color: transparent;
             }
 
             .print-a4 {
@@ -49,25 +85,30 @@
                 overflow: hidden !important;
             }
         }
-
-        :root {
-            --color-primary: #008769;
-            --color-secondary: #1a1c1e;
-            --color-background: white;
-        }
     </style>
 </head>
-<button onclick="window.print()" class="fixed bottom-8 right-8 z-50 bg-primary text-white px-6 py-3 rounded-xl shadow-2xl hover:scale-105 transition-transform active:scale-95 print:hidden font-bold flex items-center gap-2">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+
+<button id="download-btn"
+        onclick="downloadPDF()"
+        class="bg-primary fixed right-8 top-8 z-50 flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="h-5 w-5"
+         viewBox="0 0 20 20"
+         fill="currentColor">
+        <path fill-rule="evenodd"
+              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+              clip-rule="evenodd" />
     </svg>
     Download PDF
 </button>
-<body class="font-space print-a4 bg-background mx-auto my-[10mm] box-border max-h-[297mm] w-[210mm] px-[72pt] pb-[72pt] pt-[20pt] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+
+<body class="font-space print-a4 bg-background mx-auto my-[25mm] box-border max-h-[297mm] w-[210mm] text-[10pt] text-black shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+    <div id="capture-area"
+         class="relative h-[297mm] w-[210mm] bg-white px-[72pt] pb-[72pt] pt-[20pt]">
     <div class="top-20 flex justify-between">
         <div class="">
             <div class="bg-primary h-[10px] w-[100px]"></div>
-            <p class="text-primary font-space mb-[-15px] text-[40pt] font-[1000] uppercase">
+            <p class="text-primary font-space text-[40pt] font-[1000] uppercase">
                 Musytari
             </p>
             <p class="text-secondary font-space text-[10pt] uppercase">
@@ -96,7 +137,7 @@
             </div>
         </div>
         <div>
-            <img src="https://cibangsa.com/public/journals/1/journalThumbnail_en.jpg"
+            <img src="{{ asset('assets/cover/Musytari.jpg') }}"
                  alt=""
                  class="w-[120px]" />
         </div>
@@ -219,6 +260,7 @@
             Dr. Fahad Ismail, M.Pd., PhD
         </p>
         <p class="font-space font-bold text-black">Director</p>
+    </div>
     </div>
 </body>
 

@@ -119,7 +119,8 @@ class ReviewSubmission extends Page
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
                 ->visible(fn () => $this->record->status === 'Pending' && Auth::user()?->hasRole('super_admin')),
-            EditAction::make(),
+            EditAction::make()
+            ->label(fn () => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission'),
             Action::make('Tanya admin')
                 ->label('Tanya Admin')
                 ->icon('heroicon-o-chat-bubble-left-right')

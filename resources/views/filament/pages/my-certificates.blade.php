@@ -94,7 +94,7 @@
                         <!-- Download Actions Grid -->
                         <div class="grid grid-cols-1 gap-3">
                             <!-- Download LOA -->
-                            <a href="{{ route('public.loa.preview', ['record' => $record, 'print' => 1]) }}"
+                            <a href="{{ route('public.loa.preview', ['record' => $record, 'download' => 1]) }}"
                                target="_blank"
                                class="premium-gradient ambient-shadow flex items-center justify-between gap-2 rounded-2xl px-6 py-4 text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-95">
                                 <div class="flex items-center gap-3">
@@ -122,7 +122,7 @@
 
                             <!-- Two Column Grid for AC and PFC -->
                                 <!-- Award Certificate -->
-                                <a href="{{ route('public.ac.preview', ['record' => $record, 'print' => 1]) }}"
+                                <a href="{{ route('public.ac.preview', ['record' => $record, 'download' => 1]) }}"
                                    target="_blank"
                                    class="premium-gradient ambient-shadow flex items-center justify-between gap-2 rounded-2xl px-6 py-4 text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-95">
                                     <div class="flex items-center gap-3">
@@ -151,7 +151,7 @@
                                 </a>
 
                                 <!-- Plagiarism Free -->
-                                <a href="{{ route('public.pfc.preview', ['record' => $record, 'print' => 1]) }}"
+                                <a href="{{ route('public.pfc.preview', ['record' => $record, 'download' => 1]) }}"
                                    target="_blank"
                                    class="premium-gradient ambient-shadow flex items-center justify-between gap-2 rounded-2xl px-6 py-4 text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-95">
                                     <div class="flex items-center gap-3">

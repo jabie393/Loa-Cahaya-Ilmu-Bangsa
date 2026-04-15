@@ -35,10 +35,12 @@
         };
 
         window.downloadPDF = async function() {
-            const { jsPDF } = window.jspdf;
+            const {
+                jsPDF
+            } = window.jspdf;
             const element = document.querySelector('[data-purpose="certificate-main-layout"]');
             const btn = document.querySelector('#download-btn');
-            
+
             btn.style.opacity = '0.5';
             btn.innerText = 'Processing...';
 
@@ -128,10 +130,10 @@
     </style>
 </head>
 
-<body class="font-sans  mx-auto my-[10mm] box-border h-[297mm] max-h-[297mm] w-[210mm] bg-white shadow-[0_0_10px_rgba(0,0,0,0.2)] print:m-0 print:shadow-none">
+<body class="mx-auto my-[25mm] box-border h-[297mm] max-h-[297mm] w-[210mm] bg-white font-sans shadow-[0_0_10px_rgba(0,0,0,0.2)] print:m-0 print:shadow-none">
     <button id="download-btn"
             onclick="downloadPDF()"
-            class="bg-cert-navy fixed bottom-8 right-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
+            class="bg-cert-navy fixed right-8 top-8 z-[100] flex items-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-2xl transition-transform hover:scale-105 active:scale-95 print:hidden">
         <svg xmlns="http://www.w3.org/2000/svg"
              class="h-5 w-5"
              viewBox="0 0 20 20"
@@ -142,8 +144,8 @@
         </svg>
         Download PDF
     </button>
-    
-    <main class="relative print-a4 flex flex-col h-full items-center px-[72pt] pb-[72pt] pt-[105.8pt]"
+
+    <main class="print-a4 relative flex h-full flex-col items-center px-[72pt] pb-[72pt] pt-[105.8pt]"
           data-purpose="certificate-main-layout">
         <div class="decorative-band top-0"
              data-purpose="header-graphics">
@@ -160,7 +162,7 @@
         </div>
         <div class="dot-line absolute bottom-40 left-12 top-40 opacity-50"></div>
         <div class="dot-line absolute bottom-40 right-12 top-40 opacity-50"></div>
-        <section class="relative z-10 flex flex-col items-center text-center justify-center"
+        <section class="relative z-10 flex flex-col items-center justify-center text-center"
                  data-purpose="certificate-content">
             <div class="mb-10">
                 <h1 class="font-serif text-5xl font-bold uppercase leading-tight tracking-widest">
@@ -177,7 +179,7 @@
                 <p class="mb-6 font-serif text-lg font-bold uppercase tracking-wide">
                     Diberikan kepada
                 </p>
-                <p class="recipient-name text-black font-serif text-2xl">
+                <p class="recipient-name font-serif text-2xl text-black">
                     {{ $record->author_name }}
                 </p>
             </div>
@@ -185,7 +187,7 @@
                 <p class="text-md mb-2 font-serif font-bold uppercase tracking-wide">
                     Telah Menulis artikel ilmiah dengan judul :
                 </p>
-                <p class="recipient-name text-black font-serif text-lg">
+                <p class="recipient-name font-serif text-lg text-black">
                     {{ $record->title }}
                 </p>
             </div>
@@ -193,13 +195,13 @@
                 <p class="text-md mb-2 font-serif font-bold uppercase tracking-wide">
                     Pada Jurnal :
                 </p>
-                <p class="recipient-name text-black font-serif text-lg">
+                <p class="recipient-name font-serif text-lg text-black">
                     {{ $record->journal->name }}
                 </p>
             </div>
             <div class="mx-auto max-w-lg space-y-8">
                 <p class="text-justify font-serif text-base italic leading-relaxed text-gray-700">
-                    Kepandanya diberikan predikat sangat baik dengan plagiasi yang berlaku pada saat jurnal ilmiah diterbitkan denganpersantase dibawah 30% Sertifikat bebas plagiarisme ini diberikan dan berlaku jika dilengkapi dengan LoA penerimaan. Demikian sertifikat ini dibuat untuk digunakan sebagaimana mestinya.
+                    Kepandanya diberikan predikat <span class="font-bold">Sangat Baik</span> dengan Plagiarisme dibawah 20%. Sertifikat ini berlaku jika dilengkapi dengan LoA. Demikian untuk dipergunakan sebagaimana mestinya, dan akan diperbaiki jika terdapat kekeliruan.
                 </p>
             </div>
         </section>
