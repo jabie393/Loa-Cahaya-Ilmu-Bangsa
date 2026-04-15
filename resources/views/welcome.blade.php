@@ -7,6 +7,24 @@
         <link rel="icon" href="{{ asset('favicon.ico') }}">
         <title>LOA | Panduan Pengajuan & Verifikasi</title>
 
+        <!-- Primary Meta Tags -->
+        <meta name="title" content="LOA | Panduan Pengajuan & Verifikasi">
+        <meta name="description" content="Sistem kurasi digital resmi untuk mempermudah perolehan Letter of Acceptance (LOA) bagi civitas akademika dengan standar jurnal bereputasi.">
+
+        <!-- Open Graph / Facebook / WhatsApp -->
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="LOA | Panduan Pengajuan & Verifikasi">
+        <meta property="og:description" content="Sistem kurasi digital resmi untuk mempermudah perolehan Letter of Acceptance (LOA) bagi civitas akademika dengan standar jurnal bereputasi.">
+        <meta property="og:image" content="{{ asset('assets/bg.jpg') }}">
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image">
+        <meta property="twitter:url" content="{{ url()->current() }}">
+        <meta property="twitter:title" content="LOA | Panduan Pengajuan & Verifikasi">
+        <meta property="twitter:description" content="Sistem kurasi digital resmi untuk mempermudah perolehan Letter of Acceptance (LOA) bagi civitas akademika dengan standar jurnal bereputasi.">
+        <meta property="twitter:image" content="{{ asset('assets/bg.jpg') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
