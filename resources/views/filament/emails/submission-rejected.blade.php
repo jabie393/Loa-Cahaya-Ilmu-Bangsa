@@ -37,34 +37,34 @@
         <!-- Detail Section -->
         <h2 style="font-size: 18px; font-weight: bold; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">Detail Pengajuan:</h2>
 
-        <!-- Card-like list with inline CSS -->
+        <!-- Card-like details table with inline CSS for better wrapping -->
         <div style="background-color: #f9fafb; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Judul:</span>
-                    <span style="color: #4b5563;">{{ $submission->title }}</span>
-                </li>
-                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Nama Penulis:</span>
-                    <span style="color: #4b5563;">{{ $submission->author_name }}</span>
-                </li>
-                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Institusi:</span>
-                    <span style="color: #4b5563;">{{ $submission->institution }}</span>
-                </li>
-                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Jurnal:</span>
-                    <span style="color: #4b5563;">{{ $submission->journal->name ?? 'N/A' }}</span>
-                </li>
-                <li style="display: flex; flex-wrap: wrap; margin-bottom: 8px;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Volume:</span>
-                    <span style="color: #4b5563;">{{ $submission->volume }}</span>
-                </li>
-                <li style="display: flex; flex-wrap: wrap;">
-                    <span style="font-weight: 600; width: 140px; color: #1f2937;">Tanggal Ditolak:</span>
-                    <span style="color: #4b5563;">{{ $submission->rejected_date->format('d M Y') }}</span>
-                </li>
-            </ul>
+            <table role="presentation" style="width: 100%; border-collapse: collapse; border-spacing: 0;">
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; width: 140px; font-weight: 600; color: #1f2937;">Judul:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->title }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Nama Penulis:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->author_name }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Institusi:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->institution }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Jurnal:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->journal->name ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Volume:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->volume }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Tanggal Ditolak:</td>
+                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->rejected_date->format('d M Y') }}</td>
+                </tr>
+            </table>
         </div>
 
         <!-- Closing remarks -->
