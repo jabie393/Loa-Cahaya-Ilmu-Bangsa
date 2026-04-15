@@ -85,7 +85,8 @@ class SubmissionsTable
                         ->icon('heroicon-o-eye')
                         ->color('primary')
                         ->url(fn (Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record])),
-                    EditAction::make(),
+                    EditAction::make()
+                        ->label(fn (Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission'),
                     Action::make('Tanya admin')
                     ->label('Tanya Admin')
                     ->icon('heroicon-o-chat-bubble-left-right')
