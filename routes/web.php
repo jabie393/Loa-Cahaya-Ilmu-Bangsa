@@ -1,11 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SmartJournalAssistantController;
-
-// Route::get('/smart-assistant', [SmartJournalAssistantController::class, 'index'])->name('public.smart-assistant');
-Route::post('/smart-assistant', [SmartJournalAssistantController::class, 'review'])->name('smart-assistant.review');
-
 Route::get('/', function () {
     return view('welcome');
 });
