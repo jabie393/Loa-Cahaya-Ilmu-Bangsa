@@ -27,7 +27,6 @@ class PreSubmissionReviewMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('no-reply@cahayailmubangsa.com', 'Redaksi Cahaya Ilmu Bangsa'),
             subject: 'Hasil Review Pra-OJS: ' . ($this->review->title ?? 'Dokumen Jurnal Anda'),
         );
     }
@@ -39,6 +38,9 @@ class PreSubmissionReviewMail extends Mailable
     {
         return new Content(
             view: 'filament.emails.review-report',
+            with: [
+                'review' => $this->review,
+            ],
         );
     }
 
