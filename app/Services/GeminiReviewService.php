@@ -32,20 +32,37 @@ class GeminiReviewService implements AiReviewContract
 
         $prompt = $this->buildPrompt($text);
 
-        $response = Http::timeout(120)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
-            'contents' => [
-                [
-                    'parts' => [
-                        ['text' => $prompt]
-                    ]
-                ]
-            ],
-            'generationConfig' => [
-                'responseMimeType' => 'application/json',
-            ]
-        ]);
+        $maxRetries = 3;
+        $retryCount = 0;
+        $response = null;
 
-        if (!$response->successful()) {
+        while ($retryCount < $maxRetries) {
+            $response = Http::timeout(120)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json',
+                ]
+            ]);
+
+            if ($response->successful()) {
+                break;
+            }
+
+            // If 503 (Overloaded) or 429 (Rate Limit), wait and retry
+            if (in_array($response->status(), [503, 429])) {
+                $retryCount++;
+                if ($retryCount < $maxRetries) {
+                    sleep(2); // wait 2 seconds before retry
+                    continue;
+                }
+            }
+
             throw new Exception("API Gemini Error: " . $response->body());
         }
 
