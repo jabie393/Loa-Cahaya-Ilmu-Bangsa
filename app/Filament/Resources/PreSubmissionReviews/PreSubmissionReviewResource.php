@@ -39,47 +39,62 @@ class PreSubmissionReviewResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Informasi Author & Jurnal')
-                    ->description('Lengkapi data berikut untuk memulai review otomatis.')
-                    ->columns(2)
+                Section::make('Informasi Pengajuan')
+                    ->description('Lengkapi data penulis dan pilih jurnal target untuk memulai penelaahan awal.')
                     ->schema([
                         TextInput::make('author_name')
-                            ->label('Nama Lengkap Author')
+                            ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
+                            ->helperText('Masukkan nama penulis pertama dan rekan penulis jika ada.')
+                            ->default(fn () => auth()->user()?->name)
                             ->required()
                             ->maxLength(255),
                         TextInput::make('email')
-                            ->label('Email Author')
+                            ->label('Email Korespondensi')
+                            ->helperText('Hasil review akan dikirimkan secara otomatis ke alamat email ini.')
+                            ->default(fn () => auth()->user()?->email)
                             ->email()
                             ->required()
                             ->maxLength(255),
                         Select::make('journal_id')
-                            ->label('Target Jurnal')
+                            ->label('Target Jurnal / Nama Jurnal')
                             ->relationship('journal', 'name')
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->required()
+                            ->native(false),
+                    ])
+                    ->columnSpan(4),
+
+                Section::make('Dokumen Jurnal')
+                    ->description('Unggah naskah Anda dalam format Word.')
+                    ->schema([
                         FileUpload::make('file_path')
-                            ->label('File Jurnal (.docx)')
+                            ->label('File Naskah (.docx)')
                             ->required()
                             ->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/pdf'])
                             ->directory('pre-reviews')
                             ->preserveFilenames()
-                            ->maxSize(10240),
-                    ]),
+                            ->maxSize(10240)
+                            ->columnSpanFull(),
+                    ])
+                    ->columnSpan(2),
                 
-                Section::make('Hasil Review AI')
-                    ->description('Hasil review akan terisi otomatis setelah proses selesai.')
+                Section::make('Hasil Review AI (Otomatis)')
+                    ->description('Bagian ini akan terisi secara otomatis oleh sistem setelah Anda menyimpan data.')
                     ->schema([
                         TextInput::make('title')
-                            ->label('Judul Jurnal (Dideteksi AI)')
+                            ->label('Judul Jurnal yang Terdeteksi')
                             ->disabled()
-                            ->dehydrated(false),
+                            ->placeholder('Akan terisi otomatis...'),
                         Textarea::make('general_suggestions')
-                            ->label('Saran Revisi Umum')
+                            ->label('Ringkasan Saran Revisi')
                             ->rows(5)
-                            ->disabled(),
+                            ->disabled()
+                            ->placeholder('Akan terisi otomatis...'),
                     ])
+                    ->columnSpanFull()
                     ->visible(fn ($record) => $record !== null),
-            ]);
+            ])->columns(6);
     }
 
     public static function infolist(Schema $schema): Schema

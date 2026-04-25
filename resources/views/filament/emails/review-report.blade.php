@@ -122,7 +122,7 @@
         <div class="content">
             <div class="intro">
                 <span class="badge">Hasil Review Pra-OJS</span>
-                <h2>Hasil Evaluasi Awal Naskah Jurnal</h2>
+                <h2>Hasil Evaluasi Awal Naskah Jurnal {{ $review->journal ? '"' . $review->journal->name . '"' : '' }}</h2>
             </div>
 
             <p style="font-size: 15px; color: #4b5563;">Halo <strong>{{ $review->author_name }}</strong>,</p>

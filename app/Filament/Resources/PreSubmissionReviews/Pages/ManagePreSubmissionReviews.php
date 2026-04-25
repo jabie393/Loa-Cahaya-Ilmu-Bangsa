@@ -21,7 +21,7 @@ class ManagePreSubmissionReviews extends ManageRecords
             CreateAction::make()
                 ->label('Review Jurnal Baru')
                 ->modalHeading('Kirim Jurnal untuk Review Pra-OJS')
-                ->modalSubmitActionLabel('Mulai Review AI')
+                ->modalSubmitActionLabel('Request Review')
                 ->mutateFormDataUsing(function (array $data): array {
                     $data['status'] = 'processing';
                     return $data;
@@ -30,10 +30,10 @@ class ManagePreSubmissionReviews extends ManageRecords
                     try {
                         // resolve AI service through manager
                         $aiService = app('ai-review')->driver();
-                        
+
                         // Perform Review
                         $results = $aiService->review($record);
-                        
+
                         // Update Record
                         $record->update([
                             'title' => $results['detected_title'] ?? null,
@@ -50,11 +50,11 @@ class ManagePreSubmissionReviews extends ManageRecords
 
                         // Send Email
                         Mail::to($record->email)->send(new PreSubmissionReviewMail($record));
-                        
+
                         $record->update(['email_sent_at' => now()]);
 
                         Notification::make()
-                            ->title('Review Selesai & Email Terkirim')
+                            ->title('Request Review Berhasil Terkirim')
                             ->success()
                             ->send();
 
