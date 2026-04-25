@@ -10,6 +10,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -26,11 +27,11 @@ class PreSubmissionReviewResource extends Resource
     protected static ?string $model = PreSubmissionReview::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
-    
+
     protected static ?string $navigationLabel = 'Review Pra OJS';
-    
+
     protected static ?string $pluralLabel = 'Review Pra OJS';
-    
+
     protected static ?string $modelLabel = 'Review Pra OJS';
 
     protected static ?string $recordTitleAttribute = 'author_name';
@@ -45,13 +46,13 @@ class PreSubmissionReviewResource extends Resource
                         TextInput::make('author_name')
                             ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
                             ->helperText('Masukkan nama penulis pertama dan rekan penulis jika ada.')
-                            ->default(fn () => auth()->user()?->name)
+                            ->default(fn() => auth()->user()?->name)
                             ->required()
                             ->maxLength(255),
                         TextInput::make('email')
                             ->label('Email Korespondensi')
                             ->helperText('Hasil review akan dikirimkan secara otomatis ke alamat email ini.')
-                            ->default(fn () => auth()->user()?->email)
+                            ->default(fn() => auth()->user()?->email)
                             ->email()
                             ->required()
                             ->maxLength(255),
@@ -78,8 +79,8 @@ class PreSubmissionReviewResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->columnSpan(2),
-                
-                Section::make('Hasil Review AI (Otomatis)')
+
+                Section::make('Hasil Review')
                     ->description('Bagian ini akan terisi secara otomatis oleh sistem setelah Anda menyimpan data.')
                     ->schema([
                         TextInput::make('title')
@@ -93,7 +94,7 @@ class PreSubmissionReviewResource extends Resource
                             ->placeholder('Akan terisi otomatis...'),
                     ])
                     ->columnSpanFull()
-                    ->visible(fn ($record) => $record !== null),
+                    ->visible(fn($record) => $record !== null),
             ])->columns(6);
     }
 
@@ -101,16 +102,15 @@ class PreSubmissionReviewResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Detail Pengajuan')
-                    ->columns(2)
+                Section::make('Informasi Pengajuan')
                     ->schema([
                         TextEntry::make('author_name')->label('Nama Author'),
                         TextEntry::make('email')->label('Email Author'),
                         TextEntry::make('journal.name')->label('Jurnal Tujuan')->placeholder('-'),
-                        TextEntry::make('title')->label('Judul Naskah')->placeholder('-')->columnSpanFull(),
+                        TextEntry::make('title')->label('Judul Naskah')->placeholder('-'),
                         TextEntry::make('status')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'pending' => 'gray',
                                 'processing' => 'warning',
                                 'reviewed' => 'success',
@@ -121,7 +121,9 @@ class PreSubmissionReviewResource extends Resource
                             ->label('Email Terkirim Pada')
                             ->dateTime()
                             ->placeholder('Belum terkirim'),
-                    ]),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
 
                 Section::make('Hasil Analisis Reviewer')
                     ->schema([
@@ -137,15 +139,22 @@ class PreSubmissionReviewResource extends Resource
                             ->markdown()
                             ->weight('bold')
                             ->color(Color::Amber),
-                    ]),
-                
+                    ])
+                    ->columns(1)
+                    ->columnSpanFull(),
+
                 Section::make('Informasi Sistem')
                     ->schema([
                         TextEntry::make('error_message')
-                            ->label('Pesan Error (Jika Ada)')
+                            ->label('Pesan Error Terakhir')
                             ->color('danger')
-                            ->visible(fn ($record) => $record->status === 'failed'),
-                    ])->visible(fn ($record) => $record->status === 'failed'),
+                            ->visible(fn($record) => $record->status === 'failed'),
+                        TextEntry::make('created_at')->label('Dibuat')->dateTime(),
+                        TextEntry::make('updated_at')->label('Pembaruan Terakhir')->dateTime(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->visible(fn($record) => $record->status === 'failed' || $record->status === 'processing'),
             ]);
     }
 
@@ -165,7 +174,7 @@ class PreSubmissionReviewResource extends Resource
                     ->placeholder('-'),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'pending' => 'gray',
                         'processing' => 'warning',
                         'reviewed' => 'success',
@@ -189,7 +198,8 @@ class PreSubmissionReviewResource extends Resource
                 //
             ])
             ->actions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->modalWidth('7xl'),
                 DeleteAction::make(),
             ])
             ->bulkActions([
