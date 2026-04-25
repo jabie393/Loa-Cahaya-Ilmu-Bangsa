@@ -22,6 +22,7 @@ class ManagePreSubmissionReviews extends ManageRecords
                 ->label('Review Jurnal Baru')
                 ->modalHeading('Kirim Jurnal untuk Review Pra-OJS')
                 ->modalSubmitActionLabel('Request Review')
+                ->successNotification(null)
                 ->mutateFormDataUsing(function (array $data): array {
                     $data['status'] = 'processing';
                     return $data;
