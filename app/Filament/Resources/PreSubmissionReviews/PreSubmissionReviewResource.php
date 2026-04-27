@@ -17,10 +17,15 @@ use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Enums\RecordActionsPosition;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class PreSubmissionReviewResource extends Resource
 {
@@ -35,6 +40,17 @@ class PreSubmissionReviewResource extends Resource
     protected static ?string $modelLabel = 'Review Pra OJS';
 
     protected static ?string $recordTitleAttribute = 'author_name';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (Auth::user()->hasRole('super_admin')) {
+            return $query;
+        }
+
+        return $query->where('user_id', Auth::id());
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -141,12 +157,14 @@ class PreSubmissionReviewResource extends Resource
                             ->color(Color::Amber),
                     ])
                     ->columns(1)
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->visible(fn($record) => $record->status !== 'failed'),
 
                 Section::make('Informasi Sistem')
                     ->schema([
                         TextEntry::make('error_message')
                             ->label('Pesan Error Terakhir')
+                            ->formatStateUsing(fn ($state) => (config('app.env') === 'local' || env('APP_ENV') === 'local') ? $state : 'mohon maaf reviewer sedang sibuk, coba request ulang dalam beberapa menit')
                             ->color('danger')
                             ->visible(fn($record) => $record->status === 'failed'),
                         TextEntry::make('created_at')->label('Dibuat')->dateTime(),
@@ -198,10 +216,29 @@ class PreSubmissionReviewResource extends Resource
                 //
             ])
             ->actions([
-                ViewAction::make()
-                    ->modalWidth('7xl'),
-                DeleteAction::make(),
-            ])
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('View Detail')
+                        ->modalWidth('7xl')
+                        ->modalAutofocus(false)
+                        ->extraModalFooterActions([
+                            Action::make('request_again')
+                                ->label('Request Again')
+                                ->color('warning')
+                                ->icon('heroicon-o-arrow-path')
+                                ->requiresConfirmation()
+                                ->visible(fn (PreSubmissionReview $record): bool => $record->status === 'failed')
+                                ->action(fn (PreSubmissionReview $record) => $record->processReview()),
+                            DeleteAction::make()
+                                ->visible(fn (PreSubmissionReview $record): bool => $record->status === 'failed'),
+                        ]),
+                    DeleteAction::make(),
+                ])
+                ->label('')
+                ->icon('heroicon-o-eye')
+                ->color('primary')
+                ->button(),
+            ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

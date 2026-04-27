@@ -24,54 +24,12 @@ class ManagePreSubmissionReviews extends ManageRecords
                 ->modalSubmitActionLabel('Request Review')
                 ->successNotification(null)
                 ->mutateFormDataUsing(function (array $data): array {
+                    $data['user_id'] = auth()->id();
                     $data['status'] = 'processing';
                     return $data;
                 })
                 ->after(function (PreSubmissionReview $record) {
-                    try {
-                        // resolve AI service through manager
-                        $aiService = app('ai-review')->driver();
-
-                        // Perform Review
-                        $results = $aiService->review($record);
-
-                        // Update Record
-                        $record->update([
-                            'title' => $results['detected_title'] ?? null,
-                            'structure_review' => $results['structure_review'] ?? null,
-                            'abstract_review' => $results['abstract_review'] ?? null,
-                            'introduction_review' => $results['introduction_review'] ?? null,
-                            'method_review' => $results['method_review'] ?? null,
-                            'results_review' => $results['results_review'] ?? null,
-                            'conclusion_review' => $results['conclusion_review'] ?? null,
-                            'bibliography_review' => $results['bibliography_review'] ?? null,
-                            'general_suggestions' => $results['general_suggestions'] ?? null,
-                            'status' => 'reviewed',
-                        ]);
-
-                        // Send Email
-                        Mail::to($record->email)->send(new PreSubmissionReviewMail($record));
-
-                        $record->update(['email_sent_at' => now()]);
-
-                        Notification::make()
-                            ->title('Request Review Berhasil Terkirim')
-                            ->success()
-                            ->send();
-
-                    } catch (Exception $e) {
-                        $record->update([
-                            'status' => 'failed',
-                            'error_message' => $e->getMessage(),
-                        ]);
-
-                        Notification::make()
-                            ->title('Gagal Memproses Review')
-                            ->body($e->getMessage())
-                            ->danger()
-                            ->persistent()
-                            ->send();
-                    }
+                    $record->processReview();
                 }),
         ];
     }

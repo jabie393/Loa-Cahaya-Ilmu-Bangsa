@@ -64,3 +64,5 @@ Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
         ))
     ]);
 })->name('public.pfc.preview');
+
+
