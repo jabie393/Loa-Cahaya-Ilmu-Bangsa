@@ -95,7 +95,6 @@ class PreSubmissionReview extends Model
                 ->title('Gagal Memproses Review')
                 ->body($errorMessage)
                 ->danger()
-                ->persistent()
                 ->send();
         }
     }

@@ -68,6 +68,7 @@ class SubmissionsTable
                     ->date()
                     ->sortable(),
             ])
+            ->defaultSort('sort_priority', 'asc')
             ->filters([
                 //
             ])

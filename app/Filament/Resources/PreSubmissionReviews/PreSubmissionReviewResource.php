@@ -44,12 +44,30 @@ class PreSubmissionReviewResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
+        $user = Auth::user();
 
-        if (Auth::user()->hasRole('super_admin')) {
-            return $query;
+        if ($user->hasRole('super_admin')) {
+            $query->where(function (Builder $query) use ($user) {
+                $query->where('status', '!=', 'failed')
+                      ->orWhere('user_id', $user->id);
+            });
+        } else {
+            $query->where('user_id', $user->id);
         }
 
-        return $query->where('user_id', Auth::id());
+        // Tambahkan virtual column untuk sortir agar tidak merusak fitur sortir header
+        return $query->select('*')
+            ->selectRaw("CASE WHEN status = 'failed' THEN 0 ELSE 1 END AS sort_priority");
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getEloquentQuery()->where('status', 'failed')->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
     }
 
     public static function form(Schema $schema): Schema
@@ -164,7 +182,7 @@ class PreSubmissionReviewResource extends Resource
                     ->schema([
                         TextEntry::make('error_message')
                             ->label('Pesan Error Terakhir')
-                            ->formatStateUsing(fn ($state) => (config('app.env') === 'local' || env('APP_ENV') === 'local') ? $state : 'mohon maaf reviewer sedang sibuk, coba request ulang dalam beberapa menit')
+                            ->formatStateUsing(fn($state) => (config('app.env') === 'local' || env('APP_ENV') === 'local') ? $state : 'Mohon maaf reviewer sedang sibuk, coba request ulang jurnal ini dalam beberapa menit dengan menekan tombol "Request Again"')
                             ->color('danger')
                             ->visible(fn($record) => $record->status === 'failed'),
                         TextEntry::make('created_at')->label('Dibuat')->dateTime(),
@@ -211,7 +229,7 @@ class PreSubmissionReviewResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('sort_priority', 'asc')
             ->filters([
                 //
             ])
@@ -227,17 +245,27 @@ class PreSubmissionReviewResource extends Resource
                                 ->color('warning')
                                 ->icon('heroicon-o-arrow-path')
                                 ->requiresConfirmation()
-                                ->visible(fn (PreSubmissionReview $record): bool => $record->status === 'failed')
-                                ->action(fn (PreSubmissionReview $record) => $record->processReview()),
+                                ->visible(fn(PreSubmissionReview $record): bool => $record->status === 'failed')
+                                ->action(fn(PreSubmissionReview $record, Action $action) => [
+                                    $record->processReview(),
+                                    $action->cancel(),
+                                ]),
                             DeleteAction::make()
-                                ->visible(fn (PreSubmissionReview $record): bool => $record->status === 'failed'),
+                                ->visible(fn(PreSubmissionReview $record): bool => $record->status === 'failed'),
                         ]),
+                    Action::make('request_again_table')
+                        ->label('Request Again')
+                        ->color('warning')
+                        ->icon('heroicon-o-arrow-path')
+                        ->requiresConfirmation()
+                        ->visible(fn(PreSubmissionReview $record): bool => $record->status === 'failed')
+                        ->action(fn(PreSubmissionReview $record) => $record->processReview()),
                     DeleteAction::make(),
                 ])
-                ->label('')
-                ->icon('heroicon-o-eye')
-                ->color('primary')
-                ->button(),
+                    ->label('')
+                    ->icon('heroicon-o-eye')
+                    ->color('primary')
+                    ->button(),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
