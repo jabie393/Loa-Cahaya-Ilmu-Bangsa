@@ -9,6 +9,7 @@ use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Support\Facades\Mail;
+use App\Services\QuotaService;
 use Exception;
 
 class ManagePreSubmissionReviews extends ManageRecords
@@ -24,7 +25,20 @@ class ManagePreSubmissionReviews extends ManageRecords
                 ->modalSubmitActionLabel('Request Review')
                 ->successNotification(null)
                 ->mutateFormDataUsing(function (array $data): array {
-                    $data['user_id'] = auth()->id();
+                    $quotaService = app(QuotaService::class);
+                    $user = auth()->user();
+
+                    if (!$quotaService->canRequestReview($user)) {
+                        Notification::make()
+                            ->title('Batas Review Tercapai')
+                            ->body('Maaf, kuota review harian Anda telah habis. Silakan coba lagi besok atau hubungi admin untuk credits tambahan.')
+                            ->danger()
+                            ->send();
+
+                        $this->halt();
+                    }
+
+                    $data['user_id'] = $user->id;
                     $data['status'] = 'processing';
                     return $data;
                 })

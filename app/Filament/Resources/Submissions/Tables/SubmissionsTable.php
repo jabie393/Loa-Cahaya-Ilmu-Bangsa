@@ -56,7 +56,10 @@ class SubmissionsTable
                         'Rejected' => 'heroicon-o-x-circle',
                         default => 'heroicon-o-question-mark-circle'
                     })
-                    ->badge(),
+                    ->badge()
+                    ->sortable(query: fn (\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder => 
+                        $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
+                    ),
                 TextColumn::make('submission_date')
                     ->date()
                     ->sortable(),
@@ -68,7 +71,7 @@ class SubmissionsTable
                     ->date()
                     ->sortable(),
             ])
-            ->defaultSort('sort_priority', 'asc')
+            ->defaultSort('status', 'asc')
             ->filters([
                 //
             ])
