@@ -43,8 +43,8 @@ class SubmissionResource extends Resource
         $query = parent::getEloquentQuery();
 
         if (Auth::user()->hasRole('super_admin')) {
-            $query->select('*')->selectRaw("CASE WHEN status = 'Pending' THEN 0 WHEN status = 'Rejected' THEN 1 ELSE 2 END AS sort_priority");
-            return $query;
+            return $query->select('*')
+                ->selectRaw("CASE WHEN status = 'Pending' THEN 0 WHEN status = 'Rejected' THEN 1 ELSE 2 END AS sort_priority");
         }
 
         return $query->where('user_id', Auth::id())

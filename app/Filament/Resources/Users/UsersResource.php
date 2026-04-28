@@ -31,6 +31,7 @@ class UsersResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->with(['userQuota'])
             ->withCount([
                 'submissions as pending_submissions_count' => fn (Builder $query) => $query->where('status', 'Pending'),
                 'submissions as rejected_submissions_count' => fn (Builder $query) => $query->where('status', 'Rejected'),

@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password', 'phone'])]
@@ -39,12 +40,25 @@ class User extends Authenticatable implements FilamentUser
     {
         static::created(function (User $user) {
             $user->assignRole('panel_user');
+
+            // Create default quota
+            $user->userQuota()->create([
+                'daily_limit' => config('quota.default_daily_limit', 2),
+                'daily_used' => 0,
+                'bonus_tokens' => 0,
+                'total_used' => 0,
+            ]);
         });
     }
 
     public function submissions(): HasMany
     {
         return $this->hasMany(Submission::class);
+    }
+
+    public function userQuota(): HasOne
+    {
+        return $this->hasOne(UserQuota::class);
     }
 
     public function canAccessPanel(Panel $panel): bool

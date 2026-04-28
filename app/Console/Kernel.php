@@ -18,6 +18,12 @@ class Kernel extends ConsoleKernel
             ->dailyAt('02:00')
             ->name('delete-rejected-submissions')
             ->description('Delete submissions rejected for 7 days or more');
+
+        // Reset daily review quota at midnight
+        $schedule->command('quota:reset')
+            ->dailyAt('00:00')
+            ->name('reset-daily-quota')
+            ->description('Reset daily review quota for all users');
     }
 
     /**

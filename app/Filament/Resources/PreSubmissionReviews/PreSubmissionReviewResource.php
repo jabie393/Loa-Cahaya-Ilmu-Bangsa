@@ -6,6 +6,7 @@ use App\Filament\Resources\PreSubmissionReviews\Pages\ManagePreSubmissionReviews
 use App\Models\PreSubmissionReview;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -111,6 +112,17 @@ class PreSubmissionReviewResource extends Resource
                             ->preserveFilenames()
                             ->maxSize(10240)
                             ->columnSpanFull(),
+
+                        Placeholder::make('quota_info')
+                            ->label('Sisa Kuota Anda')
+                            ->content(function () {
+                                $user = auth()->user();
+                                if ($user?->hasRole('super_admin')) {
+                                    return 'Unlimited (Administrator)';
+                                }
+                                $summary = app(\App\Services\QuotaService::class)->getQuotaSummary($user);
+                                return "Hari ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Credits: {$summary['review_credits']}";
+                            }),
                     ])
                     ->columnSpan(2),
 
@@ -217,7 +229,9 @@ class PreSubmissionReviewResource extends Resource
                         'failed' => 'danger',
                         default => 'gray',
                     })
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => 
+                        $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
+                    ),
                 TextColumn::make('email_sent_at')
                     ->label('Terkirim')
                     ->dateTime('d M Y H:i')
@@ -229,7 +243,7 @@ class PreSubmissionReviewResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('sort_priority', 'asc')
+            ->defaultSort('status', 'asc')
             ->filters([
                 //
             ])

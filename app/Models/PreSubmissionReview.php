@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Mail\PreSubmissionReviewMail;
 use Illuminate\Support\Facades\Mail;
 use Filament\Notifications\Notification;
+use App\Services\QuotaService;
 use Exception;
 
 class PreSubmissionReview extends Model
@@ -70,6 +71,9 @@ class PreSubmissionReview extends Model
                 'general_suggestions' => $results['general_suggestions'] ?? null,
                 'status' => 'reviewed',
             ]);
+
+            // Consume Quota
+            app(QuotaService::class)->consumeQuota($this->user);
 
             // Send Email
             Mail::to($this->email)->send(new PreSubmissionReviewMail($this));

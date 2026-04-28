@@ -73,10 +73,18 @@ class GeminiReviewService implements AiReviewContract
             throw new Exception("Format respons AI tidak valid.");
         }
 
+        // Clean up the response from markdown backticks if present
+        $rawContent = trim($rawContent);
+        if (str_starts_with($rawContent, '```')) {
+            $rawContent = preg_replace('/^```(?:json)?\s+/', '', $rawContent);
+            $rawContent = preg_replace('/\s+```$/', '', $rawContent);
+            $rawContent = trim($rawContent);
+        }
+
         $result = json_decode($rawContent, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg());
+            throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . substr($rawContent, 0, 100) . "...");
         }
 
         return $result;
