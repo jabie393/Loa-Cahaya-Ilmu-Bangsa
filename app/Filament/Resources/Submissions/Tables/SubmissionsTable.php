@@ -31,11 +31,11 @@ class SubmissionsTable
                     ->label('Penulis & Judul')
                     ->words(5)
                     ->searchable()
-                    ->description(fn (Submission $record): string => \Illuminate\Support\Str::words($record->title, 10)),
+                    ->description(fn (Submission $record) => \Illuminate\Support\Str::words($record->title ?? '', 10)),
                 TextColumn::make('journal.name')
                     ->label('Jurnal & Volume')
                     ->searchable()
-                    ->description(fn (Submission $record): string => \Illuminate\Support\Str::words($record->volume, 10)),
+                    ->description(fn (Submission $record) => \Illuminate\Support\Str::words($record->volume ?? '', 10)),
                 TextColumn::make('proof_of_payment')
                     ->label('Bukti Pembayaran')
                     ->badge()
