@@ -77,6 +77,39 @@ class UsersForm
                         ])
                         ->visible(fn($operation) => $operation === 'edit'),
 
+                    Section::make('Manajemen Kuota Plagiasi')
+                        ->description('Statistik penggunaan cek plagiasi oleh user ini.')
+                        ->schema([
+                            Grid::make(3)
+                                ->schema([
+                                    Placeholder::make('plagiarism_daily_used_stats')
+                                        ->label('Sisa Kuota Hari Ini')
+                                        ->content(fn($record) => $record?->hasRole('super_admin')
+                                            ? 'Unlimited'
+                                            : (max(0, ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')) - ($record?->userPlagiarismQuota?->daily_used ?? 0)) . ' / ' . ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')))),
+
+                                    Placeholder::make('additional_credits_stats')
+                                        ->label('Kredit Tambahan')
+                                        ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userPlagiarismQuota?->additional_credits ?? 0)),
+
+                                    Placeholder::make('plagiarism_total_used_stats')
+                                        ->label('Total Cek')
+                                        ->content(fn($record) => $record?->userPlagiarismQuota?->total_used ?? 0),
+                                ]),
+
+                            Grid::make(1)
+                                ->relationship('userPlagiarismQuota')
+                                ->schema([
+                                    TextInput::make('additional_credits')
+                                        ->label('Kredit Tambahan (Manual)')
+                                        ->helperText('Input angka di sini untuk memberikan tambahan kuota cek plagiasi bagi user.')
+                                        ->numeric()
+                                        ->default(0)
+                                        ->required(),
+                                ]),
+                        ])
+                        ->visible(fn($operation) => $operation === 'edit'),
+
                 ]
             );
     }

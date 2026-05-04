@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\QuotaService;
+use App\Services\PlagiarismQuotaService;
 use Illuminate\Console\Command;
 
 class ResetDailyQuota extends Command
@@ -19,17 +20,19 @@ class ResetDailyQuota extends Command
      *
      * @var string
      */
-    protected $description = 'Reset daily review quota for all users at midnight';
+    protected $description = 'Reset daily review and plagiarism quota for all users at midnight';
 
     /**
      * Execute the console command.
      */
-    public function handle(QuotaService $quotaService)
+    public function handle(QuotaService $quotaService, PlagiarismQuotaService $plagiarismQuotaService)
     {
-        $this->info('Resetting daily quotas...');
-        
+        $this->info('Resetting daily review quotas...');
         $quotaService->resetAllDailyQuotas();
+
+        $this->info('Resetting daily plagiarism quotas...');
+        $plagiarismQuotaService->resetAllDailyQuotas();
         
-        $this->info('Daily quotas have been reset successfully.');
+        $this->info('All daily quotas have been reset successfully.');
     }
 }

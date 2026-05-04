@@ -16,6 +16,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('ai-review', function ($app) {
             return new \App\Services\AiReviewManager($app);
         });
+
+        $this->app->singleton('plagiarism', function ($app) {
+            return new \App\Services\PlagiarismManager($app);
+        });
     }
 
     /**

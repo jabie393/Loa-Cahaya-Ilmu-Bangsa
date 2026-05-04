@@ -2,22 +2,22 @@
 
 namespace App\Services;
 
-use App\Contracts\AiReviewContract;
-use App\Models\PreSubmissionReview;
+use App\Contracts\PlagiarismContract;
+use App\Models\PlagiarismCheck;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
 use ZipArchive;
 use Exception;
 
-class GeminiReviewService implements AiReviewContract
+class GeminiPlagiarismService implements PlagiarismContract
 {
     /**
-     * Perform an AI review using Google Gemini.
+     * Perform plagiarism check using Gemini.
      */
-    public function review(PreSubmissionReview $reviewRecord): array
+    public function check(PlagiarismCheck $record): array
     {
-        $text = $this->extractText($reviewRecord->file_path);
+        $text = $this->extractText($record->file_path);
         
         if (empty($text)) {
             throw new Exception("Gagal mengekstrak teks dari dokumen.");
@@ -55,23 +55,24 @@ class GeminiReviewService implements AiReviewContract
                     break;
                 }
 
-                // If 503 (Overloaded) or 429 (Rate Limit), wait and retry
-                if (in_array($response->status(), [503, 429, 500, 504])) {
+                // Handle server errors or rate limiting
+                if (in_array($response->status(), [429, 500, 503, 504])) {
                     $retryCount++;
                     if ($retryCount < $maxRetries) {
-                        sleep(3); // wait 3 seconds before retry
+                        sleep(3);
                         continue;
                     }
                 }
 
-                throw new Exception("API Gemini Error: " . $response->body());
+                throw new Exception("API Gemini Error (Status: {$response->status()}): " . $response->body());
+
             } catch (Exception $e) {
                 $retryCount++;
                 if ($retryCount < $maxRetries) {
                     sleep(3);
                     continue;
                 }
-                throw new Exception("Koneksi ke AI terputus atau server sibuk (cURL Error). Detail: " . $e->getMessage());
+                throw new Exception("Koneksi ke AI terputus atau server sibuk (cURL Error). Silakan coba beberapa saat lagi. Detail: " . $e->getMessage());
             }
         }
 
@@ -82,7 +83,6 @@ class GeminiReviewService implements AiReviewContract
             throw new Exception("Format respons AI tidak valid.");
         }
 
-        // Clean up the response from markdown backticks if present
         $rawContent = trim($rawContent);
         if (str_starts_with($rawContent, '```')) {
             $rawContent = preg_replace('/^```(?:json)?\s+/', '', $rawContent);
@@ -93,7 +93,7 @@ class GeminiReviewService implements AiReviewContract
         $result = json_decode($rawContent, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . substr($rawContent, 0, 100) . "...");
+            throw new Exception("Gagal memparsing JSON dari AI.");
         }
 
         return $result;
@@ -107,7 +107,6 @@ class GeminiReviewService implements AiReviewContract
         $absolutePath = storage_path('app/public/' . $filePath);
         
         if (!file_exists($absolutePath)) {
-            // Try direct path if not in storage/app/public
             $absolutePath = Storage::path($filePath);
         }
 
@@ -126,9 +125,6 @@ class GeminiReviewService implements AiReviewContract
         return '';
     }
 
-    /**
-     * Logic to extract text from DOCX file.
-     */
     protected function extractTextFromDocx(string $filePath): string
     {
         $text = '';
@@ -137,7 +133,6 @@ class GeminiReviewService implements AiReviewContract
             if (($index = $zip->locateName('word/document.xml')) !== false) {
                 $data = $zip->getFromIndex($index);
                 $zip->close();
-                // Replace paragraph tags with newlines for better structure
                 $text = strip_tags(str_replace(['<w:p>', '<w:p ', '</w:p>'], ["\n\n", "\n\n", ""], $data));
             } else {
                 $zip->close();
@@ -146,33 +141,33 @@ class GeminiReviewService implements AiReviewContract
         return trim($text);
     }
 
-    /**
-     * Build the structured prompt for Gemini.
-     */
     protected function buildPrompt(string $text): string
     {
-        // Limit text length to avoid token limits (approx 150k chars)
-        $text = substr($text, 0, 150000);
+        $text = substr($text, 0, 100000); // Limit to 100k chars for plagiarism check
 
-        return "Anda adalah seorang reviewer jurnal profesional senior dari 'Cahaya Ilmu Bangsa'. 
-        Tugas Anda adalah memberikan review 'Pra-OJS' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.
-        Berikan review singkat dan poin-poin yang jelas untuk setiap bagian berikut.
-        Gunakan Bahasa Indonesia yang formal dan profesional.
+        return "Anda adalah sistem 'Cek Plagiasi' cerdas.
+        Tugas Anda adalah menganalisis teks berikut dan memberikan estimasi kemiripan (similarity score) berdasarkan pengetahuan luas Anda tentang literatur akademik.
+        Berikan skor dalam persentase (0-100).
+        Berikan juga beberapa bagian teks yang paling terindikasi memiliki kemiripan tinggi.
+        Gunakan Bahasa Indonesia.
         
-        PENTING: Anda harus mengembalikan hasil dalam format JSON murni dengan struktur kunci berikut:
+        PENTING: Kembalikan dalam format JSON murni:
         {
-            \"structure_review\": \"...\",
-            \"abstract_review\": \"...\",
-            \"introduction_review\": \"...\",
-            \"method_review\": \"...\",
-            \"results_review\": \"...\",
-            \"conclusion_review\": \"...\",
-            \"bibliography_review\": \"...\",
-            \"general_suggestions\": \"...\",
+            \"similarity_score\": 25.5,
+            \"similarity_category\": \"rendah\",
+            \"highlighted_parts\": [
+                {
+                    \"text\": \"...\",
+                    \"source\": \"... (jika diketahui, atau tulis 'External Source')\",
+                    \"reason\": \"...\"
+                }
+            ],
             \"detected_title\": \"...\"
         }
 
-        Isi jurnal untuk di-review:
+        Kategori: 0-20% (rendah), 21-50% (sedang), >50% (tinggi).
+
+        Teks Jurnal:
         ---
         {$text}
         ---";

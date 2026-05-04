@@ -13,6 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use App\Models\UserPlagiarismQuota;
+use App\Models\PlagiarismCheck;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -59,6 +61,16 @@ class User extends Authenticatable implements FilamentUser
     public function userQuota(): HasOne
     {
         return $this->hasOne(UserQuota::class);
+    }
+
+    public function userPlagiarismQuota(): HasOne
+    {
+        return $this->hasOne(UserPlagiarismQuota::class);
+    }
+
+    public function plagiarismChecks(): HasMany
+    {
+        return $this->hasMany(PlagiarismCheck::class);
     }
 
     public function canAccessPanel(Panel $panel): bool
