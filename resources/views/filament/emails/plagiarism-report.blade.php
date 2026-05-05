@@ -214,6 +214,10 @@
         </div>
 
         <div class="footer">
+            <div style="margin-bottom: 15px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Turnitin_logo_%282021%29.svg/200px-Turnitin_logo_%282021%29.svg.png" alt="Turnitin" style="height: 20px; vertical-align: middle;">
+                <span style="margin-left: 8px; font-size: 11px; color: #94a3b8;">Powered by Turnitin</span>
+            </div>
             &copy; {{ date('Y') }} <strong>Cahaya Ilmu Bangsa</strong>. All Rights Reserved.<br>
             Jl. Raya Sempalwadak No.6, Arjowinangun, Kec. Kedungkandang, Kota Malang, Jawa Timur 65132
         </div>

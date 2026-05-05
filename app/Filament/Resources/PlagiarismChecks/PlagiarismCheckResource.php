@@ -31,7 +31,7 @@ class PlagiarismCheckResource extends Resource
 {
     protected static ?string $model = PlagiarismCheck::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
+    protected static string|BackedEnum|null $navigationIcon = 'turnitin-logo';
 
     protected static ?string $navigationLabel = 'Cek Plagiasi';
 
@@ -165,6 +165,11 @@ class PlagiarismCheckResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('user.name')
+                    ->label('Username')
+                    ->searchable()
+                    ->sortable()
+                    ->visible(fn() => auth()->user()?->hasRole('super_admin')),
                 TextColumn::make('title')
                     ->label('Judul Naskah')
                     ->searchable()

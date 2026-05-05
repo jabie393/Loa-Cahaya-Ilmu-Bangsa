@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use BladeUI\Icons\Factory;
+use Filament\Support\Facades\FilamentView;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -25,8 +28,19 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot(Factory $factory): void
     {
+        $factory->add('default', [
+            'path' => resource_path('svg'),
+            'prefix' => '',
+        ]);
+
+        FilamentView::registerRenderHook(
+            'tables::toolbar.start',
+            fn () => view('filament.plagiarism.table-header'),
+            \App\Filament\Resources\PlagiarismChecks\Pages\ManagePlagiarismChecks::class,
+        );
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
