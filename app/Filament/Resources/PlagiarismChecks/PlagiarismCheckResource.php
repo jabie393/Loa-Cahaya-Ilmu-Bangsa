@@ -41,16 +41,44 @@ class PlagiarismCheckResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    public static function getNavigationBadge(): ?string
+    {
+        $user = auth()->user();
+        if (!$user) return null;
+
+        $count = static::getModel()::where('status', 'failed')
+            ->where('user_id', $user->id)
+            ->count();
+        
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
         if ($user->hasRole('super_admin')) {
-            return $query;
+            $query->where(function (Builder $query) use ($user) {
+                $query->where('user_id', $user->id)
+                      ->orWhere('status', 'completed');
+            });
+        } else {
+            $query->where('user_id', $user->id);
         }
 
-        return $query->where('user_id', $user->id);
+        return $query->select('*')
+            ->selectRaw("(CASE 
+                WHEN status = 'failed' THEN 1 
+                WHEN status = 'processing' THEN 2 
+                WHEN status = 'pending' THEN 3 
+                WHEN status = 'completed' THEN 4 
+                ELSE 5 END) as sort_priority");
     }
 
     public static function form(Schema $schema): Schema
@@ -209,13 +237,17 @@ class PlagiarismCheckResource extends Resource
                         'completed' => 'success',
                         'failed' => 'danger',
                         default => 'gray',
-                    }),
+                    })
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => 
+                        $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
+                    ),
                 TextColumn::make('created_at')
                     ->label('Tanggal')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
-            ->defaultSort('created_at', 'desc')
+
+            ->defaultSort('status', 'asc')
             ->filters([
                 //
             ])

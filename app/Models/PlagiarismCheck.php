@@ -66,7 +66,7 @@ class PlagiarismCheck extends Model
 
             $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local') 
                 ? $e->getMessage() 
-                : 'Server turnitin sedang high traffic silakan cek ulang dalam beberapa menit dengan menekan tombol Re-Check';
+                : 'Server turnitin sedang high traffic silakan cek ulang dalam beberapa menit dengan menekan tombol "Re-Check"';
 
             \Filament\Notifications\Notification::make()
                 ->title('Gagal Memproses')

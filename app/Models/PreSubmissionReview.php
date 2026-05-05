@@ -92,8 +92,8 @@ class PreSubmissionReview extends Model
             ]);
 
             $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local')
-                ? $e->getMessage() 
-                : 'mohon maaf reviewer sedang sibuk, coba request ulang dalam beberapa menit';
+                ? $e->getMessage()
+                : 'Mohon maaf reviewer sedang sibuk, coba request ulang jurnal ini dalam beberapa menit dengan menekan tombol "Request Again"';
 
             Notification::make()
                 ->title('Gagal Memproses Review')
