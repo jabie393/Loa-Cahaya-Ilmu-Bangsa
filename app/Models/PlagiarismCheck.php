@@ -56,11 +56,7 @@ class PlagiarismCheck extends Model
             \Illuminate\Support\Facades\Mail::to($this->email ?? $this->user->email)
                 ->send(new \App\Mail\PlagiarismCheckResultMail($this));
 
-            \Filament\Notifications\Notification::make()
-                ->title('Analisis Selesai')
-                ->body('Pengecekan plagiasi berhasil dilakukan.')
-                ->success()
-                ->send();
+
 
         } catch (\Exception $e) {
             $this->update([
@@ -68,9 +64,13 @@ class PlagiarismCheck extends Model
                 'error_message' => $e->getMessage(),
             ]);
 
+            $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local') 
+                ? $e->getMessage() 
+                : 'Server turnitin sedang high traffic silakan cek ulang dalam beberapa menit dengan menekan tombol Re-Check';
+
             \Filament\Notifications\Notification::make()
                 ->title('Gagal Memproses')
-                ->body($e->getMessage())
+                ->body($errorMessage)
                 ->danger()
                 ->send();
         }

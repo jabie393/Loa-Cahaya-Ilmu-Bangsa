@@ -103,7 +103,7 @@ class PlagiarismCheckResource extends Resource
                             ->numeric(2)
                             ->suffix('%')
                             ->weight('bold')
-                            ->color(fn ($state) => match (true) {
+                            ->color(fn($state) => match (true) {
                                 $state < 20 => 'success',
                                 $state < 50 => 'warning',
                                 default => 'danger',
@@ -111,16 +111,16 @@ class PlagiarismCheckResource extends Resource
                         TextEntry::make('similarity_category')
                             ->label('Kategori')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'rendah' => 'success',
                                 'sedang' => 'warning',
                                 'tinggi' => 'danger',
                                 default => 'gray',
                             })
-                            ->formatStateUsing(fn ($state) => ucfirst($state)),
+                            ->formatStateUsing(fn($state) => ucfirst($state)),
                         TextEntry::make('status')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
+                            ->color(fn(string $state): string => match ($state) {
                                 'pending' => 'gray',
                                 'processing' => 'warning',
                                 'completed' => 'success',
@@ -152,6 +152,7 @@ class PlagiarismCheckResource extends Resource
                     ->schema([
                         TextEntry::make('error_message')
                             ->label('Pesan Error')
+                            ->formatStateUsing(fn($state) => (config('app.env') === 'local' || env('APP_ENV') === 'local') ? $state : 'Server turnitin sedang high traffic silakan cek ulang dalam beberapa menit dengan menekan tombol "Re-Check"')
                             ->color('danger')
                             ->visible(fn($record) => $record->status === 'failed'),
                         TextEntry::make('created_at')->label('Waktu Pengecekan')->dateTime(),
@@ -170,6 +171,10 @@ class PlagiarismCheckResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->visible(fn() => auth()->user()?->hasRole('super_admin')),
+                TextColumn::make('email')
+                    ->label('Email Penerima')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('title')
                     ->label('Judul Naskah')
                     ->searchable()
@@ -180,7 +185,7 @@ class PlagiarismCheckResource extends Resource
                     ->numeric(1)
                     ->suffix('%')
                     ->sortable()
-                    ->color(fn ($state) => match (true) {
+                    ->color(fn($state) => match (true) {
                         $state < 20 => 'success',
                         $state < 50 => 'warning',
                         $state === null => 'gray',
@@ -189,16 +194,16 @@ class PlagiarismCheckResource extends Resource
                 TextColumn::make('similarity_category')
                     ->label('Kategori')
                     ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
+                    ->color(fn(?string $state): string => match ($state) {
                         'rendah' => 'success',
                         'sedang' => 'warning',
                         'tinggi' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn ($state) => ucfirst($state ?? '-')),
+                    ->formatStateUsing(fn($state) => ucfirst($state ?? '-')),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'pending' => 'gray',
                         'processing' => 'warning',
                         'completed' => 'success',
@@ -222,7 +227,7 @@ class PlagiarismCheckResource extends Resource
                         ->modalAutofocus(false)
                         ->extraModalFooterActions([
                             Action::make('request_again')
-                                ->label('Cek Ulang')
+                                ->label('Re-Check')
                                 ->color('warning')
                                 ->icon('heroicon-o-arrow-path')
                                 ->requiresConfirmation()
@@ -235,7 +240,7 @@ class PlagiarismCheckResource extends Resource
                                 ->visible(fn(PlagiarismCheck $record): bool => $record->status === 'failed'),
                         ]),
                     Action::make('request_again_table')
-                        ->label('Cek Ulang')
+                        ->label('Re-Check')
                         ->color('warning')
                         ->icon('heroicon-o-arrow-path')
                         ->requiresConfirmation()
@@ -243,10 +248,10 @@ class PlagiarismCheckResource extends Resource
                         ->action(fn(PlagiarismCheck $record) => $record->processCheck()),
                     DeleteAction::make(),
                 ])
-                ->label('')
-                ->icon('heroicon-o-eye')
-                ->color('primary')
-                ->button(),
+                    ->label('')
+                    ->icon('heroicon-o-eye')
+                    ->color('primary')
+                    ->button(),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([

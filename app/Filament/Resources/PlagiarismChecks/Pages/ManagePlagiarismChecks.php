@@ -23,6 +23,7 @@ class ManagePlagiarismChecks extends ManageRecords
                 ->icon('heroicon-o-plus')
                 ->modalHeading('Mulai Cek Plagiasi')
                 ->modalSubmitActionLabel('Jalankan Analisis')
+                ->successNotification(null)
                 ->before(function (Actions\CreateAction $action) {
                     $user = Auth::user();
                     $quotaService = app(PlagiarismQuotaService::class);
