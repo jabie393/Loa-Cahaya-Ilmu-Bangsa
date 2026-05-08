@@ -1,0 +1,78 @@
+/* Mascot Helper Animations */
+@keyframes mascot-float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+.animate-float {
+    animation: mascot-float 3s ease-in-out infinite;
+}
+
+/* Container States */
+#mascot-container[data-minimized="true"] #mascot-bubble,
+#mascot-container[data-minimized="true"] #mascot-panel,
+#mascot-container[data-minimized="true"] #mascot-actions {
+    display: none !important;
+}
+
+#mascot-container[data-minimized="true"] #mascot-avatar {
+    opacity: 0.6;
+    transform: scale(0.7) translateX(20px);
+}
+
+#mascot-container[data-minimized="true"] #mascot-avatar:hover {
+    opacity: 1;
+    transform: scale(0.8) translateX(0);
+}
+
+/* Glassmorphism Effect */
+.backdrop-blur-md {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Smooth Transitions */
+#mascot-bubble {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#mascot-panel {
+    transform-origin: bottom right;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+#mascot-panel.hidden {
+    display: none;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+}
+
+#mascot-panel:not(.hidden) {
+    display: block;
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    #mascot-container {
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    #mascot-bubble {
+        max-width: 200px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Pose Transition Effect */
+#mascot-img {
+    transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+#mascot-img.pose-changing {
+    filter: brightness(1.2) blur(2px);
+    transform: scale(1.1);
+}

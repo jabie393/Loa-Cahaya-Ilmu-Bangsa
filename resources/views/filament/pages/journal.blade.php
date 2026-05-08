@@ -18,15 +18,27 @@
                         {{ $jurnal['name'] }}
                     </h3>
                     <!-- Buttons Group -->
-                    <div class="mt-auto grid grid-cols-2 gap-3">
-                        <a href="{{ $jurnal['link'] }}"
-                           class="relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-[0_10px_20px_rgba(37,99,235,0.2)] transition-all duration-300 hover:bg-blue-700 active:scale-95">
-                            Situs Jurnal
-                        </a>
-                        <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('create', ['journal_id' => $jurnal['id']]) }}"
-                           class="flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-900 transition-all duration-300 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 active:scale-95 dark:border-slate-800 dark:bg-slate-800 dark:text-white">
-                            Ajukan
-                        </a>
+                    <div class="mt-auto flex flex-col gap-2">
+                        @if(!empty($jurnal['template_link']))
+                            <a href="{{ $jurnal['template_link'] }}"
+                               target="_blank"
+                               class="flex items-center justify-center gap-1.5 rounded-xl border-2 border-emerald-100 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all duration-300 hover:border-emerald-200 hover:bg-emerald-100 active:scale-95">
+                                <span class="material-symbols-outlined !text-[16px]">download</span>
+                                Download Template
+                            </a>
+                        @endif
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="{{ $jurnal['link'] }}"
+                               target="_blank"
+                               class="relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0_10px_20px_rgba(37,99,235,0.2)] transition-all duration-300 hover:bg-blue-700 active:scale-95">
+                                Situs Jurnal
+                            </a>
+                            <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('create', ['journal_id' => $jurnal['id']]) }}"
+                               class="flex items-center justify-center gap-1.5 rounded-xl border-2 border-slate-100 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-900 transition-all duration-300 hover:border-blue-100 hover:bg-blue-50 hover:text-blue-600 active:scale-95 dark:border-slate-800 dark:bg-slate-800 dark:text-white">
+                                Ajukan
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

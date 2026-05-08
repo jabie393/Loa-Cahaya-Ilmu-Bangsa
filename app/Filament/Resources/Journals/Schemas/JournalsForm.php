@@ -23,7 +23,12 @@ class JournalsForm
                     ->required(),
                 TextInput::make('link')
                     ->label('Link')
-                    ->required(),
+                    ->required()
+                    ->placeholder('https://...'),
+                TextInput::make('template_link')
+                    ->label('Template Link')
+                    ->url()
+                    ->placeholder('https://...'),
             ]);
     }
 }

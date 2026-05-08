@@ -28,9 +28,17 @@ class JournalsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('link')
-                    ->label('Link')
-                    ->searchable()
-                    ->sortable(),
+                    ->label('Link Jurnal')
+                    ->badge()
+                    ->color('primary')
+                    ->formatStateUsing(fn() => 'Buka Link')
+                    ->url(fn($record) => $record->link, true),
+                TextColumn::make('template_link')
+                    ->label('Template')
+                    ->badge()
+                    ->color('success')
+                    ->formatStateUsing(fn($state) => $state ? 'Download' : '-')
+                    ->url(fn($record) => $record->template_link, true),
 
             ])
             ->filters([

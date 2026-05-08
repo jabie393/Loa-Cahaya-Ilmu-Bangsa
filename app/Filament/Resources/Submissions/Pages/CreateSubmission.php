@@ -47,8 +47,8 @@ class CreateSubmission extends CreateRecord
                                 ->default(Auth::user()->email)
                                 ->email()
                                 ->required(),
-                    
-                                    
+
+
                             TextInput::make('title')
                                 ->columnSpanFull()
                                 ->label('Judul (Diisi Huruf Besar)')
@@ -98,16 +98,16 @@ class CreateSubmission extends CreateRecord
                                 ->native(false)
                                 ->displayFormat('d-m-Y')
                                 ->label('Tanggal LOA')
-                                ->required(),    
+                                ->required(),
                             TextInput::make('publication_link')
                                 ->columnSpanFull()
                                 ->label('Publication Link'),
                             Hidden::make('submission_date')
-                                ->default(now()),                
-                            
+                                ->default(now()),
+
                             Hidden::make('status')
                                 ->default('Pending'),
-                    ])->columns(2),
+                        ])->columns(2),
                     Section::make('Pembayaran')
                         ->columnSpan(2)
                         ->description('Bukti Pembayaran')
@@ -126,7 +126,7 @@ class CreateSubmission extends CreateRecord
                     Checkbox::make('agreement')
                         ->label('LoA Berlaku Jika Dilengkapi Bukti Pembayaran dan Link Terbitan, Dengan ini saya bersedia naskah saya ditarik apabila dikemudian hari terdapat kecurangan dalam pengerjaannya')
                         ->accepted(),
-                ]),    
+                ]),
         ];
     }
 }

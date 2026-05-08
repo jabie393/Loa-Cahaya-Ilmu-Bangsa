@@ -75,6 +75,7 @@ class PreSubmissionReviewResource extends Resource
     {
         return $schema
             ->components([
+                \Filament\Schemas\Components\View::make('filament.components.page-animations'),
                 Section::make('Informasi Pengajuan')
                     ->description('Lengkapi data penulis dan pilih jurnal target untuk memulai penelaahan awal.')
                     ->schema([
@@ -148,6 +149,7 @@ class PreSubmissionReviewResource extends Resource
     {
         return $schema
             ->components([
+                \Filament\Schemas\Components\View::make('filament.components.page-animations'),
                 Section::make('Informasi Pengajuan')
                     ->schema([
                         TextEntry::make('author_name')->label('Nama Author'),

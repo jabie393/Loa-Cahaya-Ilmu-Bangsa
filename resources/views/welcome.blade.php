@@ -71,6 +71,7 @@
     </style>
 
     <!-- Styles / Scripts -->
+    <link rel="stylesheet" href="{{ asset('css/mascot.css') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -266,6 +267,9 @@
 
     </main>
 
+    <!-- Mascot Helper -->
+    <x-mascot />
+
     <!-- Footer -->
     <footer class="mt-20 w-full rounded-t-[1.5rem] bg-slate-50 dark:bg-slate-900">
         <div
@@ -281,6 +285,7 @@
             </div>
         </div>
     </footer>
+    <script src="{{ asset('js/mascot.js') }}" defer></script>
 </body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

@@ -15,6 +15,7 @@ class Journal extends Model
         'slug',
         'image',
         'link',
+        'template_link',
     ];
 
     public function submissions(): HasMany
