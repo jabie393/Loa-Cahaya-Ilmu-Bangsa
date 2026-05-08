@@ -44,12 +44,13 @@ class PlagiarismCheckResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $user = auth()->user();
-        if (!$user) return null;
+        if (!$user)
+            return null;
 
         $count = static::getModel()::where('status', 'failed')
             ->where('user_id', $user->id)
             ->count();
-        
+
         return $count > 0 ? (string) $count : null;
     }
 
@@ -66,7 +67,7 @@ class PlagiarismCheckResource extends Resource
         if ($user->hasRole('super_admin')) {
             $query->where(function (Builder $query) use ($user) {
                 $query->where('user_id', $user->id)
-                      ->orWhere('status', 'completed');
+                    ->orWhere('status', 'completed');
             });
         } else {
             $query->where('user_id', $user->id);
@@ -105,14 +106,14 @@ class PlagiarismCheckResource extends Resource
                             ->columnSpanFull(),
 
                         Placeholder::make('quota_info')
-                            ->label('Status Kuota Cek Plagiasi')
+                            ->label('Sisa Kuota Anda')
                             ->content(function () {
                                 $user = auth()->user();
                                 if ($user?->hasRole('super_admin')) {
                                     return 'Unlimited (Administrator)';
                                 }
                                 $summary = app(\App\Services\PlagiarismQuotaService::class)->getQuotaSummary($user);
-                                return "Sisa Hari Ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Kredit Tambahan: {$summary['additional_credits']}";
+                                return "Hari Ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Plagiarism Credits: {$summary['additional_credits']}";
                             }),
                     ])
                     ->columnSpanFull(),
@@ -238,7 +239,8 @@ class PlagiarismCheckResource extends Resource
                         'failed' => 'danger',
                         default => 'gray',
                     })
-                    ->sortable(query: fn (Builder $query, string $direction): Builder => 
+                    ->sortable(
+                        query: fn(Builder $query, string $direction): Builder =>
                         $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
                     ),
                 TextColumn::make('created_at')

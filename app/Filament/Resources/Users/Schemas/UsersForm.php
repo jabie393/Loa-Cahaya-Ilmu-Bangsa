@@ -16,100 +16,117 @@ class UsersForm
         return $schema
             ->components(
                 [
-                    TextInput::make('name')
-                        ->label('Nama')
-                        ->required(),
-
-                    TextInput::make('email')
-                        ->email()
-                        ->required()
-                        ->unique('users', 'email', ignoreRecord: true),
-
-                    TextInput::make('password')
-                        ->password()
-                        ->revealable()
-                        ->extraInputAttributes(['autocomplete' => 'new-password'])
-                        ->required(fn($operation) => $operation === 'create') // password is only required on create, not edit.
-                        ->dehydrated(fn($state) => filled($state)) // prevents sending empty values to the database (so it doesn’t overwrite existing password).
-                        ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null) // if user types something, hash it; otherwise leave as null.
-                        ->label(__('Password')),
-
-                    TextInput::make('phone')
-                        ->label('Nomor Telepon'),
-
-                    Select::make('roles')
-                        ->label('Role')
-                        ->relationship('roles', 'name')
-                        ->preload()
-                        ->required()
-                        ->live(),
-
-                    Section::make('Manajemen Kuota Review')
-                        ->description('Statistik penggunaan review jurnal oleh user ini.')
+                    Grid::make(12)
+                        ->columnSpanFull()
                         ->schema([
-                            Grid::make(3)
-                                ->schema([
-                                    Placeholder::make('daily_used_stats')
-                                        ->label('Sisa Kuota Hari Ini')
-                                        ->content(fn($record) => $record?->hasRole('super_admin')
-                                            ? 'Unlimited'
-                                            : (max(0, ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')) - ($record?->userQuota?->daily_used ?? 0)) . ' / ' . ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')))),
-
-                                    Placeholder::make('review_credits_stats')
-                                        ->label('Review Credits')
-                                        ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userQuota?->review_credits ?? 0)),
-
-                                    Placeholder::make('total_used_stats')
-                                        ->label('Total Review')
-                                        ->content(fn($record) => $record?->userQuota?->total_used ?? 0),
-                                ]),
-
+                            // Left Column: User Profile Info (5/12 width)
                             Grid::make(1)
-                                ->relationship('userQuota')
                                 ->schema([
-                                    TextInput::make('review_credits')
-                                        ->label('Kuota Review (Manual)')
-                                        ->helperText('Input angka di sini untuk memberikan tambahan kuota permanen bagi user.')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->required(),
+                                    TextInput::make('name')
+                                        ->label('Nama')
+                                        ->required()
+                                        ->maxLength(255),
+
+                                    TextInput::make('password')
+                                        ->password()
+                                        ->dehydrated(fn($state) => filled($state))
+                                        ->required(fn($operation) => $operation === 'create')
+                                        ->label(__('Password')),
+
+                                    TextInput::make('email')
+                                        ->email()
+                                        ->required()
+                                        ->maxLength(255)
+                                        ->label(__('Email')),
+
+                                    TextInput::make('phone')
+                                        ->label('Nomor Telepon'),
+
+                                    Select::make('roles')
+                                        ->label('Role')
+                                        ->relationship('roles', 'name')
+                                        ->preload()
+                                        ->required()
+                                        ->live(),
+                                ])
+                                ->columnSpan([
+                                    'default' => 12,
+                                    'lg' => 5,
                                 ]),
+
+                            // Right Column: Quota Management (7/12 width)
+                            Section::make('Manajemen Kuota')
+                                ->description('Statistik penggunaan review dan plagiarism.')
+                                ->schema([
+                                    Placeholder::make('review_header')->label('REVIEW JURNAL')->content(''),
+                                    Grid::make(3)
+                                        ->schema([
+                                            Placeholder::make('daily_used_stats')
+                                                ->label('Sisa Kuota Hari Ini')
+                                                ->content(fn($record) => $record?->hasRole('super_admin')
+                                                    ? 'Unlimited'
+                                                    : (max(0, ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')) - ($record?->userQuota?->daily_used ?? 0)) . ' / ' . ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')))),
+
+                                            Placeholder::make('review_credits_stats')
+                                                ->label('Review Credits')
+                                                ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userQuota?->review_credits ?? 0)),
+
+                                            Placeholder::make('total_used_stats')
+                                                ->label('Total Review')
+                                                ->content(fn($record) => $record?->userQuota?->total_used ?? 0),
+                                        ]),
+
+                                    Grid::make(1)
+                                        ->relationship('userQuota')
+                                        ->schema([
+                                            TextInput::make('review_credits')
+                                                ->label('Review Credits (Manual)')
+                                                ->helperText('Input angka untuk tambahan review credits.')
+                                                ->numeric()
+                                                ->default(0)
+                                                ->required(),
+                                        ]),
+
+                                    Placeholder::make('plagiarism_divider')
+                                        ->label('')
+                                        ->content(fn() => new \Illuminate\Support\HtmlString('<hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 1rem 0;">')),
+
+                                    Placeholder::make('plagiarism_header')->label('CEK PLAGIASI')->content(''),
+
+                                    Grid::make(3)
+                                        ->schema([
+                                            Placeholder::make('plagiarism_daily_used_stats')
+                                                ->label('Sisa Kuota Hari Ini')
+                                                ->content(fn($record) => $record?->hasRole('super_admin')
+                                                    ? 'Unlimited'
+                                                    : (max(0, ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')) - ($record?->userPlagiarismQuota?->daily_used ?? 0)) . ' / ' . ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')))),
+
+                                            Placeholder::make('additional_credits_stats')
+                                                ->label('Plagiarism Credits')
+                                                ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userPlagiarismQuota?->additional_credits ?? 0)),
+
+                                            Placeholder::make('plagiarism_total_used_stats')
+                                                ->label('Total Cek')
+                                                ->content(fn($record) => $record?->userPlagiarismQuota?->total_used ?? 0),
+                                        ]),
+
+                                    Grid::make(1)
+                                        ->relationship('userPlagiarismQuota')
+                                        ->schema([
+                                            TextInput::make('additional_credits')
+                                                ->label('Plagiarism Credits (Manual)')
+                                                ->helperText('Input angka untuk tambahan plagiarism credits.')
+                                                ->numeric()
+                                                ->default(0)
+                                                ->required(),
+                                        ]),
+                                ])
+                                ->columnSpan([
+                                    'default' => 12,
+                                    'lg' => 7,
+                                ])
+                                ->visible(fn($operation) => $operation === 'edit'),
                         ])
-                        ->visible(fn($operation) => $operation === 'edit'),
-
-                    Section::make('Manajemen Kuota Plagiasi')
-                        ->description('Statistik penggunaan cek plagiasi oleh user ini.')
-                        ->schema([
-                            Grid::make(3)
-                                ->schema([
-                                    Placeholder::make('plagiarism_daily_used_stats')
-                                        ->label('Sisa Kuota Hari Ini')
-                                        ->content(fn($record) => $record?->hasRole('super_admin')
-                                            ? 'Unlimited'
-                                            : (max(0, ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')) - ($record?->userPlagiarismQuota?->daily_used ?? 0)) . ' / ' . ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')))),
-
-                                    Placeholder::make('additional_credits_stats')
-                                        ->label('Kredit Tambahan')
-                                        ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userPlagiarismQuota?->additional_credits ?? 0)),
-
-                                    Placeholder::make('plagiarism_total_used_stats')
-                                        ->label('Total Cek')
-                                        ->content(fn($record) => $record?->userPlagiarismQuota?->total_used ?? 0),
-                                ]),
-
-                            Grid::make(1)
-                                ->relationship('userPlagiarismQuota')
-                                ->schema([
-                                    TextInput::make('additional_credits')
-                                        ->label('Kredit Tambahan (Manual)')
-                                        ->helperText('Input angka di sini untuk memberikan tambahan kuota cek plagiasi bagi user.')
-                                        ->numeric()
-                                        ->default(0)
-                                        ->required(),
-                                ]),
-                        ])
-                        ->visible(fn($operation) => $operation === 'edit'),
-
                 ]
             );
     }

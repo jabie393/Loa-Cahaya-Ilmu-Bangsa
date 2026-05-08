@@ -50,7 +50,7 @@ class PreSubmissionReviewResource extends Resource
         if ($user->hasRole('super_admin')) {
             $query->where(function (Builder $query) use ($user) {
                 $query->where('status', '!=', 'failed')
-                      ->orWhere('user_id', $user->id);
+                    ->orWhere('user_id', $user->id);
             });
         } else {
             $query->where('user_id', $user->id);
@@ -121,7 +121,7 @@ class PreSubmissionReviewResource extends Resource
                                     return 'Unlimited (Administrator)';
                                 }
                                 $summary = app(\App\Services\QuotaService::class)->getQuotaSummary($user);
-                                return "Hari ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Credits: {$summary['review_credits']}";
+                                return "Hari ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Review Credits: {$summary['review_credits']}";
                             }),
                     ])
                     ->columnSpan(2),
@@ -229,7 +229,8 @@ class PreSubmissionReviewResource extends Resource
                         'failed' => 'danger',
                         default => 'gray',
                     })
-                    ->sortable(query: fn (Builder $query, string $direction): Builder => 
+                    ->sortable(
+                        query: fn(Builder $query, string $direction): Builder =>
                         $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
                     ),
                 TextColumn::make('email_sent_at')

@@ -31,7 +31,7 @@ class ManagePlagiarismChecks extends ManageRecords
                     if (!$quotaService->canCheck($user)) {
                         Notification::make()
                             ->title('Kuota Habis')
-                            ->body('Batas harian pengecekan plagiasi Anda telah tercapai. Silakan coba lagi besok atau hubungi admin untuk kuota tambahan.')
+                            ->body('Batas harian pengecekan plagiasi Anda telah tercapai. Silakan coba lagi besok atau hubungi admin untuk credits tambahan.')
                             ->danger()
                             ->send();
 

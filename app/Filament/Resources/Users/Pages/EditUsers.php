@@ -11,6 +11,11 @@ class EditUsers extends EditRecord
 {
     protected static string $resource = UsersResource::class;
 
+    public function getMaxContentWidth(): \Filament\Support\Enums\Width | string | null
+    {
+        return \Filament\Support\Enums\Width::Full;
+    }
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Pastikan user ini punya record quota agar bisa disimpan lewat form
