@@ -37,7 +37,8 @@
         <div id="mascot-avatar" onclick="Mascot.togglePanel()"
             class="relative cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95">
             <img id="mascot-img" src="{{ asset('assets/mascot/idle.png') }}" alt="Kanda Putra - Maskot Helper"
-                class="h-[70px] w-auto object-contain drop-shadow-xl animate-float md:h-[100px]"
+                style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; transform: translate3d(0,0,0); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.15));"
+                class="h-[70px] w-auto object-contain animate-float md:h-[100px]"
                 onerror="this.src='https://ui-avatars.com/api/?name=KP&background=0D8ABC&color=fff'">
 
             <!-- Notification Badge (for errors/success) -->
