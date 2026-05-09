@@ -13,7 +13,7 @@ class ChatbotService
         $this->geminiService = $geminiService;
     }
 
-    public function processMessage(string $message, array $context = []): array
+    public function processMessage(string $message, array $context = [], ?string $summary = null, array $history = []): array
     {
         // 1. Try to find answer in FAQ
         $faqAnswer = $this->searchFaq($message);
@@ -26,7 +26,7 @@ class ChatbotService
         }
 
         // 2. Fallback to Gemini API with Dynamic Knowledge Base
-        $geminiAnswer = $this->geminiService->generateResponse($message, $context);
+        $geminiAnswer = $this->geminiService->generateResponse($message, $context, $summary, $history);
 
         return [
             'source' => 'gemini',

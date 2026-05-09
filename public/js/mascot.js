@@ -12,12 +12,19 @@ if (!window.Mascot) {
             panelOpen: false,
             assetPath: "/assets/mascot/",
             sessionId: localStorage.getItem("mascot_session_id") || null,
+            guestToken: localStorage.getItem("mascot_guest_token") || null,
+            historyLoaded: false,
         },
 
         init() {
             if (!this.state.sessionId) {
                 this.state.sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + Date.now();
                 localStorage.setItem("mascot_session_id", this.state.sessionId);
+            }
+            
+            if (!this.state.guestToken) {
+                this.state.guestToken = 'guest_' + Math.random().toString(36).substr(2, 9) + Date.now();
+                localStorage.setItem("mascot_guest_token", this.state.guestToken);
             }
 
             this.dom = {
@@ -41,11 +48,15 @@ if (!window.Mascot) {
 
             if (!this.dom.container) return;
 
-            // Prevent double init
+            // Prevent double init on the exact same DOM element
             if (this.dom.container.dataset.initialized) {
                 return;
             }
             this.dom.container.dataset.initialized = "true";
+            
+            // Reset history loaded state in case this is an SPA navigation 
+            // and the DOM was newly replaced but the global state remained.
+            this.state.historyLoaded = false;
 
             // Apply initial state
             if (this.state.minimized) {
@@ -60,8 +71,9 @@ if (!window.Mascot) {
             // Initial Greeting based on page
             setTimeout(() => this.handleAutoMessage(), 2500);
             
-            // Load FAQs
+            // Load FAQs and History
             this.loadFaqs();
+            this.loadHistory();
         },
 
         setupListeners() {
@@ -199,6 +211,38 @@ if (!window.Mascot) {
 
         // --- Chatbot Specific Methods ---
 
+        async loadHistory() {
+            if (this.state.historyLoaded) return;
+            this.state.historyLoaded = true;
+
+            try {
+                const response = await fetch(`/chatbot/session?session_id=${this.state.sessionId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    let hasHistory = false;
+                    data.data.forEach(msg => {
+                        if (msg.role === 'user') {
+                            this.appendUserMessage(msg.message);
+                        } else {
+                            // If it was a system message, we can just treat it as bot or system
+                            const source = msg.source || 'gemini';
+                            this.appendBotMessage(msg.message, source);
+                        }
+                        hasHistory = true;
+                    });
+                    
+                    if (hasHistory) {
+                        setTimeout(() => {
+                            this.appendBotMessage("Kita lanjutkan percakapan sebelumnya ya 👋", 'system');
+                        }, 500);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load history", e);
+            }
+        },
+
         async loadFaqs() {
             if (!this.dom.faqSuggestions) return;
             
@@ -321,6 +365,7 @@ if (!window.Mascot) {
                     body: JSON.stringify({
                         message: message,
                         session_id: this.state.sessionId,
+                        guest_token: this.state.guestToken,
                         context: context
                     })
                 });

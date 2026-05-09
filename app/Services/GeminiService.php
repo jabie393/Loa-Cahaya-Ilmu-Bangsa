@@ -14,10 +14,40 @@ class GeminiService
         $this->knowledgeLoader = $knowledgeLoader;
     }
 
-    public function generateResponse(string $userMessage, array $userContext = []): string
+    public function generateDirectResponse(string $prompt): string
     {
-        // Membaca dari config/services.php (yang mengambil dari .env)
-        // 'gemini-1.5-flash' di bawah ini hanyalah nilai cadangan (fallback) jika di .env kosong.
+        $apiKey = config('services.gemini.key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
+
+        if (!$apiKey) return "";
+
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+
+        try {
+            $response = Http::post($url, [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                    return $data['candidates'][0]['content']['parts'][0]['text'];
+                }
+            }
+            return "";
+        } catch (\Exception $e) {
+            return "";
+        }
+    }
+
+    public function generateResponse(string $userMessage, array $userContext = [], ?string $summary = null, array $history = []): string
+    {
         $apiKey = config('services.gemini.key');
         $model = config('services.gemini.model', 'gemini-1.5-flash');
 
@@ -42,6 +72,31 @@ class GeminiService
         foreach ($userContext as $key => $value) {
             $systemPrompt .= "- {$key}: {$value}\n";
         }
+        
+        // 4. Add Summary Memory
+        if (!empty($summary)) {
+            $systemPrompt .= "\n\nMEMORY PERCAKAPAN SEBELUMNYA:\n{$summary}\n";
+        }
+
+        $contents = [];
+
+        // 5. Build History (format for Gemini contents)
+        foreach ($history as $msg) {
+            $contents[] = [
+                'role' => $msg['role'] === 'user' ? 'user' : 'model',
+                'parts' => [
+                    ['text' => $msg['message']]
+                ]
+            ];
+        }
+
+        // Add the current user message
+        $contents[] = [
+            'role' => 'user',
+            'parts' => [
+                ['text' => $userMessage]
+            ]
+        ];
 
         try {
             $response = Http::post($url, [
@@ -50,13 +105,7 @@ class GeminiService
                         ['text' => $systemPrompt]
                     ]
                 ],
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $userMessage]
-                        ]
-                    ]
-                ],
+                'contents' => $contents,
                 'generationConfig' => [
                     'temperature' => 0.7,
                     'maxOutputTokens' => 800,

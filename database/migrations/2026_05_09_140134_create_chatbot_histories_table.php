@@ -13,10 +13,14 @@ return new class extends Migration
     {
         Schema::create('chatbot_histories', function (Blueprint $table) {
             $table->id();
-            $table->string('session_id')->nullable()->index();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('guest_token')->nullable()->index();
+            $table->string('role')->default('user');
             $table->text('message');
-            $table->boolean('is_user')->default(true);
+            $table->string('session_id')->nullable()->index();
+            // Optional: $table->foreign('session_id')->references('id')->on('chatbot_sessions')->nullOnDelete();
+            // Since session_id can be created on the fly by frontend before backend creates session, 
+            // a strict foreign key might fail if we don't sync properly. Let's just index it.
             $table->timestamps();
         });
     }
