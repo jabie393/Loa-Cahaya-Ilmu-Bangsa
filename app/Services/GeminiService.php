@@ -16,8 +16,10 @@ class GeminiService
 
     public function generateResponse(string $userMessage, array $userContext = []): string
     {
-        $apiKey = env('GEMINI_API_KEY');
-        $model = env('GEMINI_MODEL', 'gemini-1.5-flash');
+        // Membaca dari config/services.php (yang mengambil dari .env)
+        // 'gemini-1.5-flash' di bawah ini hanyalah nilai cadangan (fallback) jika di .env kosong.
+        $apiKey = config('services.gemini.key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
 
         if (!$apiKey) {
             Log::error('Gemini API Key is missing.');
