@@ -1,4 +1,10 @@
 <!-- Maximize Trigger (Tab Ikon di pinggir kanan) -->
+<style>
+    /* Force flex display when panel is open to bypass browser caching of old mascot.js */
+    #mascot-panel:not(.hidden) {
+        display: flex !important;
+    }
+</style>
 <div id="mascot-maximize-trigger" onclick="Mascot.toggleMinimize()"
     style="background-color: #003da3;"
     class="fixed bottom-10 right-0 z-[9999] hidden cursor-pointer items-center justify-center rounded-l-full p-2 pr-1 text-white shadow-2xl backdrop-blur-md transition-all duration-300 hover:pr-3 group">
@@ -47,82 +53,95 @@
         </div>
     </div>
 
-    <!-- Help Panel -->
+    <!-- Help Panel (Chatbot Interface) -->
     <div id="mascot-panel"
-        class="hidden w-[280px] overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 md:w-[320px]">
-        <div class="bg-primary p-6 text-white">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold">Kanda Putra</h3>
-                <button onclick="Mascot.togglePanel()" class="text-white/80 hover:text-white">
-                    <span class="material-symbols-outlined">close</span>
+        class="hidden absolute bottom-full mb-4 right-0 flex-col w-[320px] h-[550px] max-h-[75vh] overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 md:w-[380px] z-[10000]">
+        
+        <!-- Header -->
+        <div class="bg-primary p-4 text-white flex-shrink-0 relative">
+            <!-- Background Decoration -->
+            <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-xl"></div>
+            <div class="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-black/5 blur-2xl"></div>
+            
+            <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 overflow-hidden rounded-full bg-white/20 p-1 border border-white/30 shadow-inner">
+                        <img src="{{ asset('assets/mascot/idle.png') }}" class="h-full w-full object-contain" id="chatbot-header-img" alt="Kanda Putra">
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold leading-none tracking-wide drop-shadow-sm">Kanda Putra</h3>
+                        <p class="mt-1 flex items-center gap-1 text-[11px] text-white/90">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
+                            </span>
+                            AI Assistant
+                        </p>
+                    </div>
+                </div>
+                <button onclick="Mascot.togglePanel()" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/90 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white">
+                    <span class="material-symbols-outlined !text-[18px]">close</span>
                 </button>
             </div>
-            <p class="mt-1 text-xs text-white/80">Kami siap membantu proses LOA Anda</p>
         </div>
 
-        <div class="max-h-[350px] overflow-y-auto p-4">
-            <div class="mb-4">
-                <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Tips Cepat</h4>
-                <div class="space-y-2">
-                    <div class="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm">
-                        <span class="material-symbols-outlined text-primary !text-xl">description</span>
-                        <span>Gunakan format PDF/DOCX untuk semua dokumen pengajuan.</span>
-                    </div>
-                    <div class="flex items-start gap-3 rounded-xl bg-slate-50 p-3 text-sm">
-                        <span class="material-symbols-outlined text-primary !text-xl">check_circle</span>
-                        <span>Pastikan bukti pembayaran terlihat jelas dan tidak blur.</span>
+        <!-- Messages Area -->
+        <div id="chatbot-messages" style="min-height: 0;" class="flex-1 min-h-0 overflow-y-auto p-4 bg-[#f8fafc] flex flex-col gap-4 scroll-smooth">
+            <!-- Welcome Message -->
+            <div class="flex gap-3">
+                <div class="h-8 w-8 flex-shrink-0 rounded-full bg-white p-1 shadow-sm border border-slate-100">
+                    <img src="{{ asset('assets/mascot/idle.png') }}" class="h-full w-full object-contain">
+                </div>
+                <div class="flex flex-col gap-1 max-w-[85%]">
+                    <div class="rounded-2xl rounded-tl-none bg-white p-3.5 text-sm leading-relaxed text-slate-700 shadow-sm border border-slate-100">
+                        Halo! Saya <b>Kanda Putra</b>. Ada yang bisa saya bantu terkait pengajuan LOA Anda? Anda bisa memilih pertanyaan di bawah ini atau mengetik langsung pertanyaan Anda. ✨
                     </div>
                 </div>
             </div>
 
-            <div class="mb-4">
-                <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">FAQ Singkat</h4>
-                <details class="group border-b border-slate-100 py-2">
-                    <summary
-                        class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700">
-                        Berapa lama proses LOA?
-                        <span
-                            class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
-                    </summary>
-                    <p class="mt-2 text-xs leading-relaxed text-slate-500">Normalnya 1-3 hari kerja setelah verifikasi
-                        pembayaran berhasil.</p>
-                </details>
-                <details class="group border-b border-slate-100 py-2">
-                    <summary
-                        class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700">
-                        Bagaimana jika data salah?
-                        <span
-                            class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
-                    </summary>
-                    <p class="mt-2 text-xs leading-relaxed text-slate-500">Anda akan menerima notifikasi revisi. Silakan
-                        periksa dashboard Anda.</p>
-                </details>
-                <details class="group border-b border-slate-100 py-2">
-                    <summary
-                        class="flex cursor-pointer list-none items-center justify-between text-sm font-semibold text-slate-700">
-                        Ketika kuota Review dan Plagiarism habis bagaimana?
-                        <span
-                            class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
-                    </summary>
-                    <p class="mt-2 text-xs leading-relaxed text-slate-500">Anda dapat membeli credits tambahan dengan
-                        cara menghubungi admin.</p>
-                </details>
+            <!-- Dynamic FAQ Suggestions (Loaded via JS) -->
+            <div id="chatbot-faq-suggestions" class="flex flex-wrap gap-2 pl-11">
+                <!-- FAQ buttons injected here -->
             </div>
+        </div>
 
+        <!-- Typing Indicator -->
+        <div id="chatbot-typing" class="hidden px-4 pb-3 pt-1 bg-[#f8fafc]">
+            <div class="flex gap-3">
+                <div class="h-8 w-8 flex-shrink-0 rounded-full bg-white p-1 shadow-sm border border-slate-100">
+                    <img src="{{ asset('assets/mascot/thinking.png') }}" class="h-full w-full object-contain">
+                </div>
+                <div class="flex items-center gap-1.5 rounded-2xl rounded-tl-none bg-white px-4 py-3 shadow-sm border border-slate-100 w-fit">
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]"></span>
+                    <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-3 bg-white border-t border-slate-100 flex-shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <form id="chatbot-form" class="flex items-end gap-2 relative" onsubmit="Mascot.sendMessage(event)">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}" id="chatbot-csrf">
+                <textarea id="chatbot-input" rows="1" class="w-full resize-none rounded-2xl border-0 bg-slate-100 py-3.5 pl-4 pr-12 text-sm text-slate-700 focus:bg-slate-50 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" placeholder="Ketik pesan..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); Mascot.sendMessage(event); }"></textarea>
+                <button type="submit" class="absolute right-1.5 bottom-1.5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none" id="chatbot-submit">
+                    <span class="material-symbols-outlined !text-[20px] ml-0.5">send</span>
+                </button>
+            </form>
             @php
                 $adminPhone = \App\Models\User::role('super_admin')->orderBy('id')->first()?->phone ?? '628123456789';
-                // Bersihkan karakter non-numerik jika ada
                 $adminPhone = preg_replace('/[^0-9]/', '', $adminPhone);
-                // Pastikan format diawali dengan kode negara jika belum
                 if (strpos($adminPhone, '0') === 0) {
                     $adminPhone = '62' . substr($adminPhone, 1);
                 }
             @endphp
-            <a href="https://wa.me/{{ $adminPhone }}" target="_blank"
-                class="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 py-3 font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-95">
-                <span class="material-symbols-outlined">support_agent</span>
-                Hubungi Admin (WA)
-            </a>
+            <div class="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+                <span class="material-symbols-outlined !text-[14px]">support_agent</span>
+                Masalah mendesak? 
+                <a href="https://wa.me/{{ $adminPhone }}" target="_blank" class="text-primary font-semibold hover:text-primary-dark hover:underline transition-colors">
+                    Hubungi Admin
+                </a>
+            </div>
         </div>
     </div>
 </div>

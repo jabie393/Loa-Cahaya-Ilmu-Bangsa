@@ -66,3 +66,7 @@ Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
 })->name('public.pfc.preview');
 
 
+
+Route::get('/chatbot/faqs', [\App\Http\Controllers\ChatbotController::class, 'getFaqs'])->name('chatbot.faqs');
+Route::post('/chatbot/message', [\App\Http\Controllers\ChatbotController::class, 'sendMessage'])->name('chatbot.message')->middleware('throttle:30,1');
+
