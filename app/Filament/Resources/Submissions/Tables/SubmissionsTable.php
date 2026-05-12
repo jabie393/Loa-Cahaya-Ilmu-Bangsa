@@ -15,6 +15,12 @@ use Filament\Actions\ActionGroup;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SubmissionApproved;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Actions\BulkAction;
 
 
 
@@ -126,6 +132,38 @@ class SubmissionsTable
             
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('approve_selected')
+                        ->label('Approve Selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation(false)
+                        ->action(function (Collection $records) {
+                            $count = 0;
+                            $records->each(function (Submission $record) use (&$count) {
+                                if ($record->status !== 'Approved') {
+                                    if ($record->proof_of_payment) {
+                                        Storage::disk('public')->delete($record->proof_of_payment);
+                                    }
+
+                                    $record->update([
+                                        'status' => 'Approved',
+                                        'approved_date' => now(),
+                                        'proof_of_payment' => null,
+                                    ]);
+
+                                    Mail::to($record->email)->send(new SubmissionApproved($record));
+                                    $count++;
+                                }
+                            });
+
+                            if ($count > 0) {
+                                Notification::make()
+                                    ->title($count . ' submissions approved successfully')
+                                    ->success()
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn () => Auth::user()->hasRole('super_admin')),
                     DeleteBulkAction::make(),
                 ]),
             ]);

@@ -32,6 +32,7 @@ class PlagiarismCheckResource extends Resource
     protected static ?string $model = PlagiarismCheck::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'turnitin-logo';
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $navigationLabel = 'Cek Plagiasi';
 

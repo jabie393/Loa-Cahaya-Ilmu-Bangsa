@@ -17,3 +17,7 @@ Schedule::command('submissions:delete-rejected')
 Schedule::command('quota:reset')
     ->dailyAt('00:00');
 
+// Clean up old chatbot sessions hourly
+Schedule::command('chatbot:cleanup')
+    ->hourly();
+

@@ -21,6 +21,7 @@ class SubmissionResource extends Resource
     protected static ?string $model = Submission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'id';
 

@@ -33,6 +33,7 @@ class PreSubmissionReviewResource extends Resource
     protected static ?string $model = PreSubmissionReview::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationLabel = 'Review Pra OJS';
 

@@ -14,6 +14,7 @@ class MyCertificates extends Page
     use HasPageShield;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
+    protected static ?int $navigationSort = 2;
 
     protected string $view = 'filament.pages.my-certificates';
 

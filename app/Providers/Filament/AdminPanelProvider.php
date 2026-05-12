@@ -74,7 +74,7 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make()
                     ->navigationGroup('Settings')
-                    ->navigationSort(2),
+                    ->navigationSort(4),
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('right')
                     ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg')

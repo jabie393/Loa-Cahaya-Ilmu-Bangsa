@@ -288,9 +288,18 @@ if (!window.Mascot) {
         },
 
         appendBotMessage(text, source = 'gemini') {
-            // Convert simple markdown (bold)
-            let formattedText = this.escapeHtml(text)
-                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+            // Escape HTML for security
+            let formattedText = this.escapeHtml(text);
+
+            // 1. Convert Markdown Links: [text](url)
+            formattedText = formattedText.replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" class="text-primary font-bold hover:underline">$1</a>');
+
+            // 2. Detect plain URLs and convert to clickable links (avoiding those already in <a> tags)
+            const urlRegex = /(\s|^)(https?:\/\/[^\s<]+)/g;
+            formattedText = formattedText.replace(urlRegex, '$1<a href="$2" target="_blank" class="text-primary hover:underline">$2</a>');
+
+            // 3. Convert Bold and Italic
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
                 .replace(/\*(.*?)\*/g, '<i>$1</i>')
                 .replace(/\n/g, '<br>');
 
@@ -313,7 +322,6 @@ if (!window.Mascot) {
                 </div>
             </div>`;
             this.dom.chatMessages.insertAdjacentHTML('beforeend', html);
-            this.scrollToBottom();
         },
 
         scrollToBottom() {

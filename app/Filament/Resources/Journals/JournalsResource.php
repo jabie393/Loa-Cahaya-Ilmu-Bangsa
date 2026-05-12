@@ -19,7 +19,7 @@ class JournalsResource extends Resource
 {
     protected static ?string $model = Journal::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::BookOpen;
 
     protected static ?string $navigationLabel = 'Journal List';
 
@@ -27,7 +27,7 @@ class JournalsResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'Settings';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
