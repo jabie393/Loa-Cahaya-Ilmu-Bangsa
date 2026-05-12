@@ -41,6 +41,7 @@ return [
 
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
+        'chatbot_key' => env('GEMINI_CHATBOT_API_KEY', env('GEMINI_API_KEY')),
         'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
     ],
 

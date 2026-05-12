@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
+use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Textarea;
@@ -28,29 +29,31 @@ class ReviewSubmission extends Page
     {
         $this->record = $this->resolveRecord($record);
     }
-    
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('approve')
-                ->label(fn () => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve Submission')
-                ->color(fn () => $this->record->status === 'Rejected' ? 'warning' : 'success')
-                ->outlined(fn () => $this->record->status === 'Rejected')
-                ->icon(fn () => $this->record->status === 'Rejected' ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-check-circle')
+                ->label(fn() => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve')
+                ->color(fn() => $this->record->status === 'Rejected' ? 'warning' : 'success')
+                ->outlined(fn() => $this->record->status === 'Rejected')
+                ->icon(fn() => $this->record->status === 'Rejected' ? 'heroicon-m-arrow-uturn-left' : 'heroicon-m-check-circle')
+                ->size('sm')
                 ->modalSubmitAction(
-                    fn (Action $action) => $action
+                    fn(Action $action) => $action
                         ->color($this->record->status === 'Rejected' ? 'warning' : 'success')
-                        ->label($this->record->status === 'Rejected' ? 'Yes, Cancel Rejection' : 'Yes, Approve Submission')
+                        ->label($this->record->status === 'Rejected' ? 'Yes, Cancel Rejection' : 'Yes, Approve')
                 )
                 ->modalCancelAction(
-                    fn (Action $action) => $action
-                        ->color('danger')
-                        ->label('No, Cancel')
+                    fn(Action $action) => $action
+                        ->color('gray')
+                        ->label('Cancel')
                 )
                 ->requiresConfirmation()
-                ->modalHeading(fn () => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve Submission')
-                ->modalDescription(fn () => $this->record->status === 'Rejected' 
-                    ? 'Are you sure you want to cancel this rejection and set the status back to Pending?' 
+                ->modalHeading(fn() => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve Submission')
+                ->modalDescription(
+                    fn() => $this->record->status === 'Rejected'
+                    ? 'Are you sure you want to cancel this rejection?'
                     : 'Are you sure you want to approve this submission?'
                 )
                 ->action(function () {
@@ -86,12 +89,13 @@ class ReviewSubmission extends Page
 
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
-                ->visible(fn () => $this->record->status !== 'Approved' && Auth::user()?->hasRole('super_admin')),
+                ->visible(fn() => $this->record->status !== 'Approved' && Auth::user()?->hasRole('super_admin')),
             Action::make('reject')
-                ->label('Reject Submission')
+                ->label('Reject')
                 ->color('danger')
                 ->outlined(false)
-                ->icon('heroicon-o-x-mark')
+                ->icon('heroicon-m-x-mark')
+                ->size('sm')
                 ->form([
                     Section::make('')
                         ->schema([
@@ -118,15 +122,23 @@ class ReviewSubmission extends Page
 
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
-                ->visible(fn () => $this->record->status === 'Pending' && Auth::user()?->hasRole('super_admin')),
-            EditAction::make()
-            ->label(fn () => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission'),
-            Action::make('Tanya admin')
-                ->label('Tanya Admin')
-                ->icon('heroicon-o-chat-bubble-left-right')
-                ->color('primary')
-                ->url(fn () => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
-                ->openUrlInNewTab(),
+                ->visible(fn() => $this->record->status === 'Pending' && Auth::user()?->hasRole('super_admin')),
+            ActionGroup::make([
+                EditAction::make()
+                    ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
+                    ->icon('heroicon-m-pencil-square'),
+                Action::make('Konfirmasi LOA ke Admin')
+                    ->label('Konfirmasi LOA ke Admin')
+                    ->icon('heroicon-m-chat-bubble-left-right')
+                    ->color('success')
+                    ->url(fn() => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
+                    ->openUrlInNewTab(),
+            ])
+                ->label('Actions')
+                ->icon('heroicon-m-ellipsis-vertical')
+                ->size('sm')
+                ->color('gray')
+                ->button(),
         ];
     }
 }

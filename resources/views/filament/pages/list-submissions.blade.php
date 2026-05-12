@@ -13,7 +13,7 @@
                     <li>Upload bukti pembayaran</li>
                     <li>Klik <strong>Next</strong> untuk melanjutkan ke tahap konfirmasi.</li>
                     <li>Klik <strong>Submit</strong> untuk mengirimkan pengajuan Anda.</li>
-                    <li>Klik tombol <strong>Tanya Admin</strong> dan konfirmasi ID untuk approval LOA</li>
+                    <li>Klik tombol <strong>Konfirmasi LOA ke Admin</strong> dan konfirmasi ID untuk approval LOA</li>
                 </ul>
             </div>
 

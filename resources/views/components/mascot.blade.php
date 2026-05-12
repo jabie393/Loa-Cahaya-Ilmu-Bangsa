@@ -12,50 +12,54 @@
 </div>
 
 <div id="mascot-container"
-    class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3 transition-all duration-500 ease-in-out"
+    class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end md:flex-row md:items-end gap-3 transition-all duration-500 ease-in-out"
     data-minimized="false">
-    <!-- Chat Bubble -->
-    <div id="mascot-bubble"
-        class="hidden max-w-[250px] transform rounded-2xl bg-white/80 p-4 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md transition-all duration-300 md:text-base">
-        <div class="relative">
-            <span id="mascot-message">Halo! Saya Kanda Putra. Ada yang bisa saya bantu?</span>
-            <button onclick="Mascot.hideBubble()"
-                class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
-                <span class="material-symbols-outlined !text-[14px]">close</span>
-            </button>
-        </div>
-        <!-- Bubble Arrow -->
-        <div class="absolute -bottom-2 right-6 h-4 w-4 rotate-45 bg-white/80 backdrop-blur-md"></div>
-    </div>
-
-    <!-- Mascot Wrapper -->
-    <div class="group relative flex items-end">
-        <!-- Action Buttons (Visible on hover/click) -->
-        <div id="mascot-actions"
-            class="absolute -left-12 bottom-0 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-            <button onclick="Mascot.toggleMinimize()" title="Minimize"
-                class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110">
-                <span class="material-symbols-outlined text-slate-600" id="minimize-icon">collapse_all</span>
-            </button>
+    
+    <!-- Wrapper for Bubble and Avatar to keep them stacked vertically -->
+    <div class="flex flex-col items-end gap-3 order-2 md:order-1">
+        <!-- Chat Bubble -->
+        <div id="mascot-bubble"
+            class="hidden max-w-[250px] transform rounded-2xl bg-white/80 p-4 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md transition-all duration-300 md:text-base">
+            <div class="relative">
+                <span id="mascot-message">Halo! Saya Kanda Putra. Ada yang bisa saya bantu?</span>
+                <button onclick="Mascot.hideBubble()"
+                    class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
+                    <span class="material-symbols-outlined !text-[14px]">close</span>
+                </button>
+            </div>
+            <!-- Bubble Arrow -->
+            <div class="absolute -bottom-2 right-6 h-4 w-4 rotate-45 bg-white/80 backdrop-blur-md"></div>
         </div>
 
-        <!-- Mascot Image -->
-        <div id="mascot-avatar" onclick="Mascot.togglePanel()"
-            class="relative cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95">
-            <img id="mascot-img" src="{{ asset('assets/mascot/idle.png') }}" alt="Kanda Putra - Maskot Helper"
-                style="image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges; transform: translate3d(0,0,0); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.15));"
-                class="h-[70px] w-auto object-contain animate-float md:h-[100px]"
-                onerror="this.src='https://ui-avatars.com/api/?name=KP&background=0D8ABC&color=fff'">
+        <!-- Mascot Wrapper -->
+        <div class="group relative flex items-end">
+            <!-- Action Buttons (Visible on hover/click) -->
+            <div id="mascot-actions"
+                class="absolute -left-12 bottom-0 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <button onclick="Mascot.toggleMinimize()" title="Minimize"
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110">
+                    <span class="material-symbols-outlined text-slate-600" id="minimize-icon">collapse_all</span>
+                </button>
+            </div>
 
-            <!-- Notification Badge (for errors/success) -->
-            <div id="mascot-badge" class="absolute right-0 top-0 hidden h-4 w-4 animate-ping rounded-full bg-red-500">
+            <!-- Mascot Image -->
+            <div id="mascot-avatar" onclick="Mascot.togglePanel()"
+                class="relative cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95">
+                <img id="mascot-img" src="{{ asset('assets/mascot/idle.png') }}" alt="Kanda Putra - Maskot Helper"
+                    style="backface-visibility: hidden; transform: translateZ(0); -webkit-font-smoothing: antialiased; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.15));"
+                    class="h-[100px] w-auto object-contain animate-float md:h-[140px]"
+                    onerror="this.src='https://ui-avatars.com/api/?name=KP&background=0D8ABC&color=fff'">
+
+                <!-- Notification Badge (for errors/success) -->
+                <div id="mascot-badge" class="absolute right-0 top-0 hidden h-4 w-4 animate-ping rounded-full bg-red-500">
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Help Panel (Chatbot Interface) -->
     <div id="mascot-panel"
-        class="hidden absolute bottom-full mb-4 right-0 flex-col w-[320px] h-[550px] max-h-[75vh] overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 md:w-[380px] z-[10000]">
+        class="hidden absolute bottom-full mb-4 right-0 md:relative md:bottom-0 md:mb-0 md:right-auto md:order-2 flex-col w-[320px] h-[550px] max-h-[75vh] overflow-hidden rounded-3xl bg-white shadow-2xl transition-all duration-300 md:w-[380px] z-[10000]">
         
         <!-- Header -->
         <div class="bg-primary p-4 text-white flex-shrink-0 relative">

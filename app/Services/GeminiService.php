@@ -16,7 +16,7 @@ class GeminiService
 
     public function generateDirectResponse(string $prompt): string
     {
-        $apiKey = config('services.gemini.key');
+        $apiKey = config('services.gemini.chatbot_key');
         $model = config('services.gemini.model', 'gemini-1.5-flash');
 
         if (!$apiKey) return "";
@@ -48,7 +48,7 @@ class GeminiService
 
     public function generateResponse(string $userMessage, array $userContext = [], ?string $summary = null, array $history = []): string
     {
-        $apiKey = config('services.gemini.key');
+        $apiKey = config('services.gemini.chatbot_key');
         $model = config('services.gemini.model', 'gemini-1.5-flash');
 
         if (!$apiKey) {
