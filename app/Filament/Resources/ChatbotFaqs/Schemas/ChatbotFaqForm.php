@@ -15,7 +15,8 @@ class ChatbotFaqForm
         return $schema
             ->components([
                 TextInput::make('question')
-                    ->required(),
+                    ->required()
+                    ->columnSpanFull(),
                 Textarea::make('answer')
                     ->required()
                     ->columnSpanFull(),
