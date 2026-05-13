@@ -18,13 +18,22 @@ if (!window.Mascot) {
 
         init() {
             if (!this.state.sessionId) {
-                this.state.sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + Date.now();
+                this.state.sessionId =
+                    "sess_" +
+                    Math.random().toString(36).substr(2, 9) +
+                    Date.now();
                 localStorage.setItem("mascot_session_id", this.state.sessionId);
             }
-            
+
             if (!this.state.guestToken) {
-                this.state.guestToken = 'guest_' + Math.random().toString(36).substr(2, 9) + Date.now();
-                localStorage.setItem("mascot_guest_token", this.state.guestToken);
+                this.state.guestToken =
+                    "guest_" +
+                    Math.random().toString(36).substr(2, 9) +
+                    Date.now();
+                localStorage.setItem(
+                    "mascot_guest_token",
+                    this.state.guestToken,
+                );
             }
 
             this.dom = {
@@ -35,15 +44,21 @@ if (!window.Mascot) {
                 panel: document.getElementById("mascot-panel"),
                 minimizeIcon: document.getElementById("minimize-icon"),
                 badge: document.getElementById("mascot-badge"),
-                maximizeTrigger: document.getElementById("mascot-maximize-trigger"),
+                maximizeTrigger: document.getElementById(
+                    "mascot-maximize-trigger",
+                ),
                 // Chatbot specific
                 chatMessages: document.getElementById("chatbot-messages"),
                 chatInput: document.getElementById("chatbot-input"),
                 chatForm: document.getElementById("chatbot-form"),
                 chatSubmitBtn: document.getElementById("chatbot-submit"),
                 typingIndicator: document.getElementById("chatbot-typing"),
-                faqSuggestions: document.getElementById("chatbot-faq-suggestions"),
-                csrfToken: document.getElementById("chatbot-csrf") ? document.getElementById("chatbot-csrf").value : '',
+                faqSuggestions: document.getElementById(
+                    "chatbot-faq-suggestions",
+                ),
+                csrfToken: document.getElementById("chatbot-csrf")
+                    ? document.getElementById("chatbot-csrf").value
+                    : "",
             };
 
             if (!this.dom.container) return;
@@ -53,8 +68,8 @@ if (!window.Mascot) {
                 return;
             }
             this.dom.container.dataset.initialized = "true";
-            
-            // Reset history loaded state in case this is an SPA navigation 
+
+            // Reset history loaded state in case this is an SPA navigation
             // and the DOM was newly replaced but the global state remained.
             this.state.historyLoaded = false;
 
@@ -70,7 +85,7 @@ if (!window.Mascot) {
 
             // Initial Greeting based on page
             setTimeout(() => this.handleAutoMessage(), 2500);
-            
+
             // Load FAQs and History
             this.loadFaqs();
             this.loadHistory();
@@ -78,21 +93,26 @@ if (!window.Mascot) {
 
         setupListeners() {
             this.dom.img.addEventListener("mouseenter", () => {
-                if (this.state.pose === "idle" && !this.state.isTyping) this.setPose("happy");
+                if (this.state.pose === "idle" && !this.state.isTyping)
+                    this.setPose("happy");
             });
 
             this.dom.img.addEventListener("mouseleave", () => {
-                if (this.state.pose === "happy" && !this.state.isTyping) this.setPose("idle");
+                if (this.state.pose === "happy" && !this.state.isTyping)
+                    this.setPose("idle");
             });
 
             if (this.dom.chatInput) {
-                this.dom.chatInput.addEventListener('input', function() {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                    if (this.value.trim() !== '') {
-                        Mascot.dom.chatSubmitBtn.removeAttribute('disabled');
+                this.dom.chatInput.addEventListener("input", function () {
+                    this.style.height = "auto";
+                    this.style.height = this.scrollHeight + "px";
+                    if (this.value.trim() !== "") {
+                        Mascot.dom.chatSubmitBtn.removeAttribute("disabled");
                     } else {
-                        Mascot.dom.chatSubmitBtn.setAttribute('disabled', 'true');
+                        Mascot.dom.chatSubmitBtn.setAttribute(
+                            "disabled",
+                            "true",
+                        );
                     }
                 });
             }
@@ -110,8 +130,13 @@ if (!window.Mascot) {
 
                 if (pose === "warning" || pose === "success") {
                     this.dom.badge.classList.remove("hidden");
-                    if (pose === "warning") this.dom.badge.classList.replace("bg-green-500", "bg-red-500");
-                    if (pose === "success") this.dom.badge.classList.add("bg-green-500");
+                    if (pose === "warning")
+                        this.dom.badge.classList.replace(
+                            "bg-green-500",
+                            "bg-red-500",
+                        );
+                    if (pose === "success")
+                        this.dom.badge.classList.add("bg-green-500");
                 } else {
                     this.dom.badge.classList.add("hidden");
                 }
@@ -183,25 +208,36 @@ if (!window.Mascot) {
             }
 
             if (path === "/" || path === "/index.php") {
-                message = "Halo! Saya Kanda Putra. Butuh bantuan untuk pengajuan LOA? Klik saya ya! ✨";
+                message =
+                    "Halo! Saya Kanda Putra. Butuh bantuan untuk pengajuan LOA? Klik saya ya! ✨";
                 pose = "happy";
             } else if (path.includes("journal")) {
-                message = "Silakan pilih jurnal tujuan Anda untuk melakukan pengajuan LOA. 📚";
+                message =
+                    "Silakan pilih jurnal tujuan Anda untuk melakukan pengajuan LOA. 📚";
                 pose = "happy";
             } else if (path.includes("submissions/create")) {
-                message = "Pastikan semua data sudah benar dan file PDF sesuai format ya. 📄";
+                message =
+                    "Pastikan semua data sudah benar dan file PDF sesuai format ya. 📄";
                 pose = "thinking";
-            } else if (path.includes("submissions") && !path.includes("create") && !path.includes("edit")) {
-                message = "Anda dapat memantau status pengajuan LOA Anda di sini secara real-time. 🔍";
+            } else if (
+                path.includes("submissions") &&
+                !path.includes("create") &&
+                !path.includes("edit")
+            ) {
+                message =
+                    "Anda dapat memantau status pengajuan LOA Anda di sini secara real-time. 🔍";
                 pose = "idle";
             } else if (path.includes("edit")) {
-                message = "Silakan periksa catatan dari admin jika ada revisi yang diminta. ✍️";
+                message =
+                    "Silakan periksa catatan dari admin jika ada revisi yang diminta. ✍️";
                 pose = "thinking";
             } else if (path.includes("pre-submission-reviews")) {
-                message = "Selamat datang di Review Pra-OJS! Unggah naskah Anda dan biarkan reviewer kami menganalisis kualitasnya. ✨";
+                message =
+                    "Selamat datang di Review Pra-OJS! Unggah naskah Anda dan biarkan reviewer kami menganalisis kualitasnya. ✨";
                 pose = "happy";
             } else if (path.includes("plagiarism")) {
-                message = "Layanan cek plagiarisme akan membantu validasi naskah Anda. 🛡️";
+                message =
+                    "Layanan cek plagiarisme akan membantu validasi naskah Anda. 🛡️";
                 pose = "thinking";
             }
 
@@ -216,25 +252,30 @@ if (!window.Mascot) {
             this.state.historyLoaded = true;
 
             try {
-                const response = await fetch(`/chatbot/session?session_id=${this.state.sessionId}`);
+                const response = await fetch(
+                    `/chatbot/session?session_id=${this.state.sessionId}`,
+                );
                 const data = await response.json();
-                
+
                 if (data.success && data.data.length > 0) {
                     let hasHistory = false;
-                    data.data.forEach(msg => {
-                        if (msg.role === 'user') {
+                    data.data.forEach((msg) => {
+                        if (msg.role === "user") {
                             this.appendUserMessage(msg.message);
                         } else {
                             // If it was a system message, we can just treat it as bot or system
-                            const source = msg.source || 'gemini';
+                            const source = msg.source || "gemini";
                             this.appendBotMessage(msg.message, source);
                         }
                         hasHistory = true;
                     });
-                    
+
                     if (hasHistory) {
                         setTimeout(() => {
-                            this.appendBotMessage("Kita lanjutkan percakapan sebelumnya ya 👋", 'system');
+                            this.appendBotMessage(
+                                "Kita lanjutkan percakapan sebelumnya ya 👋",
+                                "system",
+                            );
                         }, 500);
                     }
                 }
@@ -245,18 +286,20 @@ if (!window.Mascot) {
 
         async loadFaqs() {
             if (!this.dom.faqSuggestions) return;
-            
+
             try {
-                const response = await fetch('/chatbot/faqs');
+                const response = await fetch("/chatbot/faqs");
                 const data = await response.json();
-                
+
                 if (data.success && data.data.length > 0) {
-                    this.dom.faqSuggestions.innerHTML = '';
-                    data.data.forEach(faq => {
-                        const btn = document.createElement('button');
-                        btn.className = "rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white";
+                    this.dom.faqSuggestions.innerHTML = "";
+                    data.data.forEach((faq) => {
+                        const btn = document.createElement("button");
+                        btn.className =
+                            "rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-white";
                         btn.innerText = faq.question;
-                        btn.onclick = () => this.sendDirectMessage(faq.question);
+                        btn.onclick = () =>
+                            this.sendDirectMessage(faq.question);
                         this.dom.faqSuggestions.appendChild(btn);
                     });
                 }
@@ -267,8 +310,8 @@ if (!window.Mascot) {
 
         sendDirectMessage(text) {
             this.dom.chatInput.value = text;
-            this.dom.chatSubmitBtn.removeAttribute('disabled');
-            this.sendMessage(new Event('submit'));
+            this.dom.chatSubmitBtn.removeAttribute("disabled");
+            this.sendMessage(new Event("submit"));
         },
 
         appendUserMessage(text) {
@@ -283,28 +326,36 @@ if (!window.Mascot) {
                     </div>
                 </div>
             </div>`;
-            this.dom.chatMessages.insertAdjacentHTML('beforeend', html);
+            this.dom.chatMessages.insertAdjacentHTML("beforeend", html);
             this.scrollToBottom();
         },
 
-        appendBotMessage(text, source = 'gemini') {
+        appendBotMessage(text, source = "gemini") {
             // Escape HTML for security
             let formattedText = this.escapeHtml(text);
 
             // 1. Convert Markdown Links: [text](url)
-            formattedText = formattedText.replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" class="text-primary font-bold hover:underline">$1</a>');
+            formattedText = formattedText.replace(
+                /\[(.*?)\]\((https?:\/\/.*?)\)/g,
+                '<a href="$2" target="_blank" class="text-primary font-bold hover:underline">$1</a>',
+            );
 
             // 2. Detect plain URLs and convert to clickable links (avoiding those already in <a> tags)
             const urlRegex = /(\s|^)(https?:\/\/[^\s<]+)/g;
-            formattedText = formattedText.replace(urlRegex, '$1<a href="$2" target="_blank" class="text-primary hover:underline">$2</a>');
+            formattedText = formattedText.replace(
+                urlRegex,
+                '$1<a href="$2" target="_blank" class="text-primary hover:underline">$2</a>',
+            );
 
             // 3. Convert Bold and Italic
-            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-                .replace(/\*(.*?)\*/g, '<i>$1</i>')
-                .replace(/\n/g, '<br>');
+            formattedText = formattedText
+                .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+                .replace(/\*(.*?)\*/g, "<i>$1</i>")
+                .replace(/\n/g, "<br>");
 
-            const sourceIcon = source === 'faq' ? 'bolt' : 'auto_awesome';
-            const sourceColor = source === 'faq' ? 'text-amber-500' : 'text-purple-500';
+            const sourceIcon = source === "faq" ? "bolt" : "auto_awesome";
+            const sourceColor =
+                source === "faq" ? "text-amber-500" : "text-purple-500";
 
             const html = `
             <div class="flex gap-3">
@@ -317,17 +368,18 @@ if (!window.Mascot) {
                     </div>
                     <div class="flex items-center gap-1 pl-1 text-[10px] text-slate-400">
                         <span class="material-symbols-outlined !text-[12px] ${sourceColor}">${sourceIcon}</span>
-                        ${source === 'faq' ? 'FAQ Database' : 'Gemini AI'}
+                        ${source === "faq" ? "FAQ Database" : "Kanda Putra"}
                     </div>
                 </div>
             </div>`;
-            this.dom.chatMessages.insertAdjacentHTML('beforeend', html);
+            this.dom.chatMessages.insertAdjacentHTML("beforeend", html);
         },
 
         scrollToBottom() {
             setTimeout(() => {
                 if (this.dom.chatMessages) {
-                    this.dom.chatMessages.scrollTop = this.dom.chatMessages.scrollHeight;
+                    this.dom.chatMessages.scrollTop =
+                        this.dom.chatMessages.scrollHeight;
                 }
             }, 50);
         },
@@ -339,79 +391,86 @@ if (!window.Mascot) {
             if (!message || this.state.isTyping) return;
 
             // Clear input
-            this.dom.chatInput.value = '';
-            this.dom.chatInput.style.height = 'auto';
-            this.dom.chatSubmitBtn.setAttribute('disabled', 'true');
+            this.dom.chatInput.value = "";
+            this.dom.chatInput.style.height = "auto";
+            this.dom.chatSubmitBtn.setAttribute("disabled", "true");
 
             // Hide suggestions after first message
             if (this.dom.faqSuggestions) {
-                this.dom.faqSuggestions.style.display = 'none';
+                this.dom.faqSuggestions.style.display = "none";
             }
 
             this.appendUserMessage(message);
-            
+
             // Set Typing state
             this.state.isTyping = true;
-            this.dom.typingIndicator.classList.remove('hidden');
+            this.dom.typingIndicator.classList.remove("hidden");
             this.setPose("thinking");
             this.scrollToBottom();
 
             // Prepare context
             const context = {
-                'Current URL': window.location.href,
-                'Page Path': window.location.pathname
+                "Current URL": window.location.href,
+                "Page Path": window.location.pathname,
             };
 
             try {
-                const response = await fetch('/chatbot/message', {
-                    method: 'POST',
+                const response = await fetch("/chatbot/message", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': this.dom.csrfToken
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": this.dom.csrfToken,
                     },
                     body: JSON.stringify({
                         message: message,
                         session_id: this.state.sessionId,
                         guest_token: this.state.guestToken,
-                        context: context
-                    })
+                        context: context,
+                    }),
                 });
 
                 const data = await response.json();
-                
+
                 this.state.isTyping = false;
-                this.dom.typingIndicator.classList.add('hidden');
+                this.dom.typingIndicator.classList.add("hidden");
                 this.setPose("idle");
 
                 if (data.success) {
                     this.appendBotMessage(data.data.message, data.data.source);
                 } else {
-                    this.appendBotMessage("Maaf, terjadi kesalahan pada sistem.", 'error');
+                    this.appendBotMessage(
+                        "Maaf, terjadi kesalahan pada sistem.",
+                        "error",
+                    );
                 }
-
             } catch (error) {
                 console.error(error);
                 this.state.isTyping = false;
-                this.dom.typingIndicator.classList.add('hidden');
+                this.dom.typingIndicator.classList.add("hidden");
                 this.setPose("warning");
-                this.appendBotMessage("Gagal terhubung ke server. Periksa koneksi internet Anda.", 'error');
+                this.appendBotMessage(
+                    "Gagal terhubung ke server. Periksa koneksi internet Anda.",
+                    "error",
+                );
             }
         },
 
         escapeHtml(unsafe) {
             return unsafe
-                 .replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;")
-                 .replace(/"/g, "&quot;")
-                 .replace(/'/g, "&#039;");
-        }
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        },
     };
 
     // Auto-init
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", () => window.Mascot.init());
+        document.addEventListener("DOMContentLoaded", () =>
+            window.Mascot.init(),
+        );
     } else {
         window.Mascot.init();
     }
