@@ -16,25 +16,27 @@ class ChatbotService
     public function processMessage(string $message, array $context = [], ?string $summary = null, array $history = []): array
     {
         // 1. Try to find answer in FAQ
-        $faqAnswer = $this->searchFaq($message);
+        $faq = $this->searchFaq($message);
 
-        if ($faqAnswer) {
-            return [
-                'source' => 'faq',
-                'answer' => $faqAnswer
-            ];
+        if ($faq) {
+            // Instead of bypassing AI, we give the FAQ as context to Gemini
+            // This ensures Kanda Putra maintains its personality and handles context properly
+            $context['Data dari FAQ Database'] = "Pertanyaan: {$faq->question}\nJawaban: {$faq->answer}";
+            $source = 'faq';
+        } else {
+            $source = 'gemini';
         }
 
-        // 2. Fallback to Gemini API with Dynamic Knowledge Base
+        // 2. Always generate response via Gemini to keep the "Kanda Putra" persona
         $geminiAnswer = $this->geminiService->generateResponse($message, $context, $summary, $history);
 
         return [
-            'source' => 'gemini',
+            'source' => $source,
             'answer' => $geminiAnswer
         ];
     }
 
-    private function searchFaq(string $message): ?string
+    private function searchFaq(string $message): ?ChatbotFaq
     {
         $message = strtolower(trim($message));
         // Simple Stopwords removal for better matching
@@ -59,8 +61,6 @@ class ChatbotService
         });
 
         // Get the most relevant FAQ
-        $faq = $query->first();
-
-        return $faq ? $faq->answer : null;
+        return $query->first();
     }
 }
