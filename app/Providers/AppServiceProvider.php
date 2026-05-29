@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton('plagiarism', function ($app) {
             return new \App\Services\PlagiarismManager($app);
         });
+
+        $this->app->singleton('plagiarism-paraphrase', function ($app) {
+            return new \App\Services\PlagiarismParaphraseManager($app);
+        });
     }
 
     /**

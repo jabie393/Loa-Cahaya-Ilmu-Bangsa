@@ -45,4 +45,8 @@ return [
         'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
     ],
 
+    'plagiarism_paraphrase' => [
+        'driver' => env('PLAGIARISM_PARAPHRASE_DRIVER', 'gemini'),
+    ],
+
 ];

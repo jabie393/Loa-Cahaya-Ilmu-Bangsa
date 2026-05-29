@@ -30,6 +30,11 @@ class PlagiarismCheck extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function plagiarismParaphrase(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PlagiarismParaphrase::class);
+    }
+
     /**
      * Process the plagiarism check.
      */
