@@ -61,8 +61,11 @@ class PlagiarismCheck extends Model
             \Illuminate\Support\Facades\Mail::to($this->email ?? $this->user->email)
                 ->send(new \App\Mail\PlagiarismCheckResultMail($this));
 
-
-
+            \Filament\Notifications\Notification::make()
+                ->title('Analisis Berhasil')
+                ->body('Pengecekan plagiasi telah selesai diproses. Hasil analisis dan laporan lengkap telah dikirimkan ke email Anda.')
+                ->success()
+                ->send();
         } catch (\Exception $e) {
             $this->update([
                 'status' => 'failed',

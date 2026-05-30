@@ -292,15 +292,15 @@ class PlagiarismCheckResource extends Resource
                         $title = $state->title;
                         $code = 'PFC-' . str_pad($state->id, 3, '0', STR_PAD_LEFT);
                         
-                        $titleStyle = 'color: #111827;'; 
+                        $titleClass = 'text-gray-900 dark:text-white'; 
                         $isLowOpacity = false;
                         
                         if ($state->status === 'failed') {
                             $filename = !empty($state->file_path) ? basename($state->file_path) : 'Berkas';
                             $title = "Analisis Plagiasi Gagal — ({$filename})";
-                            $titleStyle = 'color: #dc2626; font-style: italic;'; 
+                            $titleClass = 'text-red-600 dark:text-red-400 italic'; 
                             $errorMessage = 'Tips: Coba Re-Check setelah beberapa saat...';
-                            $code .= " | <span style='color: #d97706; font-weight: 500;'>{$errorMessage}</span>";
+                            $code .= " | <span class='text-amber-600 dark:text-amber-400 font-semibold'>{$errorMessage}</span>";
                         } elseif (empty($title)) {
                             if (!empty($state->file_path)) {
                                 $title = basename($state->file_path);
@@ -316,11 +316,11 @@ class PlagiarismCheckResource extends Resource
                         
                         return new \Illuminate\Support\HtmlString("
                             <div class='flex flex-col gap-0.5 py-1' style='{$opacityStyle}'>
-                                <div class='font-bold text-sm dark:text-white' 
-                                     style='{$titleStyle} display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25rem; max-height: 2.5rem;'>
+                                <div class='font-bold text-sm {$titleClass}' 
+                                     style='display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word; line-height: 1.25rem; max-height: 2.5rem;'>
                                     {$title}
                                 </div>
-                                <span class='text-xs text-gray-500 font-mono'>{$code}</span>
+                                <span class='text-xs text-gray-500 dark:text-gray-400 font-mono'>{$code}</span>
                             </div>
                         ");
                     }),
@@ -337,30 +337,25 @@ class PlagiarismCheckResource extends Resource
                             if ($state->status !== 'completed' || $state->similarity_score === null) {
                                 return new \Illuminate\Support\HtmlString('<span class="text-gray-400">—</span>');
                             }
-                            
-                            $score = number_format($state->similarity_score, 1) . '%';
+                                                     $score = number_format($state->similarity_score, 1) . '%';
                             $category = $state->similarity_category ?? PlagiarismCheck::getCategoryForScore($state->similarity_score);
                             
-                            $colors = match ($category) {
+                            $badgeClasses = match ($category) {
                                 'rendah' => [
-                                    'text' => '#10b981',
-                                    'bg' => '#ecfdf5',
-                                    'border' => '#a7f3d0'
+                                    'textClass' => 'text-emerald-600 dark:text-emerald-400',
+                                    'badgeClass' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50'
                                 ],
                                 'sedang' => [
-                                    'text' => '#f59e0b',
-                                    'bg' => '#fffbeb',
-                                    'border' => '#fde68a'
+                                    'textClass' => 'text-amber-600 dark:text-amber-400',
+                                    'badgeClass' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50'
                                 ],
                                 'tinggi' => [
-                                    'text' => '#ef4444',
-                                    'bg' => '#fef2f2',
-                                    'border' => '#fecaca'
+                                    'textClass' => 'text-red-600 dark:text-red-400',
+                                    'badgeClass' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50'
                                 ],
                                 default => [
-                                    'text' => '#6b7280',
-                                    'bg' => '#f9fafb',
-                                    'border' => '#e5e7eb'
+                                    'textClass' => 'text-gray-600 dark:text-gray-400',
+                                    'badgeClass' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50'
                                 ]
                             };
                             
@@ -368,8 +363,8 @@ class PlagiarismCheckResource extends Resource
                             
                             return new \Illuminate\Support\HtmlString("
                                 <div class='flex flex-col items-center justify-center gap-1.5 py-1'>
-                                    <span class='font-bold text-sm' style='color: {$colors['text']}'>{$score}</span>
-                                    <span class='px-2.5 py-0.5 text-[10px] font-semibold rounded-full border' style='color: {$colors['text']}; background-color: {$colors['bg']}; border-color: {$colors['border']}'>
+                                    <span class='font-bold text-sm {$badgeClasses['textClass']}'>{$score}</span>
+                                    <span class='px-2.5 py-0.5 text-[10px] font-semibold rounded-full border {$badgeClasses['badgeClass']}'>
                                         {$label}
                                     </span>
                                 </div>
@@ -426,26 +421,22 @@ class PlagiarismCheckResource extends Resource
                             $score = number_format((float) $paraphrase->estimated_new_score, 1) . '%';
                             $category = PlagiarismCheck::getCategoryForScore((float) $paraphrase->estimated_new_score);
                             
-                            $colors = match ($category) {
+                            $badgeClasses = match ($category) {
                                 'rendah' => [
-                                    'text' => '#10b981',
-                                    'bg' => '#ecfdf5',
-                                    'border' => '#a7f3d0'
+                                    'textClass' => 'text-emerald-600 dark:text-emerald-400',
+                                    'badgeClass' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50'
                                 ],
                                 'sedang' => [
-                                    'text' => '#f59e0b',
-                                    'bg' => '#fffbeb',
-                                    'border' => '#fde68a'
+                                    'textClass' => 'text-amber-600 dark:text-amber-400',
+                                    'badgeClass' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50'
                                 ],
                                 'tinggi' => [
-                                    'text' => '#ef4444',
-                                    'bg' => '#fef2f2',
-                                    'border' => '#fecaca'
+                                    'textClass' => 'text-red-600 dark:text-red-400',
+                                    'badgeClass' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50'
                                 ],
                                 default => [
-                                    'text' => '#6b7280',
-                                    'bg' => '#f9fafb',
-                                    'border' => '#e5e7eb'
+                                    'textClass' => 'text-gray-600 dark:text-gray-400',
+                                    'badgeClass' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50'
                                 ]
                             };
                             
@@ -453,8 +444,8 @@ class PlagiarismCheckResource extends Resource
                             
                             return new \Illuminate\Support\HtmlString("
                                 <div class='flex flex-col items-center justify-center gap-1.5 py-1'>
-                                    <span class='font-bold text-sm' style='color: {$colors['text']}'>{$score}</span>
-                                    <span class='px-2.5 py-0.5 text-[10px] font-semibold rounded-full border' style='color: {$colors['text']}; background-color: {$colors['bg']}; border-color: {$colors['border']}'>
+                                    <span class='font-bold text-sm {$badgeClasses['textClass']}'>{$score}</span>
+                                    <span class='px-2.5 py-0.5 text-[10px] font-semibold rounded-full border {$badgeClasses['badgeClass']}'>
                                         {$label}
                                     </span>
                                 </div>
@@ -528,9 +519,13 @@ class PlagiarismCheckResource extends Resource
                                             ->send();
 
                                     } catch (\Exception $e) {
+                                        $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local')
+                                            ? $e->getMessage()
+                                            : 'Server parafrase sedang sibuk. Silakan coba kembali beberapa saat lagi.';
+
                                         \Filament\Notifications\Notification::make()
                                             ->title('Parafrase Gagal')
-                                            ->body('Terjadi kesalahan saat memproses parafrase: ' . $e->getMessage())
+                                            ->body('Terjadi kesalahan saat memproses parafrase: ' . $errorMessage)
                                             ->danger()
                                             ->send();
                                     }
@@ -540,7 +535,11 @@ class PlagiarismCheckResource extends Resource
                                 ->color('warning')
                                 ->icon('heroicon-o-arrow-path')
                                 ->requiresConfirmation()
-                                ->visible(fn(PlagiarismCheck $record): bool => $record->status === 'failed')
+                                ->visible(
+                                    fn(PlagiarismCheck $record): bool =>
+                                    $record->status === 'failed' &&
+                                    (!auth()->user()?->hasRole('super_admin') || $record->user_id === auth()->id())
+                                )
                                 ->action(fn(PlagiarismCheck $record, Action $action) => [
                                     $record->processCheck(),
                                     $action->cancel(),
@@ -586,9 +585,13 @@ class PlagiarismCheckResource extends Resource
                                     ->send();
 
                             } catch (\Exception $e) {
+                                $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local')
+                                    ? $e->getMessage()
+                                    : 'Server parafrase sedang sibuk. Silakan coba kembali beberapa saat lagi.';
+
                                 \Filament\Notifications\Notification::make()
                                     ->title('Parafrase Gagal')
-                                    ->body('Terjadi kesalahan saat memproses parafrase: ' . $e->getMessage())
+                                    ->body('Terjadi kesalahan saat memproses parafrase: ' . $errorMessage)
                                     ->danger()
                                     ->send();
                             }
@@ -598,7 +601,11 @@ class PlagiarismCheckResource extends Resource
                         ->color('warning')
                         ->icon('heroicon-o-arrow-path')
                         ->requiresConfirmation()
-                        ->visible(fn(PlagiarismCheck $record): bool => $record->status === 'failed')
+                        ->visible(
+                            fn(PlagiarismCheck $record): bool =>
+                            $record->status === 'failed' &&
+                            (!auth()->user()?->hasRole('super_admin') || $record->user_id === auth()->id())
+                        )
                         ->action(fn(PlagiarismCheck $record, Action $action) => [
                             $record->processCheck(),
                             $action->cancel(),
