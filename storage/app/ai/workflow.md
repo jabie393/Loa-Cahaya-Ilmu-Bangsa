@@ -42,13 +42,59 @@ Hasil review dikirim otomatis ke email pengguna.
 
 ---
 
-## STEP 2 — Cek Plagiasi
+## STEP 2 — Cek Plagiasi & Parafrase
 
-Penulis melakukan pengecekan plagiasi melalui fitur:
+Penulis melakukan pengecekan plagiasi dan optimasi kemiripan naskah melalui fitur:
 
-- Cek Plagiasi
+- Cek Plagiasi & Parafrase
 
-Hasil pengecekan digunakan untuk memastikan artikel memenuhi standar jurnal tujuan.
+Hasil pengecekan digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk ke OJS.
+
+### 1. Proses Pengecekan Plagiasi
+Pengecekan plagiasi dilakukan dengan alur sistematis berikut:
+* **Pengisian & Unggah**: Penulis mengisi email penerima hasil analisis dan mengunggah file naskah (format **.docx** atau **.pdf** dengan ukuran maksimal 10 MB). Penulis dapat memantau sisa kuota hariannya secara real-time di bawah formulir.
+* **Proses Berjalan (`pending`/`processing`)**:
+  - Sistem mengubah status menjadi `processing` dan menjalankan analisis di latar belakang.
+  - Untuk kenyamanan visual, judul naskah yang sedang diproses di daftar tabel akan ditampilkan secara redup (opacity `0.55 !important`).
+* **Hasil Sukses (`completed`)**:
+  - Sistem otomatis mendeteksi judul asli naskah.
+  - Hasil analisis menyimpan skor kemiripan (`similarity_score`) dan memetakannya ke dalam kategori Turnitin:
+    - **Rendah** (< 20%): Badge Hijau
+    - **Sedang** (20% - 49%): Badge Jingga/Amber
+    - **Tinggi** (>= 50%): Badge Merah
+  - Kalimat-kalimat yang terindikasi plagiat disimpan di `report_data.highlighted_parts` lengkap dengan dugaan sumber (`source`) dan alasannya.
+  - Mengirimkan email laporan analisis premium secara otomatis ke email penerima.
+  - Mengurangi kuota harian (Plagiarism Credits) milik pengguna.
+* **Hasil Gagal (`failed`)**:
+  - Apabila server Turnitin mengalami high traffic, status diubah menjadi `failed` dan pesan error dicatat.
+  - Di daftar tabel, baris naskah yang gagal akan secara otomatis **disortir paling atas** agar disadari pengguna.
+  - Judul naskah akan dirender dengan teks miring merah bertuliskan: *Analisis Plagiasi Gagal — (Nama Berkas)* dan petunjuk *"Tips: Coba Re-Check setelah beberapa saat..."*.
+  - Penulis dapat memicu analisis ulang secara manual melalui tombol **"Re-Check"** pada dropdown aksi tabel atau footer modal detail.
+
+### 2. Proses Parafrase Akademik
+Setelah cek plagiasi sukses (`completed`), jika naskah memiliki kalimat-kalimat dengan tingkat kemiripan tinggi, penulis dapat menggunakan fitur **Parafrase** untuk melakukan revisi kalimat secara otomatis:
+* **Akses Fitur**:
+  - Dapat diakses melalui tombol **"Parafrase"** pada baris tabel (ikon ✨ hijau) atau di dalam footer modal detail naskah.
+  - **Keamanan & Privasi Hak Akses**: Super Admin hanya diizinkan memparafrase naskah miliknya sendiri. Tombol Parafrase akan disembunyikan sepenuhnya dari baris tabel/modal jika naskah tersebut milik pengguna biasa demi melindungi kerahasiaan tulisan penulis.
+* **Ketentuan Penggunaan**:
+  - Layanan bersifat gratis dan terintegrasi dalam kuota cek plagiasi.
+  - Hanya dapat dijalankan **1x per hasil cek Turnitin** (tombol otomatis tidak aktif setelah diproses).
+  - Penulis dapat mengulang proses (*retry*) hanya apabila proses parafrase sebelumnya berstatus gagal (`failed`).
+* **Sistem Kerja Back-End**:
+  - Sistem mengirimkan bagian kalimat plagiat (`highlighted_parts`) untuk dianalisis dan disusun ulang menggunakan metode ilmiah terstruktur dengan persona **Editor Akademik Senior**.
+  - Sistem menghasilkan susunan kalimat baru yang profesional, elegan, dan mempertahankan makna asli dengan standar jurnal internasional terakreditasi.
+* **Hasil Sukses (`completed`)**:
+  - Menyimpan data perbandingan kalimat side-by-side (`original` vs `improved`) beserta catatan penjelasannya (`explanation`).
+  - Menghitung perkiraan skor kemiripan baru yang lebih rendah (`estimated_new_score`).
+  - Mengirimkan email laporan premium bertema Royal Blue & Emerald Green yang berisi tabel perbandingan side-by-side secara otomatis ke email penulis.
+* **Interaktivitas Visual di Antarmuka (UI/UX)**:
+  - **Tabbed Infolist (Detail Naskah)**: Modal detail bertransformasi secara instan menggunakan dua tab dinamis:
+    - **Tab Hasil Cek Plagiasi**: Menampilkan statistik plagiasi awal dan bagian teks bermasalah.
+    - **Tab Hasil Parafrase**: Menampilkan perbandingan side-by-side kalimat asli vs rekomendasi parafrase serta perkiraan skor baru. (Tab ini tersembunyi sepenuhnya jika naskah belum diparafrase).
+  - **Similarity Group Column (Daftar Tabel)**:
+    - **Kolom Awal**: Skor dan badge kemiripan Turnitin sebelum diparafrase.
+    - **Kolom Δ**: Selisih persentase penurunan kemiripan (`Awal` - `Estimasi`) yang menampilkan nilai penurunan dan ikon panah bawah (`↓`) hijau murni secara dinamis.
+    - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu-abu: *"Belum parafrase"*.
 
 ---
 
@@ -379,6 +425,10 @@ Kanda Putra wajib:
 - mengarahkan user mengecek status melalui menu "Submissions"
 - mengingatkan revisi maksimal 7x24 jam jika submission ditolak
 - menjelaskan bahwa semua notifikasi penting dikirim melalui email
+- memahami bahwa naskah dengan similarity tinggi dapat diparafrase akademik secara gratis sebanyak 1x per hasil Turnitin (dapat diulang jika gagal generate).
+- mengarahkan penulis untuk meninjau perbandingan kalimat side-by-side dan estimasi kemiripan baru pada tab "Hasil Parafrase" di modal detail naskah.
+- menjelaskan bahwa hasil laporan kemiripan baru pasca-parafrase juga dikirimkan langsung ke email penulis secara otomatis.
+- memahami bahwa Super Admin tidak dapat memparafrase naskah milik pengguna biasa demi menjaga privasi dan keamanan data penulis.
 
 Kanda Putra tidak boleh:
 

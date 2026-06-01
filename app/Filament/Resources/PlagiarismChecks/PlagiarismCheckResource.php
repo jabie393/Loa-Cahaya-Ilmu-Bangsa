@@ -91,7 +91,6 @@ class PlagiarismCheckResource extends Resource
         return $schema
             ->components([
                 Section::make('Upload Dokumen')
-                    ->description('Unggah file jurnal (DOCX atau PDF) untuk dianalisis tingkat plagiasinya.')
                     ->schema([
                         TextInput::make('email')
                             ->label('Email Penerima Hasil')
@@ -286,19 +285,19 @@ class PlagiarismCheckResource extends Resource
                     ->sortable()
                     ->extraHeaderAttributes(['style' => 'width: 35%; min-width: 250px; max-width: 380px;'])
                     ->extraCellAttributes(['style' => 'max-width: 380px; white-space: normal;'])
-                    ->state(fn (PlagiarismCheck $record) => $record)
+                    ->state(fn(PlagiarismCheck $record) => $record)
                     ->html()
                     ->formatStateUsing(function ($state) {
                         $title = $state->title;
                         $code = 'PFC-' . str_pad($state->id, 3, '0', STR_PAD_LEFT);
-                        
-                        $titleClass = 'text-gray-900 dark:text-white'; 
+
+                        $titleClass = 'text-gray-900 dark:text-white';
                         $isLowOpacity = false;
-                        
+
                         if ($state->status === 'failed') {
                             $filename = !empty($state->file_path) ? basename($state->file_path) : 'Berkas';
                             $title = "Analisis Plagiasi Gagal — ({$filename})";
-                            $titleClass = 'text-red-600 dark:text-red-400 italic'; 
+                            $titleClass = 'text-red-600 dark:text-red-400 italic';
                             $errorMessage = 'Tips: Coba Re-Check setelah beberapa saat...';
                             $code .= " | <span class='text-amber-600 dark:text-amber-400 font-semibold'>{$errorMessage}</span>";
                         } elseif (empty($title)) {
@@ -311,9 +310,9 @@ class PlagiarismCheckResource extends Resource
                         } elseif (in_array($state->status, ['pending', 'processing'])) {
                             $isLowOpacity = true;
                         }
-                        
+
                         $opacityStyle = $isLowOpacity ? 'opacity: 0.55 !important;' : '';
-                        
+
                         return new \Illuminate\Support\HtmlString("
                             <div class='flex flex-col gap-0.5 py-1' style='{$opacityStyle}'>
                                 <div class='font-bold text-sm {$titleClass}' 
@@ -331,15 +330,15 @@ class PlagiarismCheckResource extends Resource
                     TextColumn::make('similarity_score')
                         ->label('Awal')
                         ->alignment(\Filament\Support\Enums\Alignment::Center)
-                        ->state(fn (PlagiarismCheck $record) => $record)
+                        ->state(fn(PlagiarismCheck $record) => $record)
                         ->html()
                         ->formatStateUsing(function ($state) {
                             if ($state->status !== 'completed' || $state->similarity_score === null) {
                                 return new \Illuminate\Support\HtmlString('<span class="text-gray-400">—</span>');
                             }
-                                                     $score = number_format($state->similarity_score, 1) . '%';
+                            $score = number_format($state->similarity_score, 1) . '%';
                             $category = $state->similarity_category ?? PlagiarismCheck::getCategoryForScore($state->similarity_score);
-                            
+
                             $badgeClasses = match ($category) {
                                 'rendah' => [
                                     'textClass' => 'text-emerald-600 dark:text-emerald-400',
@@ -358,9 +357,9 @@ class PlagiarismCheckResource extends Resource
                                     'badgeClass' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50'
                                 ]
                             };
-                            
+
                             $label = ucfirst($category);
-                            
+
                             return new \Illuminate\Support\HtmlString("
                                 <div class='flex flex-col items-center justify-center gap-1.5 py-1'>
                                     <span class='font-bold text-sm {$badgeClasses['textClass']}'>{$score}</span>
@@ -375,18 +374,18 @@ class PlagiarismCheckResource extends Resource
                     TextColumn::make('delta')
                         ->label('Δ')
                         ->alignment(\Filament\Support\Enums\Alignment::Center)
-                        ->state(fn (PlagiarismCheck $record) => $record)
+                        ->state(fn(PlagiarismCheck $record) => $record)
                         ->html()
                         ->formatStateUsing(function ($state) {
                             $paraphrase = $state->plagiarismParaphrase;
                             if (!$paraphrase || $paraphrase->status !== 'completed' || $paraphrase->estimated_new_score === null) {
                                 return new \Illuminate\Support\HtmlString('<span class="text-gray-400 font-medium text-xs">—</span>');
                             }
-                            
+
                             $awal = (float) $state->similarity_score;
                             $estimasi = (float) $paraphrase->estimated_new_score;
                             $diff = $awal - $estimasi;
-                            
+
                             if ($diff > 0) {
                                 $formattedDiff = number_format($diff, 1);
                                 return new \Illuminate\Support\HtmlString("
@@ -398,7 +397,7 @@ class PlagiarismCheckResource extends Resource
                                     </span>
                                 ");
                             }
-                            
+
                             return new \Illuminate\Support\HtmlString('<span class="text-gray-400 font-medium text-xs">—</span>');
                         }),
 
@@ -406,7 +405,7 @@ class PlagiarismCheckResource extends Resource
                     TextColumn::make('estimated_new_score')
                         ->label('Estimasi')
                         ->alignment(\Filament\Support\Enums\Alignment::Center)
-                        ->state(fn (PlagiarismCheck $record) => $record)
+                        ->state(fn(PlagiarismCheck $record) => $record)
                         ->html()
                         ->formatStateUsing(function ($state) {
                             $paraphrase = $state->plagiarismParaphrase;
@@ -417,10 +416,10 @@ class PlagiarismCheckResource extends Resource
                                     </div>
                                 ");
                             }
-                            
+
                             $score = number_format((float) $paraphrase->estimated_new_score, 1) . '%';
                             $category = PlagiarismCheck::getCategoryForScore((float) $paraphrase->estimated_new_score);
-                            
+
                             $badgeClasses = match ($category) {
                                 'rendah' => [
                                     'textClass' => 'text-emerald-600 dark:text-emerald-400',
@@ -439,9 +438,9 @@ class PlagiarismCheckResource extends Resource
                                     'badgeClass' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50'
                                 ]
                             };
-                            
+
                             $label = ucfirst($category);
-                            
+
                             return new \Illuminate\Support\HtmlString("
                                 <div class='flex flex-col items-center justify-center gap-1.5 py-1'>
                                     <span class='font-bold text-sm {$badgeClasses['textClass']}'>{$score}</span>
@@ -467,7 +466,7 @@ class PlagiarismCheckResource extends Resource
                     WHEN status = 'pending' THEN 3 
                     WHEN status = 'completed' THEN 4 
                     ELSE 5 END) ASC")
-                ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc');
             })
             ->filters([
                 //
@@ -488,7 +487,7 @@ class PlagiarismCheckResource extends Resource
                                 ->requiresConfirmation()
                                 ->modalHeading('Mulai Parafrase Akademik')
                                 ->modalDescription('Apakah Anda yakin ingin memproses parafrase akademik pada bagian naskah ini? Proses ini hanya bisa dijalankan satu kali per hasil cek plagiasi dan akan memparafrase kalimat yang memiliki similarity tinggi.')
-                                ->modalSubmitAction(fn (\Filament\Actions\Action $action) => $action->color('warning'))
+                                ->modalSubmitAction(fn(\Filament\Actions\Action $action) => $action->color('warning'))
                                 ->modalIconColor('warning')
                                 ->visible(
                                     fn(PlagiarismCheck $record): bool =>
@@ -554,7 +553,7 @@ class PlagiarismCheckResource extends Resource
                         ->requiresConfirmation()
                         ->modalHeading('Mulai Parafrase Akademik')
                         ->modalDescription('Apakah Anda yakin ingin memproses parafrase akademik pada bagian naskah ini? Proses ini hanya bisa dijalankan satu kali per hasil cek plagiasi dan akan memparafrase kalimat yang memiliki similarity tinggi.')
-                        ->modalSubmitAction(fn (\Filament\Actions\Action $action) => $action->color('warning'))
+                        ->modalSubmitAction(fn(\Filament\Actions\Action $action) => $action->color('warning'))
                         ->modalIconColor('warning')
                         ->visible(
                             fn(PlagiarismCheck $record): bool =>

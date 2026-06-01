@@ -22,6 +22,8 @@ class ManagePreSubmissionReviews extends ManageRecords
             CreateAction::make()
                 ->label('Review Jurnal Baru')
                 ->modalHeading('Kirim Jurnal untuk Review Pra-OJS')
+                ->slideOver()
+                ->modalWidth('5xl')
                 ->modalSubmitActionLabel('Request Review')
                 ->successNotification(null)
                 ->mutateFormDataUsing(function (array $data): array {

@@ -22,6 +22,8 @@ class ManagePlagiarismChecks extends ManageRecords
                 ->label('Cek Plagiasi Baru')
                 ->icon('heroicon-o-plus')
                 ->modalHeading('Mulai Cek Plagiasi')
+                ->slideOver()
+                ->modalWidth('3xl')
                 ->modalSubmitActionLabel('Jalankan Analisis')
                 ->successNotification(null)
                 ->before(function (Actions\CreateAction $action) {

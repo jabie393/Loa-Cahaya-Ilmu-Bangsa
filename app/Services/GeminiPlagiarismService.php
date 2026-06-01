@@ -23,8 +23,8 @@ class GeminiPlagiarismService implements PlagiarismContract
             throw new Exception("Gagal mengekstrak teks dari dokumen.");
         }
 
-        $apiKey = config('services.gemini.key', env('GEMINI_API_KEY'));
-        $model = config('services.gemini.model', env('GEMINI_MODEL', 'gemini-1.5-flash'));
+        $apiKey = config('services.gemini.plagiarism_key');
+        $model = config('services.gemini.model', 'gemini-1.5-flash');
 
         if (!$apiKey) {
             throw new Exception("API Key Gemini belum diatur.");

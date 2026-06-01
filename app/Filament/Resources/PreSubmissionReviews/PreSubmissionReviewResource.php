@@ -76,10 +76,18 @@ class PreSubmissionReviewResource extends Resource
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\View::make('filament.components.page-animations'),
+                \Filament\Schemas\Components\View::make('filament.components.page-animations')
+                    ->columnSpanFull(),
                 Section::make('Informasi Pengajuan')
-                    ->description('Lengkapi data penulis dan pilih jurnal target untuk memulai penelaahan awal.')
                     ->schema([
+                        Select::make('journal_id')
+                            ->label('Target Jurnal / Nama Jurnal')
+                            ->relationship('journal', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->native(false)
+                            ->columnSpanFull(),
                         TextInput::make('author_name')
                             ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
                             ->helperText('Masukkan nama penulis pertama dan rekan penulis jika ada.')
@@ -93,18 +101,14 @@ class PreSubmissionReviewResource extends Resource
                             ->email()
                             ->required()
                             ->maxLength(255),
-                        Select::make('journal_id')
-                            ->label('Target Jurnal / Nama Jurnal')
-                            ->relationship('journal', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->native(false),
                     ])
-                    ->columnSpan(4),
+                    ->columns(2)
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 4,
+                    ]),
 
                 Section::make('Dokumen Jurnal')
-                    ->description('Unggah naskah Anda dalam format Word.')
                     ->schema([
                         FileUpload::make('file_path')
                             ->label('File Naskah (.docx)')
@@ -126,7 +130,10 @@ class PreSubmissionReviewResource extends Resource
                                 return "Hari ini: {$summary['daily_remaining']} / {$summary['daily_limit']} | Review Credits: {$summary['review_credits']}";
                             }),
                     ])
-                    ->columnSpan(2),
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ]),
 
                 Section::make('Hasil Review')
                     ->description('Bagian ini akan terisi secara otomatis oleh sistem setelah Anda menyimpan data.')
@@ -143,14 +150,18 @@ class PreSubmissionReviewResource extends Resource
                     ])
                     ->columnSpanFull()
                     ->visible(fn($record) => $record !== null),
-            ])->columns(6);
+            ])->columns([
+                    'default' => 1,
+                    'lg' => 6,
+                ]);
     }
 
     public static function infolist(Schema $schema): Schema
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\View::make('filament.components.page-animations'),
+                \Filament\Schemas\Components\View::make('filament.components.page-animations')
+                    ->columnSpanFull(),
                 Section::make('Informasi Pengajuan')
                     ->schema([
                         TextEntry::make('author_name')->label('Nama Author'),
