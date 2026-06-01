@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\PlagiarismContract;
 use App\Models\PlagiarismCheck;
+use App\Traits\HandlesGeminiFallback;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
@@ -12,6 +13,7 @@ use Exception;
 
 class GeminiPlagiarismService implements PlagiarismContract
 {
+    use HandlesGeminiFallback;
     /**
      * Perform plagiarism check using Gemini.
      */
@@ -32,48 +34,23 @@ class GeminiPlagiarismService implements PlagiarismContract
 
         $prompt = $this->buildPrompt($text);
 
-        $maxRetries = 3;
-        $retryCount = 0;
-        $response = null;
-
-        while ($retryCount < $maxRetries) {
-            try {
-                $response = Http::timeout(120)->post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
-                    ],
-                    'generationConfig' => [
-                        'responseMimeType' => 'application/json',
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt]
                     ]
-                ]);
+                ]
+            ],
+            'generationConfig' => [
+                'responseMimeType' => 'application/json',
+            ]
+        ];
 
-                if ($response->successful()) {
-                    break;
-                }
-
-                // Handle server errors or rate limiting
-                if (in_array($response->status(), [429, 500, 503, 504])) {
-                    $retryCount++;
-                    if ($retryCount < $maxRetries) {
-                        sleep(3);
-                        continue;
-                    }
-                }
-
-                throw new Exception("API Gemini Error (Status: {$response->status()}): " . $response->body());
-
-            } catch (Exception $e) {
-                $retryCount++;
-                if ($retryCount < $maxRetries) {
-                    sleep(3);
-                    continue;
-                }
-                throw new Exception("Koneksi ke AI terputus atau server sibuk (cURL Error). Silakan coba beberapa saat lagi. Detail: " . $e->getMessage());
-            }
+        try {
+            $response = $this->callGemini($apiKey, $model, $payload, 120);
+        } catch (Exception $e) {
+            throw new Exception("Koneksi ke AI terputus atau server sibuk. Silakan coba beberapa saat lagi. Detail: " . $e->getMessage());
         }
 
         $data = $response->json();

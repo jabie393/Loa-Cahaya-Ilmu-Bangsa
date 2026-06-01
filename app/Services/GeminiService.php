@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Traits\HandlesGeminiFallback;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GeminiService
 {
+    use HandlesGeminiFallback;
+
     private KnowledgeLoaderService $knowledgeLoader;
 
     public function __construct(KnowledgeLoaderService $knowledgeLoader)
@@ -21,49 +24,27 @@ class GeminiService
 
         if (!$apiKey) return "";
 
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $prompt]
+                    ]
+                ]
+            ],
+        ];
 
-        $maxRetries = 3;
-        $retryCount = 0;
-        $response = null;
-
-        while ($retryCount < $maxRetries) {
-            try {
-                $response = Http::timeout(60)->post($url, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
-                    ],
-                ]);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                        return $data['candidates'][0]['content']['parts'][0]['text'];
-                    }
-                }
-
-                // If 503 (Overloaded) or 429 (Rate Limit), wait and retry
-                if (in_array($response->status(), [503, 429, 500, 504])) {
-                    $retryCount++;
-                    if ($retryCount < $maxRetries) {
-                        sleep(3);
-                        continue;
-                    }
-                }
-                break;
-            } catch (\Exception $e) {
-                $retryCount++;
-                if ($retryCount < $maxRetries) {
-                    sleep(3);
-                    continue;
-                }
-                break;
+        try {
+            $response = $this->callGemini($apiKey, $model, $payload);
+            
+            $data = $response->json();
+            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                return $data['candidates'][0]['content']['parts'][0]['text'];
             }
+        } catch (\Exception $e) {
+            Log::error('Gemini Service Direct Response Exception', ['message' => $e->getMessage()]);
         }
+
         return "";
     }
 
@@ -119,52 +100,28 @@ class GeminiService
             ]
         ];
 
-        $maxRetries = 3;
-        $retryCount = 0;
-        $response = null;
+        $payload = [
+            'system_instruction' => [
+                'parts' => [
+                    ['text' => $systemPrompt]
+                ]
+            ],
+            'contents' => $contents,
+            'generationConfig' => [
+                'temperature' => 0.7,
+                'maxOutputTokens' => 2048,
+            ]
+        ];
 
-        while ($retryCount < $maxRetries) {
-            try {
-                $response = Http::timeout(60)->post($url, [
-                    'system_instruction' => [
-                        'parts' => [
-                            ['text' => $systemPrompt]
-                        ]
-                    ],
-                    'contents' => $contents,
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 2048,
-                    ]
-                ]);
-
-                if ($response->successful()) {
-                    $data = $response->json();
-                    if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                        return $data['candidates'][0]['content']['parts'][0]['text'];
-                    }
-                }
-
-                // If 503 (Overloaded) or 429 (Rate Limit), wait and retry
-                if (in_array($response->status(), [503, 429, 500, 504])) {
-                    $retryCount++;
-                    if ($retryCount < $maxRetries) {
-                        sleep(3); // wait 3 seconds before retry
-                        continue;
-                    }
-                }
-
-                Log::error('Gemini API Error', ['response' => $response->body()]);
-                break;
-            } catch (\Exception $e) {
-                $retryCount++;
-                if ($retryCount < $maxRetries) {
-                    sleep(3);
-                    continue;
-                }
-                Log::error('Gemini API Exception', ['message' => $e->getMessage()]);
-                break;
+        try {
+            $response = $this->callGemini($apiKey, $model, $payload);
+            
+            $data = $response->json();
+            if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                return $data['candidates'][0]['content']['parts'][0]['text'];
             }
+        } catch (\Exception $e) {
+            Log::error('Gemini Service Response Exception', ['message' => $e->getMessage()]);
         }
 
         return "Maaf, saya sedang kesulitan memahami permintaan Anda. Silakan coba beberapa saat lagi atau hubungi admin.";
