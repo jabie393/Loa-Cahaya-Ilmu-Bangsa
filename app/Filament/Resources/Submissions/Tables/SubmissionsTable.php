@@ -82,20 +82,20 @@ class SubmissionsTable
             ->filters([
                 //
             ])
-            ->recordUrl(fn(Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ActionGroup::make([
                     Action::make('review')
                         ->label('Review')
                         ->icon('heroicon-o-eye')
                         ->color('warning')
-                        ->url(fn(Submission $record): string => SubmissionResource::getUrl('review', ['record' => $record]))
+                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('review', ['record' => $record]))
                         ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved'),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
                         ->color('primary')
-                        ->url(fn(Submission $record): string => SubmissionResource::getUrl('view', ['record' => $record])),
+                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record])),
                     EditAction::make()
                         ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission'),
                     Action::make('Konfirmasi LOA ke Admin')
