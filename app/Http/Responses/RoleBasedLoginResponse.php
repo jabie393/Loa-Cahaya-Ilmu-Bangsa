@@ -11,6 +11,8 @@ class RoleBasedLoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
+        $request->session()->put('show_welcome_modal', true);
+
         return redirect()->to('/journal');
     }
 }

@@ -51,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Filament\Resources\PlagiarismChecks\Pages\ManagePlagiarismChecks::class,
         );
 
+        FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn () => view('components.welcome-modal'),
+        );
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
