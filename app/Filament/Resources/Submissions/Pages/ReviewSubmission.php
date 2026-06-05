@@ -97,6 +97,38 @@ class ReviewSubmission extends Page
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
                 ->visible(fn() => $this->record->status !== 'Approved' && Auth::user()?->hasRole('super_admin')),
+            Action::make('resubmit_ojs')
+                ->label('Resubmit to OJS')
+                ->color('info')
+                ->icon('heroicon-m-arrow-path')
+                ->size('sm')
+                ->requiresConfirmation()
+                ->modalHeading('Resubmit to OJS')
+                ->modalDescription('Are you sure you want to resubmit this submission to OJS?')
+                ->action(function () {
+                    try {
+                        $result = app(\App\Services\OjsSubmissionService::class)->submit($this->record);
+                        if ($result['success']) {
+                            Notification::make()
+                                ->title('Resubmitted to OJS successfully')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('OJS Resubmission Failed')
+                                ->body($result['message'])
+                                ->danger()
+                                ->send();
+                        }
+                    } catch (\Throwable $e) {
+                        Notification::make()
+                            ->title('OJS Resubmission Failed')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(fn() => $this->record->status === 'Approved' && Auth::user()?->hasRole('super_admin')),
             Action::make('reject')
                 ->label('Reject')
                 ->color('danger')
