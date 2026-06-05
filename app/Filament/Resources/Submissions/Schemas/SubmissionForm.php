@@ -7,6 +7,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
@@ -130,6 +132,38 @@ class SubmissionForm
                             ->columnSpanFull()
                             ->label('Publication Link')
                             ->required(),
+
+                        Textarea::make('abstract')
+                            ->label('Abstract')
+                            ->required()
+                            ->columnSpanFull()
+                            ->autosize()
+                            ->maxLength(5000)
+                            ->rules(['string'])
+                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
+                        TagsInput::make('keywords')
+                            ->label('Keywords')
+                            ->separator(',')
+                            ->required()
+                            ->helperText('Pisahkan kata kunci dengan koma')
+                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
+                        FileUpload::make('manuscript_file')
+                            ->label('Manuscript File')
+                            ->required()
+                            ->acceptedFileTypes([
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            ])
+                            ->maxSize(20480)
+                            ->disk('public')
+                            ->directory('manuscripts')
+                            ->downloadable()
+                            ->preserveFilenames()
+                            ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'])
+                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         DatePicker::make('submission_date')
                             ->default(now())

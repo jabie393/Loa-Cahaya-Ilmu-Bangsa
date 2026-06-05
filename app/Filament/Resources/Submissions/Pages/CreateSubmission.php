@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Submissions\Pages;
 use App\Filament\Resources\Submissions\SubmissionResource;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -102,6 +104,32 @@ class CreateSubmission extends CreateRecord
                             TextInput::make('publication_link')
                                 ->columnSpanFull()
                                 ->label('Publication Link'),
+                            Textarea::make('abstract')
+                                ->label('Abstract')
+                                ->required()
+                                ->columnSpanFull()
+                                ->autosize()
+                                ->maxLength(5000)
+                                ->rules(['string']),
+                            TagsInput::make('keywords')
+                                ->label('Keywords')
+                                ->separator(',')
+                                ->required()
+                                ->helperText('Pisahkan kata kunci dengan koma'),
+                            FileUpload::make('manuscript_file')
+                                ->label('Manuscript File')
+                                ->required()
+                                ->acceptedFileTypes([
+                                    'application/pdf',
+                                    'application/msword',
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                ])
+                                ->maxSize(20480)
+                                ->disk('public')
+                                ->directory('manuscripts')
+                                ->downloadable()
+                                ->preserveFilenames()
+                                ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480']),
                             Hidden::make('submission_date')
                                 ->default(now()),
 

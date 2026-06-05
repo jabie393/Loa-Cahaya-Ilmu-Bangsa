@@ -28,6 +28,13 @@ class Submission extends Model
         'submission_date',
         'approved_date',
         'rejected_date',
+        'abstract',
+        'keywords',
+        'manuscript_file',
+        'ojs_submission_id',
+        'ojs_status',
+        'ojs_synced_at',
+        'ojs_error_message',
     ];
 
     protected function casts(): array
@@ -39,6 +46,7 @@ class Submission extends Model
             'submission_date' => 'date',
             'approved_date' => 'date',
             'rejected_date' => 'date',
+            'ojs_synced_at' => 'datetime',
         ];
     }
 

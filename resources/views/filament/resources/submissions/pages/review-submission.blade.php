@@ -103,6 +103,90 @@
                            class="text-primary-600 dark:text-primary-400 truncate text-xs font-medium">{{ $record->publication_link ?? 'Belum diisi' }}</a>
                     </div>
                 </div>
+
+                <!-- Metadata Artikel -->
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-6">Metadata Artikel</h4>
+                <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Abstract</span>
+                        <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->abstract ?? '-' }}</span>
+                    </div>
+                    <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Keywords</span>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            @if ($record->keywords)
+                                @foreach (explode(',', $record->keywords) as $keyword)
+                                    <span class="inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-500/10">
+                                        {{ trim($keyword) }}
+                                    </span>
+                                @endforeach
+                            @else
+                                <span class="text-sm text-gray-900 dark:text-white">-</span>
+                            @endif
+                        </div>
+                    </div>
+                    @if ($record->manuscript_file)
+                        <div class="wrap-break-word flex flex-col pt-2">
+                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-2">Manuscript File</span>
+                            <div>
+                                <x-filament::button
+                                    href="{{ Storage::disk('public')->url($record->manuscript_file) }}"
+                                    tag="a"
+                                    download
+                                    target="_blank"
+                                    icon="heroicon-m-arrow-down-tray"
+                                    color="primary"
+                                >
+                                    Download Manuscript
+                                </x-filament::button>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- OJS Integration -->
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-6">OJS Integration</h4>
+                <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col">
+                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">OJS Submission ID</span>
+                            <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1">{{ $record->ojs_submission_id ?? '-' }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">OJS Status</span>
+                            <div class="mt-1">
+                                @if($record->ojs_status)
+                                    <span class="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset {{
+                                        match($record->ojs_status) {
+                                            'pending' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-500/30',
+                                            'submitted' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-500/30',
+                                            'accepted' => 'bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/20 dark:text-purple-400 dark:ring-purple-500/30',
+                                            'published' => 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/30',
+                                            'failed' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-500/30',
+                                            default => 'bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-700/50 dark:text-gray-400 dark:ring-gray-600/20',
+                                        }
+                                    }}">
+                                        {{ $record->ojs_status }}
+                                    </span>
+                                @else
+                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">-</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Last Sync</span>
+                        <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
+                            {{ $record->ojs_synced_at ? $record->ojs_synced_at->format('d M Y H:i:s') : '-' }}
+                        </span>
+                    </div>
+                    <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Error Message</span>
+                        <span class="text-sm font-medium mt-1 {{ $record->ojs_error_message ? 'text-danger-600 dark:text-danger-400' : 'text-gray-900 dark:text-white' }}">
+                            {{ $record->ojs_error_message ?? '-' }}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             <!-- Review Right Column -->

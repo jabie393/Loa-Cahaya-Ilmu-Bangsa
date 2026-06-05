@@ -73,6 +73,13 @@ class ReviewSubmission extends Page
                             Storage::disk('public')->delete($this->record->proof_of_payment);
                         }
 
+                        // Run OJS Submission
+                        try {
+                            app(\App\Services\OjsSubmissionService::class)->submit($this->record);
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning("OJS integration failed during single approval of submission ID: {$this->record->id}. Error: {$e->getMessage()}");
+                        }
+
                         $this->record->update([
                             'status' => 'Approved',
                             'approved_date' => now(),

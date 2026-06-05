@@ -7,6 +7,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use App\Models\Submission;
 use App\Filament\Resources\Submissions\SubmissionResource;
@@ -67,6 +68,32 @@ class SubmissionsTable
                         query: fn(\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder =>
                         $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
                     ),
+                IconColumn::make('manuscript_file')
+                    ->label('Manuscript')
+                    ->icon(fn($state) => $state ? 'heroicon-o-arrow-down-tray' : null)
+                    ->color('primary')
+                    ->url(fn(Submission $record) => $record->manuscript_file ? Storage::disk('public')->url($record->manuscript_file) : null)
+                    ->openUrlInNewTab()
+                    ->placeholder('-'),
+                TextColumn::make('ojs_status')
+                    ->label('OJS Status')
+                    ->badge()
+                    ->color(fn(?string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'submitted' => 'info',
+                        'accepted' => 'primary',
+                        'published' => 'success',
+                        'failed' => 'danger',
+                        default => 'gray',
+                    })
+                    ->placeholder('-')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('ojs_synced_at')
+                    ->label('Last Sync')
+                    ->dateTime('d M Y H:i:s')
+                    ->placeholder('-')
+                    ->sortable(),
                 TextColumn::make('submission_date')
                     ->date()
                     ->sortable(),
@@ -144,6 +171,13 @@ class SubmissionsTable
                                 if ($record->status !== 'Approved') {
                                     if ($record->proof_of_payment) {
                                         Storage::disk('public')->delete($record->proof_of_payment);
+                                    }
+
+                                    // Run OJS Submission
+                                    try {
+                                        app(\App\Services\OjsSubmissionService::class)->submit($record);
+                                    } catch (\Throwable $e) {
+                                        \Illuminate\Support\Facades\Log::warning("OJS integration failed during bulk approval of submission ID: {$record->id}. Error: {$e->getMessage()}");
                                     }
 
                                     $record->update([
