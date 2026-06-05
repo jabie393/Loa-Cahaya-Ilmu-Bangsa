@@ -131,7 +131,8 @@ class SubmissionForm
                         TextInput::make('publication_link')
                             ->columnSpanFull()
                             ->label('Publication Link')
-                            ->required(),
+                            ->readOnly()
+                            ->placeholder('Link publikasi akan terisi otomatis setelah disetujui admin'),
 
                         Textarea::make('abstract')
                             ->label('Abstract')

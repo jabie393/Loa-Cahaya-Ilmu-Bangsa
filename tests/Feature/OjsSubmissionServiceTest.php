@@ -132,6 +132,7 @@ class OjsSubmissionServiceTest extends TestCase
         $submission->refresh();
         $this->assertEquals('submitted', $submission->ojs_status);
         $this->assertEquals('888777', $submission->ojs_submission_id);
+        $this->assertEquals('https://cibangsa.com/index.php/testjournal/workflow/index/888777/5', $submission->publication_link);
         $this->assertNull($submission->ojs_error_message);
 
         Http::assertSent(function ($request) use ($submission) {

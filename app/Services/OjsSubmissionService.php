@@ -117,12 +117,23 @@ class OjsSubmissionService
 
             $ojsSubmissionId = $responseJson['submissionId'] ?? null;
 
+            // Generate OJS Workflow Link
+            $publicationLink = null;
+            if ($ojsSubmissionId) {
+                if (!str_contains($baseUrl, 'index.php')) {
+                    $publicationLink = "{$baseUrl}/index.php/{$journalPath}/workflow/index/{$ojsSubmissionId}/5";
+                } else {
+                    $publicationLink = "{$baseUrl}/{$journalPath}/workflow/index/{$ojsSubmissionId}/5";
+                }
+            }
+
             // Update submission tracking status on success
             $submission->update([
                 'ojs_status' => 'submitted',
                 'ojs_submission_id' => $ojsSubmissionId,
                 'ojs_synced_at' => now(),
                 'ojs_error_message' => null,
+                'publication_link' => $publicationLink,
             ]);
 
             Log::info("OJS integration succeeded for submission ID: {$submission->id}. OJS Submission ID: {$ojsSubmissionId}");

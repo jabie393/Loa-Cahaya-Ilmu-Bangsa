@@ -103,7 +103,9 @@ class CreateSubmission extends CreateRecord
                                 ->required(),
                             TextInput::make('publication_link')
                                 ->columnSpanFull()
-                                ->label('Publication Link'),
+                                ->label('Publication Link')
+                                ->readOnly()
+                                ->placeholder('Link publikasi akan terisi otomatis setelah disetujui admin'),
                             Textarea::make('abstract')
                                 ->label('Abstract')
                                 ->required()

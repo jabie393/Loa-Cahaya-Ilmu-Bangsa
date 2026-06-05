@@ -128,7 +128,7 @@ class ReviewSubmission extends Page
                             ->send();
                     }
                 })
-                ->visible(fn() => $this->record->status === 'Approved' && Auth::user()?->hasRole('super_admin')),
+                ->visible(fn() => $this->record->status === 'Approved' && $this->record->ojs_status !== 'submitted' && Auth::user()?->hasRole('super_admin')),
             Action::make('reject')
                 ->label('Reject')
                 ->color('danger')
