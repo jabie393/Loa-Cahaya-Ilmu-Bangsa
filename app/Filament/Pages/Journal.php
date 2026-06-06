@@ -12,6 +12,8 @@ class Journal extends Page
     protected string $view = 'filament.pages.journal';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::BookOpen;
     protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = '1. Unduh Template';
+    protected static ?string $title = 'Unduh Template';
 
     public function getJurnals(): array
     {

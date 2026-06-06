@@ -35,9 +35,28 @@ class PlagiarismCheckResource extends Resource
     protected static ?string $model = PlagiarismCheck::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'turnitin-logo';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Cek Plagiasi & Parafrase';
+    protected static ?string $navigationLabel = '2. Cek Plagiasi & Parafrase';
+
+    public static function getNavigationItems(): array
+    {
+        $activeRoutePattern = static::getNavigationItemActiveRoutePattern();
+
+        return [
+            \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
+                ->group(static::getNavigationGroup())
+                ->parentItem(static::getNavigationParentItem())
+                ->icon(static::getNavigationIcon())
+                ->activeIcon(static::getActiveNavigationIcon())
+                ->isActiveWhen(fn (): bool => \Filament\Support\original_request()->routeIs($activeRoutePattern))
+                ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
+                ->badgeTooltip(static::getNavigationBadgeTooltip())
+                ->sort(2)
+                ->url(static::getNavigationUrl())
+                ->extraAttributes(['data-subtitle' => '(Tidak Wajib)']),
+        ];
+    }
 
     protected static ?string $pluralLabel = 'Cek Plagiasi & Parafrase';
 

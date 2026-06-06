@@ -8,3 +8,29 @@
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../vendor/diogogpinto/filament-auth-ui-enhancer/resources/**/*.blade.php';
 
+/* Navigation Subtitle Styles */
+.fi-sidebar-item[data-subtitle] .fi-sidebar-item-btn {
+    flex-wrap: wrap !important;
+}
+
+.fi-sidebar-item[data-subtitle] .fi-sidebar-item-label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+}
+
+.fi-sidebar-item[data-subtitle] .fi-sidebar-item-label::after {
+    content: "(Tidak Wajib)";
+    display: block;
+    font-size: 0.6875rem; /* ~11px */
+    font-weight: 500;
+    color: #94a3b8; /* slate-400 */
+    margin-top: 0.0625rem;
+}
+
+/* Light mode overrides */
+:root:not(.dark) .fi-sidebar-item[data-subtitle] .fi-sidebar-item-label::after {
+    color: #64748b; /* slate-500 */
+}
+
+

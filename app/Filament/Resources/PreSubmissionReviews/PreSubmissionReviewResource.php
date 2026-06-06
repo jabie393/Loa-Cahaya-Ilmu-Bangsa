@@ -35,7 +35,26 @@ class PreSubmissionReviewResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-magnifying-glass';
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationLabel = 'Review Pra OJS';
+    protected static ?string $navigationLabel = '3. Review Pra OJS';
+
+    public static function getNavigationItems(): array
+    {
+        $activeRoutePattern = static::getNavigationItemActiveRoutePattern();
+
+        return [
+            \Filament\Navigation\NavigationItem::make(static::getNavigationLabel())
+                ->group(static::getNavigationGroup())
+                ->parentItem(static::getNavigationParentItem())
+                ->icon(static::getNavigationIcon())
+                ->activeIcon(static::getActiveNavigationIcon())
+                ->isActiveWhen(fn (): bool => \Filament\Support\original_request()->routeIs($activeRoutePattern))
+                ->badge(static::getNavigationBadge(), color: static::getNavigationBadgeColor())
+                ->badgeTooltip(static::getNavigationBadgeTooltip())
+                ->sort(3)
+                ->url(static::getNavigationUrl())
+                ->extraAttributes(['data-subtitle' => '(Tidak Wajib)']),
+        ];
+    }
 
     protected static ?string $pluralLabel = 'Review Pra OJS';
 
