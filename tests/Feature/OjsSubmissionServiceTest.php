@@ -102,7 +102,8 @@ class OjsSubmissionServiceTest extends TestCase
             'https://cibangsa.com/index.php/testjournal/loa-api/submissions' => Http::response([
                 'success' => true,
                 'message' => 'Submission created successfully',
-                'submissionId' => 888777,
+                'submission_id' => 888777,
+                'article_url' => 'https://cibangsa.com/index.php/testjournal/article/view/888777',
             ], 200)
         ]);
 
@@ -121,6 +122,8 @@ class OjsSubmissionServiceTest extends TestCase
             'status' => 'Pending',
             'abstract' => 'This is the abstract text.',
             'keywords' => 'keyword1, keyword2',
+            'volume' => 'Vol. 3 No. 2 (2026)',
+            'manuscript_file' => 'manuscripts/test.pdf',
         ]);
 
         $service = new OjsSubmissionService();
@@ -132,7 +135,7 @@ class OjsSubmissionServiceTest extends TestCase
         $submission->refresh();
         $this->assertEquals('submitted', $submission->ojs_status);
         $this->assertEquals('888777', $submission->ojs_submission_id);
-        $this->assertEquals('https://cibangsa.com/index.php/testjournal/workflow/index/888777/5', $submission->publication_link);
+        $this->assertEquals('https://cibangsa.com/index.php/testjournal/article/view/888777', $submission->publication_link);
         $this->assertNull($submission->ojs_error_message);
 
         Http::assertSent(function ($request) use ($submission) {
@@ -145,6 +148,10 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['author_name'] === 'John Doe' &&
                 $request['email'] === 'john@example.com' &&
                 $request['institution'] === 'Test Uni' &&
+                $request['volume'] === '3' &&
+                $request['number'] === '2' &&
+                $request['year'] === '2026' &&
+                !empty($request['pdf_url']) &&
                 !empty($request['loa_number']) &&
                 !empty($request['loa_date']);
         });

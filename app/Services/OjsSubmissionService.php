@@ -74,6 +74,18 @@ class OjsSubmissionService
 
             $loaDate = $submission->date_of_loa ? $submission->date_of_loa->format('Y-m-d') : now()->format('Y-m-d');
 
+            // Parse volume, number, year from volume text
+            $vol = null;
+            $no = null;
+            $year = null;
+            if ($submission->volume && preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $submission->volume, $matches)) {
+                $vol = $matches[1] ?? null;
+                $no = $matches[2] ?? null;
+                $year = $matches[3] ?? null;
+            }
+
+            $pdfUrl = $submission->manuscript_file ? \Illuminate\Support\Facades\Storage::disk('public')->url($submission->manuscript_file) : null;
+
             // Build API endpoint URL
             if (!str_contains($baseUrl, 'index.php')) {
                 $url = "{$baseUrl}/index.php/{$journalPath}/loa-api/submissions";
@@ -93,6 +105,10 @@ class OjsSubmissionService
                 'institution' => $submission->institution,
                 'loa_number' => $loaNumber,
                 'loa_date' => $loaDate,
+                'pdf_url' => $pdfUrl,
+                'volume' => $vol,
+                'number' => $no,
+                'year' => $year,
             ];
 
             Log::info("Sending submission ID: {$submission->id} to OJS URL: {$url}");
@@ -115,11 +131,12 @@ class OjsSubmissionService
                 throw new \Exception("OJS API returned failure: {$msg}");
             }
 
-            $ojsSubmissionId = $responseJson['submissionId'] ?? null;
+            $ojsSubmissionId = $responseJson['submission_id'] ?? $responseJson['submissionId'] ?? null;
+            $articleUrl = $responseJson['article_url'] ?? null;
 
-            // Generate OJS Workflow Link
-            $publicationLink = null;
-            if ($ojsSubmissionId) {
+            // Generate OJS Workflow Link as fallback if no article_url is returned
+            $publicationLink = $articleUrl;
+            if (empty($publicationLink) && $ojsSubmissionId) {
                 if (!str_contains($baseUrl, 'index.php')) {
                     $publicationLink = "{$baseUrl}/index.php/{$journalPath}/workflow/index/{$ojsSubmissionId}/5";
                 } else {
