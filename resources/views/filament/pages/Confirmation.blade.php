@@ -19,7 +19,19 @@
                 <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                     <div class="flex flex-col">
                         <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Nama Penulis</span>
-                        <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">{{ $get('author_name') }}</span>
+                        @php
+                            $authorNames = $get('author_name');
+                            if (is_array($authorNames)) {
+                                $authorNames = implode(', ', $authorNames);
+                            } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
+                                $authorNames = $authorNames->implode(', ');
+                            } else {
+                                $authorNames = (string) $authorNames;
+                            }
+                        @endphp
+                        <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
+                            {{ $authorNames }}
+                        </span>
                     </div>
                     <div class="flex flex-col">
                         <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Email</span>

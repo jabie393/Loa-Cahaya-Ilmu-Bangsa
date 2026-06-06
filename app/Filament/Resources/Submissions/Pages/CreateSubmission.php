@@ -40,9 +40,24 @@ class CreateSubmission extends CreateRecord
                         ->schema([
                             Hidden::make('user_id')
                                 ->default(Auth::user()->id),
-                            TextInput::make('author_name')
-                                ->label('Nama Penulis (Di Isi Semua, Pisahkan dengan Tanda Koma)')
-                                ->default(Auth::user()->name)
+                            TagsInput::make('author_name')
+                                ->label('Nama Penulis')
+                                ->placeholder('Tambah penulis')
+                                ->helperText('Tekan enter untuk memisahkan')
+                                ->default(Auth::user()?->name ? [Auth::user()->name] : [])
+                                ->formatStateUsing(function ($state) {
+                                    if (is_array($state)) {
+                                        return $state;
+                                    }
+                                    if (is_string($state) && str_starts_with($state, '[') && str_ends_with($state, ']')) {
+                                        $decoded = json_decode($state, true);
+                                        if (is_array($decoded)) {
+                                            return $decoded;
+                                        }
+                                    }
+                                    return is_string($state) ? array_map('trim', explode(',', $state)) : [];
+                                })
+                                ->separator(',')
                                 ->required(),
                             TextInput::make('email')
                                 ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
@@ -117,7 +132,8 @@ class CreateSubmission extends CreateRecord
                                 ->label('Keywords')
                                 ->separator(',')
                                 ->required()
-                                ->helperText('Pisahkan kata kunci dengan koma'),
+                                ->placeholder('Tambah kata kunci')
+                                ->helperText('Tekan enter untuk memisahkan'),
                             FileUpload::make('manuscript_file')
                                 ->label('Manuscript File')
                                 ->required()

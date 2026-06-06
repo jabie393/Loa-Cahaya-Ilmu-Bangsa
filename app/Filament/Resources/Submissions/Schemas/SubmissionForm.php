@@ -38,8 +38,23 @@ class SubmissionForm
                     ->schema([
                         Hidden::make('user_id')
                             ->default(Auth::user()->id),
-                        TextInput::make('author_name')
-                            ->default(Auth::user()->name)
+                        TagsInput::make('author_name')
+                            ->label('Nama Penulis (Di Isi Semua, Tekan Enter untuk Memisahkan)')
+                            ->placeholder('Tambah penulis')
+                            ->default(Auth::user()?->name ? [Auth::user()->name] : [])
+                            ->formatStateUsing(function ($state) {
+                                if (is_array($state)) {
+                                    return $state;
+                                }
+                                if (is_string($state) && str_starts_with($state, '[') && str_ends_with($state, ']')) {
+                                    $decoded = json_decode($state, true);
+                                    if (is_array($decoded)) {
+                                        return $decoded;
+                                    }
+                                }
+                                return is_string($state) ? array_map('trim', explode(',', $state)) : [];
+                            })
+                            ->separator(',')
                             ->required()
                             ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         TextInput::make('email')

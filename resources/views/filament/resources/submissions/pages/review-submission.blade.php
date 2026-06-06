@@ -76,7 +76,21 @@
                     </div>
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Nama Penulis</span>
-                        <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->author_name }}</span>
+                        <span class="text-md font-semibold text-gray-900 dark:text-white">
+                            @php
+                                $authors = $record->author_name;
+                                if (is_string($authors) && str_starts_with($authors, '[') && str_ends_with($authors, ']')) {
+                                    $decoded = json_decode($authors, true);
+                                    if (is_array($decoded)) {
+                                        $authors = $decoded;
+                                    }
+                                }
+                                if (is_array($authors)) {
+                                    $authors = implode(', ', $authors);
+                                }
+                            @endphp
+                            {{ $authors }}
+                        </span>
                     </div>
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Email</span>
