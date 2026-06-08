@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Wizard\Step;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
+use Filament\Schemas\Components\Group;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\View;
@@ -41,7 +42,7 @@ class CreateSubmission extends CreateRecord
                             Hidden::make('user_id')
                                 ->default(Auth::user()->id),
                             TagsInput::make('author_name')
-                                ->label('Nama Penulis')
+                                ->label('Nama Penulis (Ditulis Sesuai EYD)')
                                 ->placeholder('Tambah penulis')
                                 ->helperText('Tekan enter untuk memisahkan')
                                 ->default(Auth::user()?->name ? [Auth::user()->name] : [])
@@ -64,63 +65,21 @@ class CreateSubmission extends CreateRecord
                                 ->default(Auth::user()->email)
                                 ->email()
                                 ->required(),
-
-
-                            TextInput::make('title')
-                                ->columnSpanFull()
-                                ->label('Judul (Diisi Huruf Besar)')
-                                ->required(),
                             TextInput::make('institution')
                                 ->columnSpanFull()
-                                ->label('Instansi (Jangan disingkat)')
+                                ->label('Instansi/Kampus (Jangan Disingkat)')
                                 ->required(),
+
                             Select::make('journal_id')
                                 ->label('Jurnal (Pilih Salah satu)')
                                 ->relationship('journal', 'name')
                                 ->default(request()->query('journal_id'))
-                                ->required(),
-                            Grid::make(3)
-                                ->schema([
-                                    TextInput::make('vol')
-                                        ->live() // or ->reactive() in v2
-                                        ->afterStateUpdated(function (Get $get, Set $set) {
-                                            $vol = $get('vol') ?? '';
-                                            $no = $get('no') ?? '';
-                                            $year = $get('year') ?? '';
-                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                        }),
-
-                                    TextInput::make('no')
-                                        ->live() // or ->reactive() in v2
-                                        ->afterStateUpdated(function (Get $get, Set $set) {
-                                            $vol = $get('vol') ?? '';
-                                            $no = $get('no') ?? '';
-                                            $year = $get('year') ?? '';
-                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                        }),
-
-                                    TextInput::make('year')
-                                        ->live() // or ->reactive() in v2
-                                        ->afterStateUpdated(function (Get $get, Set $set) {
-                                            $vol = $get('vol') ?? '';
-                                            $no = $get('no') ?? '';
-                                            $year = $get('year') ?? '';
-                                            $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                        }),
-
-                                    Hidden::make('volume')
-                                ]),
-
-                            DatePicker::make('date_of_loa')
-                                ->native(false)
-                                ->displayFormat('d-m-Y')
-                                ->label('Tanggal LOA')
-                                ->required(),
-                            TextInput::make('publication_link')
                                 ->columnSpanFull()
-                                ->label('Publication Link')
-                                ->readOnly()
-                                ->placeholder('Link publikasi akan terisi otomatis setelah disetujui admin'),
+                                ->required(),
+                            TextInput::make('title')
+                                ->columnSpanFull()
+                                ->label('Judul (Diisi Huruf Besar)')
+                                ->required(),
                             Textarea::make('abstract')
                                 ->label('Abstract')
                                 ->required()
@@ -134,37 +93,49 @@ class CreateSubmission extends CreateRecord
                                 ->required()
                                 ->placeholder('Tambah kata kunci')
                                 ->helperText('Tekan enter untuk memisahkan'),
-                            FileUpload::make('manuscript_file')
-                                ->label('Manuscript File')
+                            Textarea::make('references')
+                                ->label('Referensi / Daftar Pustaka')
+                                ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')
                                 ->required()
-                                ->acceptedFileTypes([
-                                    'application/pdf',
-                                    'application/msword',
-                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                ])
-                                ->maxSize(20480)
-                                ->disk('public')
-                                ->directory('manuscripts')
-                                ->downloadable()
-                                ->preserveFilenames()
-                                ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480']),
+                                ->columnSpanFull()
+                                ->rows(6),
+
                             Hidden::make('submission_date')
                                 ->default(now()),
 
                             Hidden::make('status')
                                 ->default('Pending'),
                         ])->columns(2),
-                    Section::make('Pembayaran')
-                        ->columnSpan(2)
-                        ->description('Bukti Pembayaran')
-                        ->schema([
-                            FileUpload::make('proof_of_payment')
-                                ->label('Upload Bukti Pembayaran')
-                                ->directory('proof-of-payment')
-                                ->required()
-                                ->disk('public')
-                                ->image()
-                        ]),
+                    Group::make([
+                        Section::make('File PDF')
+                            ->description('File PDF Fix yang sudah disesuaikan template')
+                            ->schema([
+                                FileUpload::make('manuscript_file')
+                                    ->label('Upload File PDF')
+                                    ->required()
+                                    ->acceptedFileTypes([
+                                        'application/pdf',
+                                        'application/msword',
+                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                    ])
+                                    ->maxSize(20480)
+                                    ->disk('public')
+                                    ->directory('manuscripts')
+                                    ->downloadable()
+                                    ->preserveFilenames()
+                                    ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480']),
+                            ]),
+                        Section::make('Pembayaran')
+                            ->description('Bukti Pembayaran')
+                            ->schema([
+                                FileUpload::make('proof_of_payment')
+                                    ->label('Upload Bukti Pembayaran')
+                                    ->directory('proof-of-payment')
+                                    ->required()
+                                    ->disk('public')
+                                    ->image()
+                            ]),
+                    ])->columnSpan(2),
                 ])->columns(6),
             Step::make('Konfirmasi')
                 ->schema([

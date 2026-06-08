@@ -122,6 +122,7 @@ class OjsSubmissionServiceTest extends TestCase
             'status' => 'Pending',
             'abstract' => 'This is the abstract text.',
             'keywords' => 'keyword1, keyword2',
+            'references' => "Reference 1\nReference 2",
             'volume' => 'Vol. 3 No. 2 (2026)',
             'manuscript_file' => 'manuscripts/test.pdf',
         ]);
@@ -145,6 +146,7 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['title'] === 'Test Article' &&
                 $request['abstract'] === 'This is the abstract text.' &&
                 $request['keywords'] === 'keyword1, keyword2' &&
+                $request['references'] === "Reference 1\nReference 2" &&
                 $request['author_name'] === 'John Doe' &&
                 $request['email'] === 'john@example.com' &&
                 $request['institution'] === 'Test Uni' &&

@@ -109,6 +109,7 @@ class OjsSubmissionService
                 'volume' => $vol,
                 'number' => $no,
                 'year' => $year,
+                'references' => $submission->references,
             ];
 
             Log::info("Sending submission ID: {$submission->id} to OJS URL: {$url}");

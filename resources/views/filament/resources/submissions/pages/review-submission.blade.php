@@ -141,7 +141,7 @@
                     </div>
                     @if ($record->manuscript_file)
                         <div class="wrap-break-word flex flex-col pt-2">
-                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-2">Manuscript File</span>
+                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-2">File PDF</span>
                             <div>
                                 <x-filament::button
                                     href="{{ Storage::disk('public')->url($record->manuscript_file) }}"
@@ -151,7 +151,7 @@
                                     icon="heroicon-m-arrow-down-tray"
                                     color="primary"
                                 >
-                                    Download Manuscript
+                                    Download File PDF
                                 </x-filament::button>
                             </div>
                         </div>

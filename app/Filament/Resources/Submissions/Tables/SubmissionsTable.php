@@ -35,14 +35,43 @@ class SubmissionsTable
                     ->label('ID')
                     ->searchable(),
                 TextColumn::make('author_name')
-                    ->label('Penulis & Judul')
-                    ->words(5)
-                    ->searchable()
-                    ->description(fn(Submission $record) => \Illuminate\Support\Str::words($record->title ?? '', 10)),
-                TextColumn::make('journal.name')
-                    ->label('Jurnal & Volume')
-                    ->searchable()
-                    ->description(fn(Submission $record) => \Illuminate\Support\Str::words($record->volume ?? '', 10)),
+                    ->label('Detail Artikel')
+                    ->html()
+                    ->state(fn(Submission $record) => $record)
+                    ->searchable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $search) {
+                        return $query->where('author_name', 'like', "%{$search}%")
+                            ->orWhere('title', 'like', "%{$search}%")
+                            ->orWhereHas('journal', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhere('volume', 'like', "%{$search}%");
+                    })
+                    ->formatStateUsing(function ($record) {
+                        $authorNames = $record->author_name;
+                        if (is_array($authorNames)) {
+                            $authors = implode(', ', $authorNames);
+                        } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
+                            $authors = $authorNames->implode(', ');
+                        } else {
+                            $authors = (string) $authorNames;
+                        }
+
+                        $title = $record->title ?? 'Untitled';
+                        $journalName = $record->journal?->name ?? 'N/A';
+                        $volume = $record->volume ? " — {$record->volume}" : '';
+
+                        return new \Illuminate\Support\HtmlString("
+                            <div class='flex flex-col gap-0.5 py-1' style='max-width: 450px;'>
+                                <div class='font-bold text-sm text-gray-900 dark:text-white break-words'>
+                                    {$authors}
+                                </div>
+                                <div class='text-xs text-gray-500 dark:text-gray-400 break-words' style='display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;'>
+                                    {$title}
+                                </div>
+                                <div class='text-[10px] text-primary-600 dark:text-primary-400 font-semibold break-words'>
+                                    {$journalName}{$volume}
+                                </div>
+                            </div>
+                        ");
+                    }),
                 TextColumn::make('proof_of_payment')
                     ->label('Bukti Pembayaran')
                     ->badge()
@@ -51,58 +80,86 @@ class SubmissionsTable
                     ->icon(fn(string $state): string => $state === 'Paid' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
                     ->searchable(),
                 TextColumn::make('status')
-                    ->color(fn(string $state): string => match ($state) {
-                        'Pending' => 'primary',
-                        'Approved' => 'success',
-                        'Rejected' => 'danger',
-                        default => 'gray'
+                    ->label('Status & OJS')
+                    ->html()
+                    ->state(fn(Submission $record) => $record)
+                    ->formatStateUsing(function ($record) {
+                        // 1. LOA Badge Info
+                        $loaStatus = $record->status;
+                        $loaClass = match ($loaStatus) {
+                            'Approved' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                            'Rejected' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            default => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50' // Pending
+                        };
+
+                        // 2. OJS Badge Info
+                        $ojsStatus = $record->ojs_status ?? 'Not Sent';
+                        $ojsClass = match ($record->ojs_status) {
+                            'pending' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
+                            'submitted' => 'text-sky-700 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/30 dark:border-sky-800/50',
+                            'accepted' => 'text-indigo-700 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950/30 dark:border-indigo-800/50',
+                            'published' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                            'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50' // null / not sent
+                        };
+                        $ojsLabel = ucfirst($ojsStatus);
+
+                        // 3. Date / Sync Time Info
+                        $dateString = '';
+                        if ($record->status === 'Approved' && $record->ojs_synced_at) {
+                            $dateString = "<span class='text-[10px] text-gray-500 dark:text-gray-400 font-mono'>" . $record->ojs_synced_at->translatedFormat('d M Y H:i:s') . "</span>";
+                        }
+
+                        return new \Illuminate\Support\HtmlString("
+                            <div class='flex flex-col gap-1.5 py-1 align-start justify-center'>
+                                <div class='flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300'>
+                                    <span class='font-semibold min-w-[32px]'>LOA:</span>
+                                    <span class='px-2 py-0.5 text-[10px] font-semibold rounded-full border {$loaClass}'>
+                                        {$loaStatus}
+                                    </span>
+                                </div>
+                                <div class='flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300'>
+                                    <span class='font-semibold min-w-[32px]'>OJS:</span>
+                                    <span class='px-2 py-0.5 text-[10px] font-semibold rounded-full border {$ojsClass}'>
+                                        {$ojsLabel}
+                                    </span>
+                                </div>
+                                {$dateString}
+                            </div>
+                        ");
                     })
-                    ->icon(fn(string $state): string => match ($state) {
-                        'Pending' => 'heroicon-o-clock',
-                        'Approved' => 'heroicon-o-check-circle',
-                        'Rejected' => 'heroicon-o-x-circle',
-                        default => 'heroicon-o-question-mark-circle'
-                    })
-                    ->badge()
                     ->sortable(
                         query: fn(\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder =>
                         $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
                     ),
                 IconColumn::make('manuscript_file')
-                    ->label('Manuscript')
+                    ->label('File PDF')
                     ->icon(fn($state) => $state ? 'heroicon-o-arrow-down-tray' : null)
                     ->color('primary')
                     ->url(fn(Submission $record) => $record->manuscript_file ? Storage::disk('public')->url($record->manuscript_file) : null)
                     ->openUrlInNewTab()
                     ->placeholder('-'),
-                TextColumn::make('ojs_status')
-                    ->label('OJS Status')
-                    ->badge()
-                    ->color(fn(?string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'submitted' => 'info',
-                        'accepted' => 'primary',
-                        'published' => 'success',
-                        'failed' => 'danger',
-                        default => 'gray',
-                    })
-                    ->placeholder('-')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('ojs_synced_at')
-                    ->label('Last Sync')
-                    ->dateTime('d M Y H:i:s')
-                    ->placeholder('-')
-                    ->sortable(),
                 TextColumn::make('submission_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('approved_date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('rejected_date')
-                    ->label('Rejection Date')
-                    ->date()
+                    ->label('Tanggal')
+                    ->state(function (Submission $record) {
+                        if ($record->status === 'Approved') {
+                            return $record->approved_date;
+                        }
+                        if ($record->status === 'Rejected') {
+                            return $record->rejected_date;
+                        }
+                        return $record->submission_date;
+                    })
+                    ->date('d M Y')
+                    ->description(function (Submission $record) {
+                        if ($record->status === 'Approved') {
+                            return 'Disetujui';
+                        }
+                        if ($record->status === 'Rejected') {
+                            return 'Ditolak';
+                        }
+                        return 'Diajukan';
+                    })
                     ->sortable(),
             ])
             ->defaultSort('status', 'asc')

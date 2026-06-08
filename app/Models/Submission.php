@@ -12,6 +12,15 @@ class Submission extends Model
 {
     use HasFactory, HasRoles;
 
+    protected static function booted()
+    {
+        static::creating(function ($submission) {
+            if (empty($submission->date_of_loa)) {
+                $submission->date_of_loa = now();
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'author_name',
@@ -30,6 +39,7 @@ class Submission extends Model
         'rejected_date',
         'abstract',
         'keywords',
+        'references',
         'manuscript_file',
         'ojs_submission_id',
         'ojs_status',

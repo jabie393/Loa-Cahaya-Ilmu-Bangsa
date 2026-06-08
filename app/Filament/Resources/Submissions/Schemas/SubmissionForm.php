@@ -12,6 +12,7 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Grid;
@@ -39,7 +40,7 @@ class SubmissionForm
                         Hidden::make('user_id')
                             ->default(Auth::user()->id),
                         TagsInput::make('author_name')
-                            ->label('Nama Penulis (Di Isi Semua, Tekan Enter untuk Memisahkan)')
+                            ->label('Nama Penulis (Ditulis Sesuai EYD)')
                             ->placeholder('Tambah penulis')
                             ->default(Auth::user()?->name ? [Auth::user()->name] : [])
                             ->formatStateUsing(function ($state) {
@@ -56,99 +57,29 @@ class SubmissionForm
                             })
                             ->separator(',')
                             ->required()
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         TextInput::make('email')
-                            ->label('Email address')
+                            ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
                             ->email()
                             ->required()
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-
-
-                        TextInput::make('title')
-                            ->columnSpanFull()
-                            ->required()
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         TextInput::make('institution')
                             ->columnSpanFull()
+                            ->label('Instansi/Kampus (Jangan Disingkat)')
                             ->required()
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         Select::make('journal_id')
+                            ->label('Jurnal (Pilih Salah satu)')
                             ->relationship('journal', 'name')
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-
-                        Grid::make(3)
-                            ->schema([
-                                TextInput::make('vol')
-                                    ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
-                                    ->live()
-                                    ->formatStateUsing(function ($record) {
-                                        if ($record && $record->volume) {
-                                            if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
-                                                return $matches[1] ?? null;
-                                            }
-                                        }
-                                        return null;
-                                    })
-                                    ->afterStateUpdated(function (Get $get, Set $set) {
-                                        $vol = $get('vol') ?? '';
-                                        $no = $get('no') ?? '';
-                                        $year = $get('year') ?? '';
-                                        $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                    }),
-
-
-
-                                TextInput::make('no')
-                                    ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
-                                    ->live()
-                                    ->formatStateUsing(function ($record) {
-                                        if ($record && $record->volume) {
-                                            if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
-                                                return $matches[2] ?? null;
-                                            }
-                                        }
-                                        return null;
-                                    })
-                                    ->afterStateUpdated(function (Get $get, Set $set) {
-                                        $vol = $get('vol') ?? '';
-                                        $no = $get('no') ?? '';
-                                        $year = $get('year') ?? '';
-                                        $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                    }),
-
-
-
-                                TextInput::make('year')
-                                    ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending']))
-                                    ->live()
-                                    ->formatStateUsing(function ($record) {
-                                        if ($record && $record->volume) {
-                                            if (preg_match('/Vol\.\s*(.*?)\s+No\.\s*(.*?)\s+(?:Tahun\s+|\()(.*?)\)?$/i', $record->volume, $matches)) {
-                                                return $matches[3] ?? null;
-                                            }
-                                        }
-                                        return null;
-                                    })
-                                    ->afterStateUpdated(function (Get $get, Set $set) {
-                                        $vol = $get('vol') ?? '';
-                                        $no = $get('no') ?? '';
-                                        $year = $get('year') ?? '';
-                                        $set('volume', trim('Vol. ' . $vol . ' ' . 'No. ' . $no . ' ' . '(' . $year . ')'));
-                                    }),
-
-
-                                Hidden::make('volume')
-                            ]),
-                        DatePicker::make('date_of_loa')
-                            ->native(false)
-                            ->label('Tanggal LOA')
-                            ->required(),
-                        TextInput::make('publication_link')
                             ->columnSpanFull()
-                            ->label('Publication Link')
-                            ->readOnly()
-                            ->placeholder('Link publikasi akan terisi otomatis setelah disetujui admin'),
-
+                            ->required()
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                        TextInput::make('title')
+                            ->columnSpanFull()
+                            ->label('Judul (Diisi Huruf Besar)')
+                            ->required()
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         Textarea::make('abstract')
                             ->label('Abstract')
                             ->required()
@@ -156,30 +87,21 @@ class SubmissionForm
                             ->autosize()
                             ->maxLength(5000)
                             ->rules(['string'])
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         TagsInput::make('keywords')
                             ->label('Keywords')
                             ->separator(',')
                             ->required()
-                            ->helperText('Pisahkan kata kunci dengan koma')
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-
-                        FileUpload::make('manuscript_file')
-                            ->label('Manuscript File')
+                            ->placeholder('Tambah kata kunci')
+                            ->helperText('Tekan enter untuk memisahkan')
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                        Textarea::make('references')
+                            ->label('Referensi / Daftar Pustaka')
+                            ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')
                             ->required()
-                            ->acceptedFileTypes([
-                                'application/pdf',
-                                'application/msword',
-                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            ])
-                            ->maxSize(20480)
-                            ->disk('public')
-                            ->directory('manuscripts')
-                            ->downloadable()
-                            ->preserveFilenames()
-                            ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'])
-                            ->disabled(fn($record) => ! Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->columnSpanFull()
+                            ->rows(6)
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         DatePicker::make('submission_date')
                             ->default(now())
@@ -188,7 +110,7 @@ class SubmissionForm
                             ->visible(fn() => Auth::user()?->hasRole('super_admin')),
                         Hidden::make('submission_date')
                             ->default(now())
-                            ->visible(fn() => ! Auth::user()?->hasRole('super_admin')),
+                            ->visible(fn() => !Auth::user()?->hasRole('super_admin')),
 
                         Select::make('status')
                             ->options(['Pending' => 'Pending', 'Approved' => 'Approved', 'Rejected' => 'Rejected'])
@@ -206,20 +128,40 @@ class SubmissionForm
                                 // For non-admin users with rejected submissions, always save as Pending
                                 return !Auth::user()?->hasRole('super_admin') && $record?->status === 'Rejected' ? 'Pending' : $state;
                             })
-                            ->visible(fn() => ! Auth::user()?->hasRole('super_admin')),
+                            ->visible(fn() => !Auth::user()?->hasRole('super_admin')),
                     ])->columns(2),
-                Section::make('Pembayaran')
-                    ->columnSpan(2)
-                    ->description('Bukti Pembayaran')
-                    ->visible(fn($record) => $record?->status !== 'Approved')
-                    ->schema([
-                        FileUpload::make('proof_of_payment')
-                            ->label('Upload Bukti Pembayaran')
-                            ->directory('proof-of-payment')
-                            ->disk('public')
-                            ->image()
-                            ->required(),
-                    ]),
+                Group::make([
+                    Section::make('File PDF')
+                        ->description('File PDF Fix yang sudah disesuaikan template')
+                        ->schema([
+                            FileUpload::make('manuscript_file')
+                                ->label('Upload File PDF')
+                                ->required()
+                                ->acceptedFileTypes([
+                                    'application/pdf',
+                                    'application/msword',
+                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                ])
+                                ->maxSize(20480)
+                                ->disk('public')
+                                ->directory('manuscripts')
+                                ->downloadable()
+                                ->preserveFilenames()
+                                ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'])
+                                ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                        ]),
+                    Section::make('Pembayaran')
+                        ->description('Bukti Pembayaran')
+                        ->visible(fn($record) => $record?->status !== 'Approved')
+                        ->schema([
+                            FileUpload::make('proof_of_payment')
+                                ->label('Upload Bukti Pembayaran')
+                                ->directory('proof-of-payment')
+                                ->disk('public')
+                                ->image()
+                                ->required(),
+                        ]),
+                ])->columnSpan(fn($record) => $record?->status === 'Approved' ? 6 : 2),
             ])->columns(6);
     }
 }
