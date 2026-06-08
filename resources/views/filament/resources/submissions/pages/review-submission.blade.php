@@ -122,10 +122,6 @@
                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mt-6">Metadata Artikel</h4>
                 <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                     <div class="wrap-break-word flex flex-col">
-                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Abstract</span>
-                        <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->abstract ?? '-' }}</span>
-                    </div>
-                    <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Keywords</span>
                         <div class="flex flex-wrap gap-1 mt-1">
                             @if ($record->keywords)
@@ -139,23 +135,14 @@
                             @endif
                         </div>
                     </div>
-                    @if ($record->manuscript_file)
-                        <div class="wrap-break-word flex flex-col pt-2">
-                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500 mb-2">File PDF</span>
-                            <div>
-                                <x-filament::button
-                                    href="{{ Storage::disk('public')->url($record->manuscript_file) }}"
-                                    tag="a"
-                                    download
-                                    target="_blank"
-                                    icon="heroicon-m-arrow-down-tray"
-                                    color="primary"
-                                >
-                                    Download File PDF
-                                </x-filament::button>
-                            </div>
-                        </div>
-                    @endif
+                    <div class="wrap-break-word flex flex-col pt-2">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Abstract</span>
+                        <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->abstract ?? '-' }}</span>
+                    </div>
+                    <div class="wrap-break-word flex flex-col pt-2">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Referensi / Daftar Pustaka</span>
+                        <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->references ?? '-' }}</span>
+                    </div>
                 </div>
 
                 <!-- OJS Integration -->
@@ -205,6 +192,40 @@
 
             <!-- Review Right Column -->
             <div class="space-y-4 md:col-span-2">
+                @if ($record->manuscript_file)
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">File PDF Naskah</h4>
+                        <div class="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                            <div class="flex items-center gap-3">
+                                <div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 text-red-600 dark:text-red-400">
+                                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900 truncate dark:text-white">
+                                        {{ basename($record->manuscript_file) }}
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500">Naskah Terunggah</p>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <x-filament::button
+                                    href="{{ Storage::disk('public')->url($record->manuscript_file) }}"
+                                    tag="a"
+                                    download
+                                    target="_blank"
+                                    icon="heroicon-m-arrow-down-tray"
+                                    color="primary"
+                                    class="w-full"
+                                >
+                                    Download File PDF
+                                </x-filament::button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($record->status === 'Approved')
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Certificates</h4>

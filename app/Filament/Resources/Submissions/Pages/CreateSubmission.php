@@ -80,6 +80,12 @@ class CreateSubmission extends CreateRecord
                                 ->columnSpanFull()
                                 ->label('Judul (Diisi Huruf Besar)')
                                 ->required(),
+                            TagsInput::make('keywords')
+                                ->label('Keywords')
+                                ->separator(',')
+                                ->required()
+                                ->placeholder('Tambah kata kunci')
+                                ->helperText('Tekan enter untuk memisahkan'),
                             Textarea::make('abstract')
                                 ->label('Abstract')
                                 ->required()
@@ -87,12 +93,6 @@ class CreateSubmission extends CreateRecord
                                 ->autosize()
                                 ->maxLength(5000)
                                 ->rules(['string']),
-                            TagsInput::make('keywords')
-                                ->label('Keywords')
-                                ->separator(',')
-                                ->required()
-                                ->placeholder('Tambah kata kunci')
-                                ->helperText('Tekan enter untuk memisahkan'),
                             Textarea::make('references')
                                 ->label('Referensi / Daftar Pustaka')
                                 ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')

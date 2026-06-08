@@ -80,6 +80,13 @@ class SubmissionForm
                             ->label('Judul (Diisi Huruf Besar)')
                             ->required()
                             ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                        TagsInput::make('keywords')
+                            ->label('Keywords')
+                            ->separator(',')
+                            ->required()
+                            ->placeholder('Tambah kata kunci')
+                            ->helperText('Tekan enter untuk memisahkan')
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         Textarea::make('abstract')
                             ->label('Abstract')
                             ->required()
@@ -88,13 +95,6 @@ class SubmissionForm
                             ->maxLength(5000)
                             ->rules(['string'])
                             ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-                        TagsInput::make('keywords')
-                            ->label('Keywords')
-                            ->separator(',')
-                            ->required()
-                            ->placeholder('Tambah kata kunci')
-                            ->helperText('Tekan enter untuk memisahkan')
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         Textarea::make('references')
                             ->label('Referensi / Daftar Pustaka')
                             ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')
@@ -102,6 +102,12 @@ class SubmissionForm
                             ->columnSpanFull()
                             ->rows(6)
                             ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
+                        TextInput::make('publication_link')
+                            ->label('Link Publikasi')
+                            ->url()
+                            ->columnSpanFull()
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && $record?->status !== 'Approved'),
 
                         DatePicker::make('submission_date')
                             ->default(now())
