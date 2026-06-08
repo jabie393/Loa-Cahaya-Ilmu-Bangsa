@@ -25,30 +25,27 @@ Setelah berhasil login, pengguna diarahkan ke dashboard utama sistem.
 
 ---
 
-# B. TAHAP PUBLIKASI ARTIKEL
+# # B. TAHAP PUBLIKASI ARTIKEL
 
-## STEP 1 — Review Pra-OJS
+## STEP 1 — Unduh Template & Penyesuaian
 
-Penulis melakukan review awal artikel melalui fitur:
+Penulis mengunduh template jurnal melalui menu:
 
-- Review Pra-OJS
+- **1. Unduh Template**
 
 Tujuan:
-
-- mengecek kualitas awal artikel
-- mengetahui revisi yang perlu dilakukan sebelum submit jurnal
-
-Hasil review dikirim otomatis ke email pengguna.
+- Mengunduh format/template jurnal resmi dari Cahaya Ilmu Bangsa Institute yang dituju.
+- Menyesuaikan artikel agar sesuai dengan template jurnal tujuan.
 
 ---
 
-## STEP 2 — Cek Plagiasi & Parafrase
+## STEP 2 — Cek Plagiasi & Parafrase (Tidak Wajib / Opsional)
 
-Penulis melakukan pengecekan plagiasi dan optimasi kemiripan naskah melalui fitur:
+Penulis melakukan pengecekan plagiasi dan optimasi kemiripan naskah secara opsional melalui fitur:
 
-- Cek Plagiasi & Parafrase
+- **2. Cek Plagiasi & Parafrase**
 
-Hasil pengecekan digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk ke OJS.
+Hasil pengecekan ini bersifat **tidak wajib (opsional)** dan hanya digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk ke OJS.
 
 ### 1. Proses Pengecekan Plagiasi
 Pengecekan plagiasi dilakukan dengan alur sistematis berikut:
@@ -98,14 +95,17 @@ Setelah cek plagiasi sukses (`completed`), jika naskah memiliki kalimat-kalimat 
 
 ---
 
-## STEP 3 — Revisi & Penyesuaian Template
+## STEP 3 — Review Pra-OJS (Tidak Wajib / Opsional)
 
-Setelah mendapatkan hasil review:
+Penulis melakukan review kelayakan artikel secara opsional sebelum diunggah ke OJS melalui fitur:
 
-- penulis melakukan revisi artikel
-- menyesuaikan format artikel dengan template jurnal tujuan
+- **3. Review Pra OJS**
 
-Template jurnal dapat diunduh melalui menu **"Journal"** pada sistem.
+Tujuan:
+- Mengecek kualitas awal artikel.
+- Mengetahui revisi akademis yang perlu dilakukan sebelum proses submit jurnal sesungguhnya.
+
+Hasil review dikirim otomatis ke email pengguna.
 
 ---
 
@@ -282,11 +282,11 @@ Kanda Putra wajib memahami bahwa LOA dilakukan setelah proses publikasi berjalan
 Pengguna:
 
 - login ke sistem
-- masuk ke menu Journal atau Submissions
+- masuk ke menu **"4. Quick Submit"**
 
 Untuk membuat pengajuan baru:
 
-- klik tombol "Buat Pengajuan Baru"
+- klik tombol **"Create"** atau **"New Submission"** pada tabel
 
 ---
 
@@ -329,6 +329,7 @@ Setelah itu klik:
 Setelah submission berhasil:
 
 - pengajuan masuk ke tahap review admin
+- naskah akan otomatis terbit / disinkronkan langsung ke OJS setelah disetujui (Approved) oleh admin
 - pengguna dapat memantau status melalui menu "Submissions"
 - notifikasi dikirim melalui email
 
@@ -383,6 +384,7 @@ Jika submission disetujui:
 
 - pengguna menerima email notifikasi
 - status menjadi approved
+- naskah otomatis langsung diterbitkan (auto-approve) ke OJS melalui website LOA
 
 Pengguna dapat mengunduh:
 
@@ -429,6 +431,8 @@ Kanda Putra wajib:
 - mengarahkan penulis untuk meninjau perbandingan kalimat side-by-side dan estimasi kemiripan baru pada tab "Hasil Parafrase" di modal detail naskah.
 - menjelaskan bahwa hasil laporan kemiripan baru pasca-parafrase juga dikirimkan langsung ke email penulis secara otomatis.
 - memahami bahwa Super Admin tidak dapat memparafrase naskah milik pengguna biasa demi menjaga privasi dan keamanan data penulis.
+- memahami bahwa di quick submission LOA, naskah yang disetujui oleh admin akan otomatis terbit/approve langsung ke OJS melalui website LOA tanpa submit manual lagi ke OJS.
+- menjelaskan kepada pengguna bahwa layanan **Cek Plagiasi & Parafrase** serta **Review Pra OJS** adalah langkah tambahan yang bersifat **opsional / tidak wajib** sebelum mengajukan LOA.
 
 Kanda Putra tidak boleh:
 
@@ -453,3 +457,22 @@ Cahaya Ilmu Bangsa Institute
 Legalitas:
 SK KEMENKUMHAM
 AHU-0018912-AH.01.14
+
+---
+
+# P. URUTAN MENU SIDEBAR (SISTEM NAVIGASI)
+
+Sistem navigasi sidebar dirancang secara terstruktur dengan urutan bernomor untuk memandu alur kerja publikasi dan administrasi secara logis:
+
+## Menu Utama (Workflow Publikasi)
+1. **1. Unduh Template** (Urutan `1`): Berisi daftar template jurnal dari Cahaya Ilmu Bangsa Institute yang siap diunduh oleh penulis.
+2. **2. Cek Plagiasi & Parafrase** (Urutan `2`): Layanan opsional untuk mengecek skor Turnitin dan melakukan parafrase naskah akademis guna menurunkan plagiarisme.
+3. **3. Review Pra OJS** (Urutan `3`): Layanan opsional bagi penulis untuk mengirimkan draf artikel guna mendapatkan review kelayakan sebelum diunggah ke OJS.
+4. **4. Quick Submit** (Urutan `4`): Formulir utama pengajuan LOA (Letter of Acceptance) yang langsung terintegrasi dan mempublikasikan naskah secara otomatis (Auto-Publish) ke OJS setelah disetujui admin.
+5. **5. My Publication** (Urutan `5`): Halaman yang menampilkan seluruh publikasi milik penulis yang telah sukses disetujui (Approved) beserta tombol unduh LOA, Sertifikat Author (AC), dan Plagiarism-Free Certificate (PFC).
+
+## Menu Group: Settings (Khusus Administrator)
+*Menu ini dikelompokkan dalam kategori **Settings** di bagian bawah sidebar:*
+1. **Journal List** (Urutan `1`): Manajemen data jurnal-jurnal yang terbit di bawah naungan CIB Institute.
+2. **Chatbot Faqs** (Urutan `2`): Pengaturan data pertanyaan dan jawaban (FAQ) untuk asisten chatbot AI.
+3. **Users** (Urutan `3`): Manajemen akun pengguna, hak akses (roles), serta kuota cek plagiat harian.
