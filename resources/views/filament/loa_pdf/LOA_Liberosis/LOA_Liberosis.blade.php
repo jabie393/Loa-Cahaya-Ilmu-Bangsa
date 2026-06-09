@@ -216,17 +216,7 @@
                     </div>
                 </div>
 
-                <!-- Instansi -->
-                <div class="bg-surface-container-lowest architectural-shadow border-primary flex flex-col border-l-4">
-                    <div class="p-2 pt-1">
-                        <span class="text-primary/50 block py-2 text-[7pt] font-bold uppercase tracking-[0.2em]">
-                            Instansi
-                        </span>
-                        <div class="text-primary/80 break-words text-[10pt] leading-relaxed">
-                            {{ $record->institution }}
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Korespondensi -->

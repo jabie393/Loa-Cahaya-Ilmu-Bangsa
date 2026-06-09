@@ -185,14 +185,7 @@
                     {{ $record->author_name }}
                 </td>
             </tr>
-            <tr class="">
-                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
-                    Instansi
-                </td>
-                <td class="font-space px-[5.4pt] py-4 text-justify align-top">
-                    {{ $record->institution }}
-                </td>
-            </tr>
+
             <tr class="">
                 <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
                     Korespondensi

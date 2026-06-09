@@ -49,10 +49,6 @@
                     <td style="padding: 8px 0; color: #4b5563;">{{ $submission->author_name }}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Institusi:</td>
-                    <td style="padding: 8px 0; color: #4b5563;">{{ $submission->institution }}</td>
-                </tr>
-                <tr>
                     <td style="padding: 8px 0; vertical-align: top; font-weight: 600; color: #1f2937;">Jurnal:</td>
                     <td style="padding: 8px 0; color: #4b5563;">{{ $submission->journal->name ?? 'N/A' }}</td>
                 </tr>

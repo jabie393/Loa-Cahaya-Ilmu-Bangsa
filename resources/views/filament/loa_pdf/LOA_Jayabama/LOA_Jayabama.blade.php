@@ -217,26 +217,7 @@
                         </p>
                     </td>
                 </tr>
-                <tr class="my-4 flex flex-col">
-                    <td class="w-[91.9pt] border-0 align-top"
-                        colspan="1"
-                        rowspan="1">
-                        <p class="py-0 text-left leading-none">
-                            <span class="font-noto text-[11pt] font-bold uppercase text-blue-900">
-                                Instansi :
-                            </span>
-                        </p>
-                    </td>
-                    <td class="w-[367.9pt] border-0 align-top"
-                        colspan="1"
-                        rowspan="1">
-                        <p class="py-0 text-left leading-none">
-                            <span class="font-noto text-[11pt] font-normal text-black">
-                                {{ $record->institution }}
-                            </span>
-                        </p>
-                    </td>
-                </tr>
+
                 <tr class="my-4 flex flex-col">
                     <td class="w-full border-0 align-top"
                         colspan="2"

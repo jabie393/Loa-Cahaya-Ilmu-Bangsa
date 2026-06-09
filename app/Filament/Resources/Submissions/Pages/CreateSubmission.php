@@ -65,10 +65,6 @@ class CreateSubmission extends CreateRecord
                                 ->default(Auth::user()->email)
                                 ->email()
                                 ->required(),
-                            TextInput::make('institution')
-                                ->columnSpanFull()
-                                ->label('Instansi/Kampus (Jangan Disingkat)')
-                                ->required(),
 
                             Select::make('journal_id')
                                 ->label('Jurnal (Pilih Salah satu)')

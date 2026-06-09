@@ -48,12 +48,6 @@
                 </div>
                 <div class="flex flex-col">
                     <span
-                        class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Instansi</span>
-                    <span
-                        class="text-sm font-semibold text-gray-900 break-words dark:text-white">{{ $get('institution') }}</span>
-                </div>
-                <div class="flex flex-col">
-                    <span
                         class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Jurnal</span>
                     <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
                         {{ \App\Models\Journal::find($get('journal_id'))?->name ?? 'N/A' }}

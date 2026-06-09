@@ -11,7 +11,7 @@
                     class="text-primary-700 dark:text-primary-300 list-outside list-disc space-y-1.5 ml-6 text-sm font-medium">
                     <li>Klik tombol <strong>Buat Pengajuan Baru</strong> di pojok kanan atas untuk memulai pengajuan.
                     </li>
-                    <li>Isi data naskah Anda: penulis, email, instansi, jurnal target, judul, abstrak, kata kunci, serta
+                    <li>Isi data naskah Anda: penulis, email, jurnal target, judul, abstrak, kata kunci, serta
                         <strong>daftar pustaka / referensi</strong>.</li>
                     <li>Unggah <strong>File PDF naskah</strong> (sesuai template jurnal) dan <strong>Bukti
                             Pembayaran</strong> pada panel samping kanan.</li>

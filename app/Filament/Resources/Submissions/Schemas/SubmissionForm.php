@@ -63,11 +63,6 @@ class SubmissionForm
                             ->email()
                             ->required()
                             ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
-                        TextInput::make('institution')
-                            ->columnSpanFull()
-                            ->label('Instansi/Kampus (Jangan Disingkat)')
-                            ->required()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         Select::make('journal_id')
                             ->label('Jurnal (Pilih Salah satu)')

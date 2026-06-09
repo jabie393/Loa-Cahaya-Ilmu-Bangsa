@@ -14,7 +14,6 @@ return new class extends Migration {
             // Data utama
             $table->string('author_name');
             $table->string('title');
-            $table->string('institution');
             $table->string('email');
 
             // Journal (dropdown)

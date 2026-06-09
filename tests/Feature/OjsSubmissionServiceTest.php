@@ -43,7 +43,6 @@ class OjsSubmissionServiceTest extends TestCase
         $submission = Submission::create([
             'author_name' => 'John Doe',
             'title' => 'Test Article',
-            'institution' => 'Test Uni',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
             'status' => 'Pending',
@@ -73,7 +72,6 @@ class OjsSubmissionServiceTest extends TestCase
         $submission = Submission::create([
             'author_name' => 'John Doe',
             'title' => 'Test Article',
-            'institution' => 'Test Uni',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
             'status' => 'Pending',
@@ -119,7 +117,6 @@ class OjsSubmissionServiceTest extends TestCase
         $submission = Submission::create([
             'author_name' => 'John Doe',
             'title' => 'Test Article',
-            'institution' => 'Test Uni',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
             'status' => 'Pending',
@@ -155,7 +152,7 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['references'] === "Reference 1\nReference 2" &&
                 $request['author_name'] === 'John Doe' &&
                 $request['email'] === 'john@example.com' &&
-                $request['institution'] === 'Test Uni' &&
+                $request['institution'] === null &&
                 $request['volume'] === null &&
                 $request['number'] === null &&
                 $request['year'] === null &&
@@ -186,7 +183,6 @@ class OjsSubmissionServiceTest extends TestCase
         $submission = Submission::create([
             'author_name' => 'John Doe',
             'title' => 'Test Article',
-            'institution' => 'Test Uni',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
             'status' => 'Pending',

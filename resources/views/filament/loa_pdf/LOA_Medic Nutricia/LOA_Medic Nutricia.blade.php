@@ -215,22 +215,7 @@
                 </div>
             </div>
         </div>
-        <div class="border-primary col-span-2 border-2 border-t-0 p-2">
-            <div class="w-[91.9pt] align-top">
-                <p class="text-left">
-                    <span class="text-secondary font-montserrat text-[10pt] font-bold uppercase tracking-widest">
-                        Instansi :
-                    </span>
-                </p>
-            </div>
-            <div class="w-[367.9pt] align-top">
-                <p class="text-left">
-                    <span class="font-lora text-[10pt] font-normal text-black">
-                        {{ $record->institution }}
-                    </span>
-                </p>
-            </div>
-        </div>
+
 
         <div class="border-primary col-span-2 flex border-2 border-t-0">
             <div class="border-primary flex w-full flex-col border-r-2 p-2">

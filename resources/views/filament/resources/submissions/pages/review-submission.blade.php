@@ -96,10 +96,6 @@
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Email</span>
                         <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->email }}</span>
                     </div>
-                    <div class="wrap-break-word flex flex-col">
-                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Instansi</span>
-                        <span class="text-md font-semibold text-gray-900 dark:text-white">{{ $record->institution }}</span>
-                    </div>
                     <div class="wrap-break-word grid grid-cols-2 gap-4">
                         <div class="flex flex-col">
                             <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Jurnal</span>

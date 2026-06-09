@@ -102,7 +102,7 @@ class OjsSubmissionService
                 'keywords' => $submission->keywords,
                 'author_name' => $submission->author_name,
                 'email' => $submission->email,
-                'institution' => $submission->institution,
+                'institution' => null,
                 'loa_number' => $loaNumber,
                 'loa_date' => $loaDate,
                 'pdf_url' => $pdfUrl,

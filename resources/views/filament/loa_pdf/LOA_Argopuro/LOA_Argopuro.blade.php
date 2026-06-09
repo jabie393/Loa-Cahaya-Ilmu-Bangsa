@@ -231,35 +231,7 @@
                     </p>
                 </td>
             </tr>
-            <tr>
-                <td class="w-[91.9pt] border-0 px-[5.4pt] py-2 align-top"
-                    colspan="1"
-                    rowspan="1">
-                    <p class="py-0 text-left leading-none">
-                        <span class="font-bahnschrift text-[11pt] font-normal text-black">
-                            Instansi
-                        </span>
-                    </p>
-                </td>
-                <td class="w-[14.2pt] border-0 px-[5.4pt] py-2 align-top"
-                    colspan="1"
-                    rowspan="1">
-                    <p class="py-0 text-left leading-none">
-                        <span class="font-bahnschrift text-[11pt] font-normal text-black">
-                            :
-                        </span>
-                    </p>
-                </td>
-                <td class="w-[367.9pt] border-0 px-[5.4pt] py-2 align-top"
-                    colspan="1"
-                    rowspan="1">
-                    <p class="py-0 text-left leading-none">
-                        <span class="font-bahnschrift text-[11pt] font-normal text-black">
-                            {{ $record->institution }}
-                        </span>
-                    </p>
-                </td>
-            </tr>
+
             <tr>
                 <td class="w-[91.9pt] border-0 px-[5.4pt] py-2 align-top"
                     colspan="1"

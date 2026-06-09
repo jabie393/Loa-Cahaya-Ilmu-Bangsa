@@ -25,7 +25,6 @@ class Submission extends Model
         'user_id',
         'author_name',
         'title',
-        'institution',
         'email',
         'journal_id',
         'volume',

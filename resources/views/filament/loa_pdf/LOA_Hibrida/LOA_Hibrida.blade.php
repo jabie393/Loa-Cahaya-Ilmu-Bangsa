@@ -251,22 +251,7 @@
                     </div>
                 </div>
             </div>
-            <div class="mb-5 flex flex-col">
-                <div class="w-[91.9pt] align-top">
-                    <p class="text-left">
-                        <span class="text-primary font-lato text-[10pt] font-bold uppercase tracking-widest">
-                            Instansi :
-                        </span>
-                    </p>
-                </div>
-                <div class="w-[367.9pt] align-top">
-                    <p class="text-left">
-                        <span class="font-garamond text-[10pt] font-bold text-black">
-                            {{ $record->institution }}
-                        </span>
-                    </p>
-                </div>
-            </div>
+
 
             <div class="mb-5 flex">
                 <div class="flex w-full flex-col">

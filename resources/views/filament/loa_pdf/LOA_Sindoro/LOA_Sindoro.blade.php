@@ -204,17 +204,7 @@
             </div>
         </div>
 
-        <!-- Instansi -->
-        <div class="flex flex-col">
-            <div class="border p-3 pt-0 text-justify leading-relaxed text-black">
-                <p class="text-primary relative top-[-6pt] mb-1 w-fit bg-white px-2 text-[7.5pt] font-bold uppercase tracking-wider">
-                    Instansi
-                </p>
-                <div>
-                    {{ $record->institution }}
-                </div>
-            </div>
-        </div>
+
 
         <!-- Korespondensi -->
         <div class="flex flex-col">
