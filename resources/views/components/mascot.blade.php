@@ -133,7 +133,9 @@
                 </button>
             </form>
             @php
-                $adminPhone = \App\Models\User::role('super_admin')->orderBy('id')->first()?->phone ?? '628123456789';
+                $adminPhone = \App\Models\User::whereHas('roles', function($q) {
+                    $q->where('name', 'super_admin');
+                })->orderBy('id')->first()?->phone ?? '628123456789';
                 $adminPhone = preg_replace('/[^0-9]/', '', $adminPhone);
                 if (strpos($adminPhone, '0') === 0) {
                     $adminPhone = '62' . substr($adminPhone, 1);
