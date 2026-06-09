@@ -134,6 +134,7 @@ class OjsSubmissionService
 
             $ojsSubmissionId = $responseJson['submission_id'] ?? $responseJson['submissionId'] ?? null;
             $articleUrl = $responseJson['article_url'] ?? null;
+            $resolvedVolume = $responseJson['volume'] ?? null;
 
             // Generate OJS Workflow Link as fallback if no article_url is returned
             $publicationLink = $articleUrl;
@@ -152,6 +153,7 @@ class OjsSubmissionService
                 'ojs_synced_at' => now(),
                 'ojs_error_message' => null,
                 'publication_link' => $publicationLink,
+                'volume' => $submission->volume ?: $resolvedVolume,
             ]);
 
             Log::info("OJS integration succeeded for submission ID: {$submission->id}. OJS Submission ID: {$ojsSubmissionId}");

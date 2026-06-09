@@ -104,6 +104,7 @@ class OjsSubmissionServiceTest extends TestCase
                 'message' => 'Submission created successfully',
                 'submission_id' => 888777,
                 'article_url' => 'https://cibangsa.com/index.php/testjournal/article/view/888777',
+                'volume' => 'Vol. 3 No. 2 (2026)',
             ], 200)
         ]);
 
@@ -123,7 +124,7 @@ class OjsSubmissionServiceTest extends TestCase
             'abstract' => 'This is the abstract text.',
             'keywords' => 'keyword1, keyword2',
             'references' => "Reference 1\nReference 2",
-            'volume' => 'Vol. 3 No. 2 (2026)',
+            'volume' => null,
             'manuscript_file' => 'manuscripts/test.pdf',
         ]);
 
@@ -137,6 +138,7 @@ class OjsSubmissionServiceTest extends TestCase
         $this->assertEquals('submitted', $submission->ojs_status);
         $this->assertEquals('888777', $submission->ojs_submission_id);
         $this->assertEquals('https://cibangsa.com/index.php/testjournal/article/view/888777', $submission->publication_link);
+        $this->assertEquals('Vol. 3 No. 2 (2026)', $submission->volume);
         $this->assertNull($submission->ojs_error_message);
 
         Http::assertSent(function ($request) use ($submission) {
@@ -150,9 +152,9 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['author_name'] === 'John Doe' &&
                 $request['email'] === 'john@example.com' &&
                 $request['institution'] === 'Test Uni' &&
-                $request['volume'] === '3' &&
-                $request['number'] === '2' &&
-                $request['year'] === '2026' &&
+                $request['volume'] === null &&
+                $request['number'] === null &&
+                $request['year'] === null &&
                 !empty($request['pdf_url']) &&
                 !empty($request['loa_number']) &&
                 !empty($request['loa_date']);
