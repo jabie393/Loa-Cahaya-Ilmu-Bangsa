@@ -146,6 +146,9 @@ class OjsSubmissionService
                 }
             }
 
+            $ojsUsername = $responseJson['ojs_username'] ?? null;
+            $ojsPassword = $responseJson['ojs_password'] ?? null;
+
             // Update submission tracking status on success
             $submission->update([
                 'ojs_status' => 'submitted',
@@ -154,6 +157,8 @@ class OjsSubmissionService
                 'ojs_error_message' => null,
                 'publication_link' => $publicationLink,
                 'volume' => $submission->volume ?: $resolvedVolume,
+                'ojs_username' => $ojsUsername,
+                'ojs_password' => $ojsPassword,
             ]);
 
             Log::info("OJS integration succeeded for submission ID: {$submission->id}. OJS Submission ID: {$ojsSubmissionId}");

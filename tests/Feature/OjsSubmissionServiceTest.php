@@ -105,6 +105,8 @@ class OjsSubmissionServiceTest extends TestCase
                 'submission_id' => 888777,
                 'article_url' => 'https://cibangsa.com/index.php/testjournal/article/view/888777',
                 'volume' => 'Vol. 3 No. 2 (2026)',
+                'ojs_username' => 'johndoe',
+                'ojs_password' => 'Pass123!',
             ], 200)
         ]);
 
@@ -139,6 +141,8 @@ class OjsSubmissionServiceTest extends TestCase
         $this->assertEquals('888777', $submission->ojs_submission_id);
         $this->assertEquals('https://cibangsa.com/index.php/testjournal/article/view/888777', $submission->publication_link);
         $this->assertEquals('Vol. 3 No. 2 (2026)', $submission->volume);
+        $this->assertEquals('johndoe', $submission->ojs_username);
+        $this->assertEquals('Pass123!', $submission->ojs_password);
         $this->assertNull($submission->ojs_error_message);
 
         Http::assertSent(function ($request) use ($submission) {

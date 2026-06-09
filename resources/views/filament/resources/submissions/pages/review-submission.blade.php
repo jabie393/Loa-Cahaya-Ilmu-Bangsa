@@ -226,6 +226,37 @@
                     </div>
                 @endif
 
+                @if ($record->ojs_username)
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Akun Penulis OJS</h4>
+                        <div class="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-500">Username/Email:</span>
+                                    <span class="font-mono font-semibold text-gray-900 dark:text-white">{{ $record->ojs_username }} ({{ $record->email }})</span>
+                                </div>
+                                @if ($record->ojs_password)
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="text-gray-500">Password OJS:</span>
+                                        <span class="font-mono font-semibold text-primary-600 dark:text-primary-400">{{ $record->ojs_password }}</span>
+                                    </div>
+                                    <p class="text-[11px] text-amber-600 dark:text-amber-400 italic mt-1 leading-normal">
+                                        *Password ini digenerate secara otomatis karena akun belum terdaftar sebelumnya di OJS.
+                                    </p>
+                                @else
+                                    <p class="text-[11px] text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
+                                        untuk login silakan menggunakan akun ojs yang sudah ada sesuai dengan email berikut.
+                                    </p>
+                                    <div class="flex justify-between items-center text-xs pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                                        <span class="text-gray-500">Email:</span>
+                                        <span class="font-mono font-semibold text-gray-900 dark:text-white">{{ $record->email }}</span>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($record->status === 'Approved')
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Certificates</h4>

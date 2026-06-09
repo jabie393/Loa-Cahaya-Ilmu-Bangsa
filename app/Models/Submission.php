@@ -42,6 +42,8 @@ class Submission extends Model
         'references',
         'manuscript_file',
         'ojs_submission_id',
+        'ojs_username',
+        'ojs_password',
         'ojs_status',
         'ojs_synced_at',
         'ojs_error_message',
