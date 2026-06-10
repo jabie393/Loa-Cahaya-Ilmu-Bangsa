@@ -230,11 +230,11 @@ class SubmissionsTable
                                         Storage::disk('public')->delete($record->proof_of_payment);
                                     }
 
-                                    // Run OJS Submission
+                                    // Run OJS Submission in background
                                     try {
-                                        app(\App\Services\OjsSubmissionService::class)->submit($record);
+                                        \App\Services\OjsSubmissionService::submitInBackground($record);
                                     } catch (\Throwable $e) {
-                                        \Illuminate\Support\Facades\Log::warning("OJS integration failed during bulk approval of submission ID: {$record->id}. Error: {$e->getMessage()}");
+                                        \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
                                     }
 
                                     $record->update([

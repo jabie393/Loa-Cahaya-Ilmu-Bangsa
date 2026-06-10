@@ -150,6 +150,8 @@ class OjsSubmissionService
             $ojsUsername = $responseJson['ojs_username'] ?? null;
             $ojsPassword = $responseJson['ojs_password'] ?? null;
 
+
+
             // Update submission tracking status on success
             $submission->update([
                 'ojs_status' => 'submitted',
@@ -181,6 +183,33 @@ class OjsSubmissionService
             ]);
 
             throw $e;
+        }
+    }
+
+    /**
+     * Dispatch OJS submission to a background CLI command.
+     *
+     * @param Submission $submission
+     * @return void
+     */
+    public static function submitInBackground(Submission $submission): void
+    {
+        // Set state to pending in web request so UI updates immediately
+        $submission->update([
+            'ojs_status' => 'pending',
+            'ojs_synced_at' => now(),
+            'ojs_error_message' => null,
+        ]);
+
+        $id = (int) $submission->id;
+        $artisanPath = base_path('artisan');
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Windows background execution
+            pclose(popen("start /B php \"" . $artisanPath . "\" submission:sync-ojs " . $id . " > NUL", "r"));
+        } else {
+            // Linux/Unix background execution
+            exec("php \"" . $artisanPath . "\" submission:sync-ojs " . $id . " > /dev/null 2>&1 &");
         }
     }
 }

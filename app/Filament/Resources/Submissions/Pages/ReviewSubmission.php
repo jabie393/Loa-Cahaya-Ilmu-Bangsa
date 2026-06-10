@@ -73,11 +73,11 @@ class ReviewSubmission extends Page
                             Storage::disk('public')->delete($this->record->proof_of_payment);
                         }
 
-                        // Run OJS Submission
+                        // Run OJS Submission in background
                         try {
-                            app(\App\Services\OjsSubmissionService::class)->submit($this->record);
+                            \App\Services\OjsSubmissionService::submitInBackground($this->record);
                         } catch (\Throwable $e) {
-                            \Illuminate\Support\Facades\Log::warning("OJS integration failed during single approval of submission ID: {$this->record->id}. Error: {$e->getMessage()}");
+                            \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$this->record->id}. Error: {$e->getMessage()}");
                         }
 
                         $this->record->update([
@@ -107,22 +107,14 @@ class ReviewSubmission extends Page
                 ->modalDescription('Are you sure you want to resubmit this submission to OJS?')
                 ->action(function () {
                     try {
-                        $result = app(\App\Services\OjsSubmissionService::class)->submit($this->record);
-                        if ($result['success']) {
-                            Notification::make()
-                                ->title('Resubmitted to OJS successfully')
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('OJS Resubmission Failed')
-                                ->body($result['message'])
-                                ->danger()
-                                ->send();
-                        }
+                        \App\Services\OjsSubmissionService::submitInBackground($this->record);
+                        Notification::make()
+                            ->title('Resubmission dispatched in background')
+                            ->info()
+                            ->send();
                     } catch (\Throwable $e) {
                         Notification::make()
-                            ->title('OJS Resubmission Failed')
+                            ->title('OJS Resubmission Failed to Dispatch')
                             ->body($e->getMessage())
                             ->danger()
                             ->send();

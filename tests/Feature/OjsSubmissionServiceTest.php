@@ -214,4 +214,41 @@ class OjsSubmissionServiceTest extends TestCase
         $this->assertEquals('failed', $submission->ojs_status);
         $this->assertStringContainsString('HTTP request failed with status 401', $submission->ojs_error_message);
     }
+
+    /**
+     * Test sync console command execution.
+     */
+    public function test_sync_command_success(): void
+    {
+        Http::fake([
+            'https://cibangsa.com/index.php/testjournal/loa-api/submissions' => Http::response([
+                'success' => true,
+                'message' => 'Submission created successfully',
+                'submission_id' => 112233,
+            ], 200)
+        ]);
+
+        $journal = Journal::create([
+            'name' => 'Test Journal',
+            'slug' => 'test-journal',
+            'link' => 'https://cibangsa.com/index.php/testjournal',
+        ]);
+
+        $submission = Submission::create([
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+            ],
+            'title' => 'Test Article',
+            'email' => 'john@example.com',
+            'journal_id' => $journal->id,
+            'status' => 'Pending',
+        ]);
+
+        $this->artisan('submission:sync-ojs', ['id' => $submission->id])
+            ->assertExitCode(0);
+
+        $submission->refresh();
+        $this->assertEquals('submitted', $submission->ojs_status);
+        $this->assertEquals('112233', $submission->ojs_submission_id);
+    }
 }
