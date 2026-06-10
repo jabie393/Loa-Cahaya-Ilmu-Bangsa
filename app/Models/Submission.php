@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Storage;
 
 class Submission extends Model
 {
@@ -17,6 +18,30 @@ class Submission extends Model
         static::creating(function ($submission) {
             if (empty($submission->date_of_loa)) {
                 $submission->date_of_loa = now();
+            }
+        });
+
+        static::saved(function ($submission) {
+            if ($submission->manuscript_file) {
+                $oldPath = $submission->manuscript_file;
+                $disk = 'public';
+
+                // Get file extension
+                $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
+                $newFilename = "file-{$submission->id}" . ($extension ? ".{$extension}" : "");
+                $newPath = "manuscripts/{$newFilename}";
+
+                if ($oldPath !== $newPath) {
+                    if (Storage::disk($disk)->exists($oldPath)) {
+                        if (Storage::disk($disk)->exists($newPath)) {
+                            Storage::disk($disk)->delete($newPath);
+                        }
+                        Storage::disk($disk)->move($oldPath, $newPath);
+
+                        $submission->manuscript_file = $newPath;
+                        $submission->saveQuietly();
+                    }
+                }
             }
         });
     }
