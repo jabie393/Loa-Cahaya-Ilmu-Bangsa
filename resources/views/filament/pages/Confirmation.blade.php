@@ -21,17 +21,31 @@
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Nama
                         Penulis</span>
                     @php
-                        $authorNames = $get('author_name');
-                        if (is_array($authorNames)) {
-                            $authorNames = implode(', ', $authorNames);
-                        } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
-                            $authorNames = $authorNames->implode(', ');
+                        $authors = $get('authors');
+                        $authorNamesString = '';
+                        if (is_array($authors) && !empty($authors)) {
+                            $names = [];
+                            foreach ($authors as $auth) {
+                                $name = $auth['name'] ?? '';
+                                $inst = $auth['institution'] ?? '';
+                                if (!empty($name)) {
+                                    $names[] = $name . (!empty($inst) ? " ({$inst})" : "");
+                                }
+                            }
+                            $authorNamesString = implode(', ', $names);
                         } else {
-                            $authorNames = (string) $authorNames;
+                            $authorNames = $get('author_name');
+                            if (is_array($authorNames)) {
+                                $authorNamesString = implode(', ', $authorNames);
+                            } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
+                                $authorNamesString = $authorNames->implode(', ');
+                            } else {
+                                $authorNamesString = (string) $authorNames;
+                            }
                         }
                     @endphp
                     <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
-                        {{ $authorNames }}
+                        {{ $authorNamesString }}
                     </span>
                 </div>
                 <div class="flex flex-col">

@@ -182,7 +182,7 @@
                     Author
                 </td>
                 <td class="font-space px-[5.4pt] py-4 align-top">
-                    {{ $record->author_name }}
+                    {{ $record->formatted_authors }}
                 </td>
             </tr>
 

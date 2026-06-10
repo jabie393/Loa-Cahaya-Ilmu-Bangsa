@@ -7,6 +7,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -41,30 +42,45 @@ class CreateSubmission extends CreateRecord
                         ->schema([
                             Hidden::make('user_id')
                                 ->default(Auth::user()->id),
-                            TagsInput::make('author_name')
-                                ->label('Nama Penulis (Ditulis Sesuai EYD)')
-                                ->placeholder('Tambah penulis')
-                                ->helperText('Tekan enter untuk memisahkan')
-                                ->default(Auth::user()?->name ? [Auth::user()->name] : [])
-                                ->formatStateUsing(function ($state) {
-                                    if (is_array($state)) {
-                                        return $state;
-                                    }
-                                    if (is_string($state) && str_starts_with($state, '[') && str_ends_with($state, ']')) {
-                                        $decoded = json_decode($state, true);
-                                        if (is_array($decoded)) {
-                                            return $decoded;
+                            Repeater::make('authors')
+                                ->label('Daftar Penulis & Instansi')
+                                ->schema([
+                                    TextInput::make('name')
+                                        ->label('Nama Penulis (Sesuai EYD)')
+                                        ->required()
+                                        ->placeholder('Nama Lengkap'),
+                                    TextInput::make('institution')
+                                        ->label('Instansi (Jangan Disingkat)')
+                                        ->required()
+                                        ->placeholder('Nama Instansi / Kampus'),
+                                ])
+                                ->createItemButtonLabel('Tambah Penulis')
+                                ->minItems(1)
+                                ->columns(2)
+                                ->columnSpanFull()
+                                ->default([
+                                    ['name' => Auth::user()?->name ?? '', 'institution' => '']
+                                ])
+                                ->afterStateHydrated(function ($component, $state, $record) {
+                                    if (empty($state) && $record && !empty($record->author_name)) {
+                                        $names = is_array($record->author_name)
+                                            ? $record->author_name
+                                            : array_map('trim', explode(',', $record->author_name));
+
+                                        $state = [];
+                                        foreach ($names as $name) {
+                                            $state[] = ['name' => $name, 'institution' => ''];
                                         }
+                                        $component->state($state);
                                     }
-                                    return is_string($state) ? array_map('trim', explode(',', $state)) : [];
-                                })
-                                ->separator(',')
-                                ->required(),
+                                }),
                             TextInput::make('email')
                                 ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
                                 ->default(Auth::user()->email)
                                 ->email()
-                                ->required(),
+                                ->required()
+                                ->placeholder('email@example.com')
+                                ->columnSpanFull(),
 
                             Select::make('journal_id')
                                 ->label('Jurnal (Pilih Salah satu)')
@@ -75,16 +91,19 @@ class CreateSubmission extends CreateRecord
                             TextInput::make('title')
                                 ->columnSpanFull()
                                 ->label('Judul (Diisi Huruf Besar)')
+                                ->placeholder('Judul Artikel')
                                 ->required(),
                             TagsInput::make('keywords')
                                 ->label('Keywords')
                                 ->separator(',')
                                 ->required()
                                 ->placeholder('Tambah kata kunci')
-                                ->helperText('Tekan enter untuk memisahkan'),
+                                ->helperText('Tekan enter untuk memisahkan')
+                                ->columnSpanFull(),
                             Textarea::make('abstract')
                                 ->label('Abstract')
                                 ->required()
+                                ->placeholder('Masukkan Abstrak')
                                 ->columnSpanFull()
                                 ->autosize()
                                 ->maxLength(5000)

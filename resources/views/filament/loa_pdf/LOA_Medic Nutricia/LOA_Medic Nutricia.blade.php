@@ -192,7 +192,7 @@
                 <div class="w-full align-top">
                     <p class="text-left">
                         <span class="font-lora text-[10pt] font-normal text-black">
-                            {{ $record->author_name }}
+                            {{ $record->formatted_authors }}
                         </span>
                     </p>
                 </div>

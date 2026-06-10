@@ -211,7 +211,7 @@
                             Author
                         </span>
                         <div class="text-primary text-[10pt] font-semibold uppercase tracking-wide">
-                            {{ $record->author_name }}
+                            {{ $record->formatted_authors }}
                         </div>
                     </div>
                 </div>

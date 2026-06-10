@@ -77,19 +77,35 @@
                     <div class="wrap-break-word flex flex-col">
                         <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Nama Penulis</span>
                         <span class="text-md font-semibold text-gray-900 dark:text-white">
-                            @php
+                             @php
                                 $authors = $record->author_name;
+                                $authorsArray = $record->authors;
                                 if (is_string($authors) && str_starts_with($authors, '[') && str_ends_with($authors, ']')) {
                                     $decoded = json_decode($authors, true);
                                     if (is_array($decoded)) {
                                         $authors = $decoded;
                                     }
                                 }
-                                if (is_array($authors)) {
-                                    $authors = implode(', ', $authors);
-                                }
                             @endphp
-                            {{ $authors }}
+                            @if (!empty($authorsArray) && is_array($authorsArray))
+                                <ul class="list-disc pl-4 space-y-1">
+                                    @foreach ($authorsArray as $author)
+                                        <li>
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ $author['name'] ?? '' }}</span>
+                                            @if(!empty($author['institution']))
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">({{ $author['institution'] }})</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                @php
+                                    if (is_array($authors)) {
+                                        $authors = implode(', ', $authors);
+                                    }
+                                @endphp
+                                {{ $authors }}
+                            @endif
                         </span>
                     </div>
                     <div class="wrap-break-word flex flex-col">

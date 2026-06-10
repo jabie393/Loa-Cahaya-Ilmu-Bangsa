@@ -200,7 +200,7 @@
                 <p class="text-primary relative top-[-6pt] mb-1 w-fit bg-white px-2 text-[7.5pt] font-bold uppercase tracking-wider">
                     Author
                 </p>
-                <div class="font-semibold">{{ $record->author_name }}</div>
+                <div class="font-semibold">{{ $record->formatted_authors }}</div>
             </div>
         </div>
 

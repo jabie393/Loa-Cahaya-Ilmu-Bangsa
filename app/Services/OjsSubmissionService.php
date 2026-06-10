@@ -110,14 +110,15 @@ class OjsSubmissionService
                 'number' => $no,
                 'year' => $year,
                 'references' => $submission->references,
+                'authors' => $submission->authors,
             ];
 
             Log::info("Sending submission ID: {$submission->id} to OJS URL: {$url}");
 
-            // Send POST request with 30s timeout
+            // Send POST request with 90s timeout to accommodate slow mail sending / file downloads in OJS
             $response = Http::withHeaders([
                 'Accept' => 'application/json',
-            ])->timeout(30)->post($url, $payload);
+            ])->timeout(90)->post($url, $payload);
 
             if ($response->failed()) {
                 $status = $response->status();

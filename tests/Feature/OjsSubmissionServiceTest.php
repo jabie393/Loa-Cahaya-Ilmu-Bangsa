@@ -41,7 +41,9 @@ class OjsSubmissionServiceTest extends TestCase
         ]);
 
         $submission = Submission::create([
-            'author_name' => 'John Doe',
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+            ],
             'title' => 'Test Article',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
@@ -70,7 +72,9 @@ class OjsSubmissionServiceTest extends TestCase
         ]);
 
         $submission = Submission::create([
-            'author_name' => 'John Doe',
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+            ],
             'title' => 'Test Article',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
@@ -115,7 +119,10 @@ class OjsSubmissionServiceTest extends TestCase
         ]);
 
         $submission = Submission::create([
-            'author_name' => 'John Doe',
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+                ['name' => 'Jane Smith', 'institution' => 'University B'],
+            ],
             'title' => 'Test Article',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,
@@ -150,12 +157,16 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['abstract'] === 'This is the abstract text.' &&
                 $request['keywords'] === 'keyword1, keyword2' &&
                 $request['references'] === "Reference 1\nReference 2" &&
-                $request['author_name'] === 'John Doe' &&
+                $request['author_name'] === 'John Doe, Jane Smith' &&
                 $request['email'] === 'john@example.com' &&
                 $request['institution'] === null &&
                 $request['volume'] === null &&
                 $request['number'] === null &&
                 $request['year'] === null &&
+                $request['authors'] === [
+                    ['name' => 'John Doe', 'institution' => 'University A'],
+                    ['name' => 'Jane Smith', 'institution' => 'University B'],
+                ] &&
                 !empty($request['pdf_url']) &&
                 !empty($request['loa_number']) &&
                 !empty($request['loa_date']);
@@ -181,7 +192,9 @@ class OjsSubmissionServiceTest extends TestCase
         ]);
 
         $submission = Submission::create([
-            'author_name' => 'John Doe',
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+            ],
             'title' => 'Test Article',
             'email' => 'john@example.com',
             'journal_id' => $journal->id,

@@ -21,6 +21,18 @@ class Submission extends Model
             }
         });
 
+        static::saving(function ($submission) {
+            if ($submission->isDirty('authors') && is_array($submission->authors)) {
+                $names = [];
+                foreach ($submission->authors as $author) {
+                    if (!empty($author['name'])) {
+                        $names[] = trim($author['name']);
+                    }
+                }
+                $submission->author_name = implode(', ', $names);
+            }
+        });
+
         static::saved(function ($submission) {
             if ($submission->manuscript_file) {
                 $oldPath = $submission->manuscript_file;
@@ -49,6 +61,7 @@ class Submission extends Model
     protected $fillable = [
         'user_id',
         'author_name',
+        'authors',
         'title',
         'email',
         'journal_id',
@@ -83,6 +96,7 @@ class Submission extends Model
             'approved_date' => 'date',
             'rejected_date' => 'date',
             'ojs_synced_at' => 'datetime',
+            'authors' => 'array',
         ];
     }
 
@@ -94,6 +108,23 @@ class Submission extends Model
     public function journal(): BelongsTo
     {
         return $this->belongsTo(Journal::class);
+    }
+
+    public function getFormattedAuthorsAttribute(): string
+    {
+        if (!empty($this->authors) && is_array($this->authors)) {
+            $names = [];
+            foreach ($this->authors as $author) {
+                $name = $author['name'] ?? '';
+                $inst = $author['institution'] ?? '';
+                if (!empty($name)) {
+                    $names[] = $name . (!empty($inst) ? " ({$inst})" : "");
+                }
+            }
+            return implode(', ', $names);
+        }
+
+        return $this->author_name ?: '';
     }
 
     public function getTemplateView(): string

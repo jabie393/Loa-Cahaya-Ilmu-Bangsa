@@ -226,7 +226,7 @@
                     rowspan="1">
                     <p class="py-0 text-left leading-none">
                         <span class="font-bahnschrift text-[11pt] font-normal text-black">
-                            {{ $record->author_name }}
+                            {{ $record->formatted_authors }}
                         </span>
                     </p>
                 </td>
