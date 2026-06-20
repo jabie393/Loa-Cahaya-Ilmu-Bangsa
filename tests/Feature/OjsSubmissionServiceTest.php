@@ -251,4 +251,52 @@ class OjsSubmissionServiceTest extends TestCase
         $this->assertEquals('submitted', $submission->ojs_status);
         $this->assertEquals('112233', $submission->ojs_submission_id);
     }
+
+    /**
+     * Test sanitization of 4-byte mathematical alphanumeric characters.
+     */
+    public function test_submitting_sanitizes_4byte_mathematical_characters(): void
+    {
+        Http::fake([
+            'https://cibangsa.com/index.php/testjournal/loa-api/submissions' => Http::response([
+                'success' => true,
+                'message' => 'Submission created successfully',
+                'submission_id' => 888777,
+            ], 200)
+        ]);
+
+        $journal = Journal::create([
+            'name' => 'Test Journal',
+            'slug' => 'test-journal',
+            'link' => 'https://cibangsa.com/index.php/testjournal',
+        ]);
+
+        // "𝑠" is U+1D460 (Mathematical Italic Small S)
+        // "𝑡" is U+1D461 (Mathematical Italic Small T)
+        // We also add an emoji (e.g. 🚀) which should be stripped
+        $submission = Submission::create([
+            'authors' => [
+                ['name' => 'John Doe', 'institution' => 'University A'],
+            ],
+            'title' => 'Test Article 𝑠',
+            'email' => 'john@example.com',
+            'journal_id' => $journal->id,
+            'status' => 'Pending',
+            'abstract' => 'Analisis Betweenness Centrality dihitung untuk seluruh pasangan simpul asal 𝑠 dan tujuan 𝑡 melalui simpul perantara 🚀',
+            'keywords' => 'test 𝑠, 𝑡, 🚀',
+        ]);
+
+        $service = new OjsSubmissionService();
+        $result = $service->submit($submission);
+
+        $this->assertTrue($result['success']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://cibangsa.com/index.php/testjournal/loa-api/submissions' &&
+                $request['title'] === 'Test Article s' &&
+                $request['abstract'] === 'Analisis Betweenness Centrality dihitung untuk seluruh pasangan simpul asal s dan tujuan t melalui simpul perantara ' &&
+                $request['keywords'] === 'test s, t, ';
+        });
+    }
 }
+
