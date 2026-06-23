@@ -34,6 +34,7 @@ Penulis mengunduh template jurnal melalui menu:
 - **1. Unduh Template**
 
 Tujuan:
+
 - Mengunduh format/template jurnal resmi dari Cahaya Ilmu Bangsa Institute yang dituju.
 - Menyesuaikan artikel agar sesuai dengan template jurnal tujuan.
 
@@ -48,50 +49,54 @@ Penulis melakukan pengecekan plagiasi dan optimasi kemiripan naskah secara opsio
 Hasil pengecekan ini bersifat **tidak wajib (opsional)** dan hanya digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk ke OJS.
 
 ### 1. Proses Pengecekan Plagiasi
+
 Pengecekan plagiasi dilakukan dengan alur sistematis berikut:
-* **Pengisian & Unggah**: Penulis mengisi email penerima hasil analisis dan mengunggah file naskah (format **.docx** atau **.pdf** dengan ukuran maksimal 10 MB). Penulis dapat memantau sisa kuota hariannya secara real-time di bawah formulir.
-* **Proses Berjalan (`pending`/`processing`)**:
-  - Sistem mengubah status menjadi `processing` dan menjalankan analisis di latar belakang.
-  - Untuk kenyamanan visual, judul naskah yang sedang diproses di daftar tabel akan ditampilkan secara redup (opacity `0.55 !important`).
-* **Hasil Sukses (`completed`)**:
-  - Sistem otomatis mendeteksi judul asli naskah.
-  - Hasil analisis menyimpan skor kemiripan (`similarity_score`) dan memetakannya ke dalam kategori Turnitin:
-    - **Rendah** (< 20%): Badge Hijau
-    - **Sedang** (20% - 49%): Badge Jingga/Amber
-    - **Tinggi** (>= 50%): Badge Merah
-  - Kalimat-kalimat yang terindikasi plagiat disimpan di `report_data.highlighted_parts` lengkap dengan dugaan sumber (`source`) dan alasannya.
-  - Mengirimkan email laporan analisis premium secara otomatis ke email penerima.
-  - Mengurangi kuota harian (Plagiarism Credits) milik pengguna.
-* **Hasil Gagal (`failed`)**:
-  - Apabila server Turnitin mengalami high traffic, status diubah menjadi `failed` dan pesan error dicatat.
-  - Di daftar tabel, baris naskah yang gagal akan secara otomatis **disortir paling atas** agar disadari pengguna.
-  - Judul naskah akan dirender dengan teks miring merah bertuliskan: *Analisis Plagiasi Gagal — (Nama Berkas)* dan petunjuk *"Tips: Coba Re-Check setelah beberapa saat..."*.
-  - Penulis dapat memicu analisis ulang secara manual melalui tombol **"Re-Check"** pada dropdown aksi tabel atau footer modal detail.
+
+- **Pengisian & Unggah**: Penulis mengisi email penerima hasil analisis dan mengunggah file naskah (format **.docx** atau **.pdf** dengan ukuran maksimal 10 MB). Penulis dapat memantau sisa kuota hariannya secara real-time di bawah formulir.
+- **Proses Berjalan (`pending`/`processing`)**:
+    - Sistem mengubah status menjadi `processing` dan menjalankan analisis di latar belakang.
+    - Untuk kenyamanan visual, judul naskah yang sedang diproses di daftar tabel akan ditampilkan secara redup (opacity `0.55 !important`).
+- **Hasil Sukses (`completed`)**:
+    - Sistem otomatis mendeteksi judul asli naskah.
+    - Hasil analisis menyimpan skor kemiripan (`similarity_score`) dan memetakannya ke dalam kategori Turnitin:
+        - **Rendah** (< 20%): Badge Hijau
+        - **Sedang** (20% - 49%): Badge Jingga/Amber
+        - **Tinggi** (>= 50%): Badge Merah
+    - Kalimat-kalimat yang terindikasi plagiat disimpan di `report_data.highlighted_parts` lengkap dengan dugaan sumber (`source`) dan alasannya.
+    - Mengirimkan email laporan analisis premium secara otomatis ke email penerima.
+    - Mengurangi kuota harian (Plagiarism Credits) milik pengguna.
+- **Hasil Gagal (`failed`)**:
+    - Apabila server Turnitin mengalami high traffic, status diubah menjadi `failed` dan pesan error dicatat.
+    - Di daftar tabel, baris naskah yang gagal akan secara otomatis **disortir paling atas** agar disadari pengguna.
+    - Judul naskah akan dirender dengan teks miring merah bertuliskan: _Analisis Plagiasi Gagal — (Nama Berkas)_ dan petunjuk _"Tips: Coba Re-Check setelah beberapa saat..."_.
+    - Penulis dapat memicu analisis ulang secara manual melalui tombol **"Re-Check"** pada dropdown aksi tabel atau footer modal detail.
 
 ### 2. Proses Parafrase Akademik
+
 Setelah cek plagiasi sukses (`completed`), jika naskah memiliki kalimat-kalimat dengan tingkat kemiripan tinggi, penulis dapat menggunakan fitur **Parafrase** untuk melakukan revisi kalimat secara otomatis:
-* **Akses Fitur**:
-  - Dapat diakses melalui tombol **"Parafrase"** pada baris tabel (ikon ✨ hijau) atau di dalam footer modal detail naskah.
-  - **Keamanan & Privasi Hak Akses**: Super Admin hanya diizinkan memparafrase naskah miliknya sendiri. Tombol Parafrase akan disembunyikan sepenuhnya dari baris tabel/modal jika naskah tersebut milik pengguna biasa demi melindungi kerahasiaan tulisan penulis.
-* **Ketentuan Penggunaan**:
-  - Layanan bersifat gratis dan terintegrasi dalam kuota cek plagiasi.
-  - Hanya dapat dijalankan **1x per hasil cek Turnitin** (tombol otomatis tidak aktif setelah diproses).
-  - Penulis dapat mengulang proses (*retry*) hanya apabila proses parafrase sebelumnya berstatus gagal (`failed`).
-* **Sistem Kerja Back-End**:
-  - Sistem mengirimkan bagian kalimat plagiat (`highlighted_parts`) untuk dianalisis dan disusun ulang menggunakan metode ilmiah terstruktur dengan persona **Editor Akademik Senior**.
-  - Sistem menghasilkan susunan kalimat baru yang profesional, elegan, dan mempertahankan makna asli dengan standar jurnal internasional terakreditasi.
-* **Hasil Sukses (`completed`)**:
-  - Menyimpan data perbandingan kalimat side-by-side (`original` vs `improved`) beserta catatan penjelasannya (`explanation`).
-  - Menghitung perkiraan skor kemiripan baru yang lebih rendah (`estimated_new_score`).
-  - Mengirimkan email laporan premium bertema Royal Blue & Emerald Green yang berisi tabel perbandingan side-by-side secara otomatis ke email penulis.
-* **Interaktivitas Visual di Antarmuka (UI/UX)**:
-  - **Tabbed Infolist (Detail Naskah)**: Modal detail bertransformasi secara instan menggunakan dua tab dinamis:
-    - **Tab Hasil Cek Plagiasi**: Menampilkan statistik plagiasi awal dan bagian teks bermasalah.
-    - **Tab Hasil Parafrase**: Menampilkan perbandingan side-by-side kalimat asli vs rekomendasi parafrase serta perkiraan skor baru. (Tab ini tersembunyi sepenuhnya jika naskah belum diparafrase).
-  - **Similarity Group Column (Daftar Tabel)**:
-    - **Kolom Awal**: Skor dan badge kemiripan Turnitin sebelum diparafrase.
-    - **Kolom Δ**: Selisih persentase penurunan kemiripan (`Awal` - `Estimasi`) yang menampilkan nilai penurunan dan ikon panah bawah (`↓`) hijau murni secara dinamis.
-    - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu-abu: *"Belum parafrase"*.
+
+- **Akses Fitur**:
+    - Dapat diakses melalui tombol **"Parafrase"** pada baris tabel (ikon ✨ hijau) atau di dalam footer modal detail naskah.
+    - **Keamanan & Privasi Hak Akses**: Super Admin hanya diizinkan memparafrase naskah miliknya sendiri. Tombol Parafrase akan disembunyikan sepenuhnya dari baris tabel/modal jika naskah tersebut milik pengguna biasa demi melindungi kerahasiaan tulisan penulis.
+- **Ketentuan Penggunaan**:
+    - Layanan bersifat gratis dan terintegrasi dalam kuota cek plagiasi.
+    - Hanya dapat dijalankan **1x per hasil cek Turnitin** (tombol otomatis tidak aktif setelah diproses).
+    - Penulis dapat mengulang proses (_retry_) hanya apabila proses parafrase sebelumnya berstatus gagal (`failed`).
+- **Sistem Kerja Back-End**:
+    - Sistem mengirimkan bagian kalimat plagiat (`highlighted_parts`) untuk dianalisis dan disusun ulang menggunakan metode ilmiah terstruktur dengan persona **Editor Akademik Senior**.
+    - Sistem menghasilkan susunan kalimat baru yang profesional, elegan, dan mempertahankan makna asli dengan standar jurnal internasional terakreditasi.
+- **Hasil Sukses (`completed`)**:
+    - Menyimpan data perbandingan kalimat side-by-side (`original` vs `improved`) beserta catatan penjelasannya (`explanation`).
+    - Menghitung perkiraan skor kemiripan baru yang lebih rendah (`estimated_new_score`).
+    - Mengirimkan email laporan premium bertema Royal Blue & Emerald Green yang berisi tabel perbandingan side-by-side secara otomatis ke email penulis.
+- **Interaktivitas Visual di Antarmuka (UI/UX)**:
+    - **Tabbed Infolist (Detail Naskah)**: Modal detail bertransformasi secara instan menggunakan dua tab dinamis:
+        - **Tab Hasil Cek Plagiasi**: Menampilkan statistik plagiasi awal dan bagian teks bermasalah.
+        - **Tab Hasil Parafrase**: Menampilkan perbandingan side-by-side kalimat asli vs rekomendasi parafrase serta perkiraan skor baru. (Tab ini tersembunyi sepenuhnya jika naskah belum diparafrase).
+    - **Similarity Group Column (Daftar Tabel)**:
+        - **Kolom Awal**: Skor dan badge kemiripan Turnitin sebelum diparafrase.
+        - **Kolom Δ**: Selisih persentase penurunan kemiripan (`Awal` - `Estimasi`) yang menampilkan nilai penurunan dan ikon panah bawah (`↓`) hijau murni secara dinamis.
+        - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu-abu: _"Belum parafrase"_.
 
 ---
 
@@ -102,6 +107,7 @@ Penulis melakukan review kelayakan artikel secara opsional sebelum diunggah ke O
 - **3. Review Pra OJS**
 
 Tujuan:
+
 - Mengecek kualitas awal artikel.
 - Mengetahui revisi akademis yang perlu dilakukan sebelum proses submit jurnal sesungguhnya.
 
@@ -210,7 +216,7 @@ Penulis wajib submit mandiri ke OJS jurnal tujuan.
 
 Submit OJS mandiri dapat dilakukan melalui platform jurnal yang digunakan pengguna atau melalui layanan jurnal di:
 
-https://cibangsa.com/
+https://journal.cib.institute/
 
 Langkah umum submit jurnal:
 
@@ -240,7 +246,7 @@ Kanda Putra harus menjelaskan bahwa:
 
 Pengguna juga dapat mencari dan melakukan submit jurnal secara mandiri melalui:
 
-https://cibangsa.com/
+https://journal.cib.institute/
 
 Alur umum:
 
@@ -422,7 +428,7 @@ Kanda Putra wajib:
 - menjelaskan langkah sesuai paket yang dipilih pengguna
 - memahami bahwa Paket 1 & 2 dibantu admin untuk submit OJS
 - memahami bahwa Paket 3 submit OJS mandiri
-- memahami bahwa submit mandiri dapat dilakukan melalui https://cibangsa.com/
+- memahami bahwa submit mandiri dapat dilakukan melalui https://journal.cib.institute/
 - memberikan panduan step-by-step jika user bingung submit jurnal
 - mengarahkan user mengecek status melalui menu "Submissions"
 - mengingatkan revisi maksimal 7x24 jam jika submission ditolak
@@ -449,7 +455,7 @@ Website LOA:
 https://loa.jurnalcib.com/
 
 Website Jurnal / OJS Mandiri:
-https://cibangsa.com/
+https://journal.cib.institute/
 
 Institusi:
 Cahaya Ilmu Bangsa Institute
@@ -465,6 +471,7 @@ AHU-0018912-AH.01.14
 Sistem navigasi sidebar dirancang secara terstruktur dengan urutan bernomor untuk memandu alur kerja publikasi dan administrasi secara logis:
 
 ## Menu Utama (Workflow Publikasi)
+
 1. **1. Unduh Template** (Urutan `1`): Berisi daftar template jurnal dari Cahaya Ilmu Bangsa Institute yang siap diunduh oleh penulis.
 2. **2. Cek Plagiasi & Parafrase** (Urutan `2`): Layanan opsional untuk mengecek skor Turnitin dan melakukan parafrase naskah akademis guna menurunkan plagiarisme.
 3. **3. Review Pra OJS** (Urutan `3`): Layanan opsional bagi penulis untuk mengirimkan draf artikel guna mendapatkan review kelayakan sebelum diunggah ke OJS.
@@ -472,7 +479,9 @@ Sistem navigasi sidebar dirancang secara terstruktur dengan urutan bernomor untu
 5. **5. My Publication** (Urutan `5`): Halaman yang menampilkan seluruh publikasi milik penulis yang telah sukses disetujui (Approved) beserta tombol unduh LOA, Sertifikat Author (AC), dan Plagiarism-Free Certificate (PFC).
 
 ## Menu Group: Settings (Khusus Administrator)
-*Menu ini dikelompokkan dalam kategori **Settings** di bagian bawah sidebar:*
+
+_Menu ini dikelompokkan dalam kategori **Settings** di bagian bawah sidebar:_
+
 1. **Journal List** (Urutan `1`): Manajemen data jurnal-jurnal yang terbit di bawah naungan CIB Institute.
 2. **Chatbot Faqs** (Urutan `2`): Pengaturan data pertanyaan dan jawaban (FAQ) untuk asisten chatbot AI.
 3. **Users** (Urutan `3`): Manajemen akun pengguna, hak akses (roles), serta kuota cek plagiat harian.
