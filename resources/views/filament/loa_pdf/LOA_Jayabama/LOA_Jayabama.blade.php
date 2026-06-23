@@ -293,7 +293,7 @@
                         colspan="1"
                         rowspan="1">
                         <p class="py-0 text-left leading-none">
-                            <a href="https://cibangsa.com/index.php/jayabamajournal/index"
+                            <a href="{{ $record->publication_link }}"
                                class="font-noto text-[11pt] font-normal text-black">
                                 {{ $record->publication_link }}
                             </a>
