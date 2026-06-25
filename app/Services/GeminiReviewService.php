@@ -3,10 +3,10 @@
 namespace App\Services;
 
 use App\Contracts\AiReviewContract;
-use App\Models\PreSubmissionReview;
 use App\Traits\HandlesGeminiFallback;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Model;
 use Smalot\PdfParser\Parser;
 use ZipArchive;
 use Exception;
@@ -17,9 +17,15 @@ class GeminiReviewService implements AiReviewContract
     /**
      * Perform an AI review using Google Gemini.
      */
-    public function review(PreSubmissionReview $reviewRecord): array
+    public function review(Model $record): array
     {
-        $text = $this->extractText($reviewRecord->file_path);
+        $filePath = $record->file_path ?? $record->manuscript_file;
+        
+        if (empty($filePath)) {
+            throw new Exception("File naskah tidak ditemukan.");
+        }
+
+        $text = $this->extractText($filePath);
         
         if (empty($text)) {
             throw new Exception("Gagal mengekstrak teks dari dokumen.");
@@ -44,6 +50,7 @@ class GeminiReviewService implements AiReviewContract
             ],
             'generationConfig' => [
                 'responseMimeType' => 'application/json',
+                'maxOutputTokens' => 8192,
             ]
         ];
 
@@ -71,7 +78,16 @@ class GeminiReviewService implements AiReviewContract
         $result = json_decode($rawContent, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . substr($rawContent, 0, 100) . "...");
+            // Log full raw content for debugging
+            \Illuminate\Support\Facades\Log::error("Gemini JSON Parsing failed. Error: " . json_last_error_msg() . " | Raw Content: " . $rawContent);
+            
+            // Try fallback by stripping control characters
+            $cleanRawContent = preg_replace('/[\x00-\x1F\x7F]/', '', $rawContent);
+            $result = json_decode($cleanRawContent, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . substr($rawContent, 0, 150) . "...");
+            }
         }
 
         return $result;
@@ -132,27 +148,35 @@ class GeminiReviewService implements AiReviewContract
         // Limit text length to avoid token limits (approx 150k chars)
         $text = substr($text, 0, 150000);
 
-        return "Anda adalah seorang reviewer jurnal profesional senior dari 'Cahaya Ilmu Bangsa'. 
-        Tugas Anda adalah memberikan review 'Pra-OJS' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.
+        return 'Anda adalah seorang reviewer jurnal profesional senior dari \'Cahaya Ilmu Bangsa\'. 
+        Tugas Anda adalah memberikan review \'Pra-OJS\' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.
         Berikan review singkat dan poin-poin yang jelas untuk setiap bagian berikut.
         Gunakan Bahasa Indonesia yang formal dan profesional.
         
         PENTING: Anda harus mengembalikan hasil dalam format JSON murni dengan struktur kunci berikut:
         {
-            \"structure_review\": \"...\",
-            \"abstract_review\": \"...\",
-            \"introduction_review\": \"...\",
-            \"method_review\": \"...\",
-            \"results_review\": \"...\",
-            \"conclusion_review\": \"...\",
-            \"bibliography_review\": \"...\",
-            \"general_suggestions\": \"...\",
-            \"detected_title\": \"...\"
+            "structure_review": "...",
+            "abstract_review": "...",
+            "introduction_review": "...",
+            "method_review": "...",
+            "results_review": "...",
+            "conclusion_review": "...",
+            "bibliography_review": "...",
+            "general_suggestions": "...",
+            "detected_title": "...",
+            "detected_abstract": "...",
+            "detected_keywords": "... (pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
+            "detected_references": "... (tuliskan daftar pustaka/referensi yang ditemukan, pisahkan per baris)"
         }
+
+        ATURAN SINTAKS JSON:
+        1. Jangan menyertakan tanda petik ganda (") di dalam nilai teks JSON kecuali tanda petik tersebut telah di-escape dengan backslash (\"). Sangat disarankan menggunakan tanda petik tunggal (\') jika ingin mengutip kata/istilah di dalam teks hasil review.
+        2. Jangan menyertakan karakter kontrol seperti baris baru langsung di dalam string JSON. Gunakan \n untuk baris baru.
+        3. Pastikan format JSON benar-benar valid secara sintaksis dan lengkap (tidak terpotong).
 
         Isi jurnal untuk di-review:
         ---
-        {$text}
-        ---";
+        ' . $text . '
+        ---';
     }
 }

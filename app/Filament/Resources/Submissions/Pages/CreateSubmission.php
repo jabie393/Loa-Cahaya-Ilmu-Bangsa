@@ -4,26 +4,20 @@ namespace App\Filament\Resources\Submissions\Pages;
 
 use App\Filament\Resources\Submissions\SubmissionResource;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Repeater;
-use Filament\Schemas\Components\Wizard\Step;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
-use Filament\Schemas\Components\Group;
 use Filament\Forms\Components\Select;
-use Illuminate\Support\Facades\Auth;
-use Filament\Schemas\Components\View;
 use Filament\Forms\Components\Checkbox;
+use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Grid;
-use Filament\Actions\Action;
-
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
-
+use Filament\Schemas\Components\View;
 
 class CreateSubmission extends CreateRecord
 {
@@ -36,129 +30,152 @@ class CreateSubmission extends CreateRecord
         return [
             Step::make('Form LOA')
                 ->schema([
-                    Section::make('Informasi Penulis')
-                        ->columnSpan(4)
-                        ->description('Informasi Penulis')
+                    Grid::make(6)
                         ->schema([
-                            Hidden::make('user_id')
-                                ->default(Auth::user()->id),
-                            Repeater::make('authors')
-                                ->label('Daftar Penulis & Instansi')
+                            Section::make('Form Submission')
+                                ->columnSpan(4)
+                                ->description('Lengkapi data pengajuan dan unggah bukti pembayaran di bawah ini')
                                 ->schema([
-                                    TextInput::make('name')
-                                        ->label('Nama Penulis (Sesuai EYD)')
+                                    Hidden::make('user_id')
+                                        ->default(Auth::user()->id),
+
+                                    Repeater::make('authors')
+                                        ->label('Daftar Penulis & Instansi')
+                                        ->schema([
+                                            TextInput::make('name')
+                                                ->label('Nama Penulis (Sesuai EYD)')
+                                                ->required()
+                                                ->placeholder('Nama Lengkap'),
+                                            TextInput::make('institution')
+                                                ->label('Instansi (Jangan Disingkat)')
+                                                ->required()
+                                                ->placeholder('Nama Instansi / Kampus'),
+                                        ])
+                                        ->createItemButtonLabel('Tambah Penulis')
+                                        ->minItems(1)
+                                        ->columns(2)
+                                        ->columnSpanFull()
+                                        ->default([
+                                            ['name' => Auth::user()?->name ?? '', 'institution' => '']
+                                        ]),
+
+                                    TextInput::make('email')
+                                        ->label('Email (Digunakan untuk pengiriman LOA & laporan review)')
+                                        ->email()
                                         ->required()
-                                        ->placeholder('Nama Lengkap'),
-                                    TextInput::make('institution')
-                                        ->label('Instansi (Jangan Disingkat)')
+                                        ->default(fn() => Auth::user()?->email)
+                                        ->placeholder('email@example.com')
+                                        ->columnSpanFull(),
+
+                                    Select::make('journal_id')
+                                        ->label('Jurnal Target')
+                                        ->relationship('journal', 'name')
+                                        ->columnSpanFull()
+                                        ->required(),
+
+                                    TextInput::make('title')
+                                        ->columnSpanFull()
+                                        ->label('Judul (Diisi Huruf Besar)')
+                                        ->placeholder('Judul Artikel Lengkap')
+                                        ->required(),
+
+                                    TagsInput::make('keywords')
+                                        ->label('Keywords')
+                                        ->separator(',')
                                         ->required()
-                                        ->placeholder('Nama Instansi / Kampus'),
-                                ])
-                                ->createItemButtonLabel('Tambah Penulis')
-                                ->minItems(1)
-                                ->columns(2)
-                                ->columnSpanFull()
-                                ->default([
-                                    ['name' => Auth::user()?->name ?? '', 'institution' => '']
-                                ])
-                                ->afterStateHydrated(function ($component, $state, $record) {
-                                    if (empty($state) && $record && !empty($record->author_name)) {
-                                        $names = is_array($record->author_name)
-                                            ? $record->author_name
-                                            : array_map('trim', explode(',', $record->author_name));
+                                        ->placeholder('Tambah kata kunci')
+                                        ->helperText('Tekan enter untuk memisahkan')
+                                        ->columnSpanFull(),
 
-                                        $state = [];
-                                        foreach ($names as $name) {
-                                            $state[] = ['name' => $name, 'institution' => ''];
-                                        }
-                                        $component->state($state);
-                                    }
-                                }),
-                            TextInput::make('email')
-                                ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
-                                ->default(Auth::user()->email)
-                                ->email()
-                                ->required()
-                                ->placeholder('email@example.com')
-                                ->columnSpanFull(),
+                                    Textarea::make('abstract')
+                                        ->label('Abstract')
+                                        ->placeholder('Masukkan Abstrak')
+                                        ->required()
+                                        ->columnSpanFull()
+                                        ->autosize()
+                                        ->maxLength(5000)
+                                        ->rules(['string']),
 
-                            Select::make('journal_id')
-                                ->label('Jurnal (Pilih Salah satu)')
-                                ->relationship('journal', 'name')
-                                ->default(request()->query('journal_id'))
-                                ->columnSpanFull()
-                                ->required(),
-                            TextInput::make('title')
-                                ->columnSpanFull()
-                                ->label('Judul (Diisi Huruf Besar)')
-                                ->placeholder('Judul Artikel')
-                                ->required(),
-                            TagsInput::make('keywords')
-                                ->label('Keywords')
-                                ->separator(',')
-                                ->required()
-                                ->placeholder('Tambah kata kunci')
-                                ->helperText('Tekan enter untuk memisahkan')
-                                ->columnSpanFull(),
-                            Textarea::make('abstract')
-                                ->label('Abstract')
-                                ->required()
-                                ->placeholder('Masukkan Abstrak')
-                                ->columnSpanFull()
-                                ->autosize()
-                                ->maxLength(5000)
-                                ->rules(['string']),
-                            Textarea::make('references')
-                                ->label('Referensi / Daftar Pustaka')
-                                ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')
-                                ->required()
-                                ->columnSpanFull()
-                                ->rows(6),
+                                    Textarea::make('references')
+                                        ->label('Referensi / Daftar Pustaka')
+                                        ->placeholder('Masukkan daftar pustaka')
+                                        ->required()
+                                        ->columnSpanFull()
+                                        ->rows(6),
+                                ])->columns(2),
 
-                            Hidden::make('submission_date')
-                                ->default(now()),
+                            Group::make([
+                                Section::make('File Naskah')
+                                    ->description('Unggah draf naskah Anda (.pdf)')
+                                    ->schema([
+                                        FileUpload::make('manuscript_file')
+                                            ->label('Upload File')
+                                            ->required()
+                                            ->acceptedFileTypes([
+                                                'application/pdf',
+                                            ])
+                                            ->maxSize(20480)
+                                            ->disk('public')
+                                            ->directory('manuscripts')
+                                            ->downloadable()
+                                            ->preserveFilenames(),
+                                    ]),
+                                Section::make('Pembayaran')
+                                    ->description('Bukti Pembayaran LOA')
+                                    ->schema([
+                                        FileUpload::make('proof_of_payment')
+                                            ->label('Upload Bukti Pembayaran')
+                                            ->directory('proof-of-payment')
+                                            ->disk('public')
+                                            ->image()
+                                            ->required(),
+                                    ]),
+                            ])->columnSpan(2),
+                        ])
+                ]),
 
-                            Hidden::make('status')
-                                ->default('Pending'),
-                        ])->columns(2),
-                    Group::make([
-                        Section::make('File PDF')
-                            ->description('File PDF Fix yang sudah disesuaikan template')
-                            ->schema([
-                                FileUpload::make('manuscript_file')
-                                    ->label('Upload File PDF')
-                                    ->required()
-                                    ->acceptedFileTypes([
-                                        'application/pdf',
-                                        'application/msword',
-                                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                                    ])
-                                    ->maxSize(20480)
-                                    ->disk('public')
-                                    ->directory('manuscripts')
-                                    ->downloadable()
-                                    ->preserveFilenames()
-                                    ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480']),
-                            ]),
-                        Section::make('Pembayaran')
-                            ->description('Bukti Pembayaran')
-                            ->schema([
-                                FileUpload::make('proof_of_payment')
-                                    ->label('Upload Bukti Pembayaran')
-                                    ->directory('proof-of-payment')
-                                    ->required()
-                                    ->disk('public')
-                                    ->image()
-                            ]),
-                    ])->columnSpan(2),
-                ])->columns(6),
             Step::make('Konfirmasi')
                 ->schema([
                     View::make('filament.pages.Confirmation'),
                     Checkbox::make('agreement')
                         ->label('LoA Berlaku Jika Dilengkapi Bukti Pembayaran dan Link Terbitan, Dengan ini saya bersedia naskah saya ditarik apabila dikemudian hari terdapat kecurangan dalam pengerjaannya')
-                        ->accepted(),
+                        ->accepted()
+                        ->dehydrated(false),
                 ]),
         ];
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $quotaService = app(\App\Services\QuotaService::class);
+        $user = Auth::user();
+
+        // Check quota first
+        if (!$quotaService->canRequestReview($user)) {
+            \Filament\Notifications\Notification::make()
+                ->title('Batas Review Tercapai')
+                ->body('Maaf, kuota review harian Anda telah habis. Silakan hubungi admin untuk kuota tambahan.')
+                ->danger()
+                ->send();
+
+            $this->halt();
+        }
+
+        $data['user_id'] = $user->id;
+        $data['status'] = 'Draft';
+        $data['review_status'] = 'processing';
+
+        return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        // Jalankan proses review setelah data disimpan
+        $this->record->processReview();
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\PreSubmissionReview;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -18,7 +18,7 @@ class PreSubmissionReviewMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public PreSubmissionReview $review
+        public Model $review
     ) {}
 
     /**

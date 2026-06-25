@@ -89,10 +89,22 @@ class SubmissionsTable
                         $loaClass = match ($loaStatus) {
                             'Approved' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
                             'Rejected' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            'Draft' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50',
                             default => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50' // Pending
                         };
 
-                        // 2. OJS Badge Info
+                        // 2. AI Review Badge Info
+                        $reviewStatus = $record->review_status ?? 'pending';
+                        $reviewClass = match ($reviewStatus) {
+                            'pending' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-800/50',
+                            'processing' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
+                            'reviewed' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                            'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-850/50'
+                        };
+                        $reviewLabel = ucfirst($reviewStatus);
+
+                        // 3. OJS Badge Info
                         $ojsStatus = $record->ojs_status ?? 'Not Sent';
                         $ojsClass = match ($record->ojs_status) {
                             'pending' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
@@ -104,23 +116,29 @@ class SubmissionsTable
                         };
                         $ojsLabel = ucfirst($ojsStatus);
 
-                        // 3. Date / Sync Time Info
+                        // 4. Date / Sync Time Info
                         $dateString = '';
                         if ($record->status === 'Approved' && $record->ojs_synced_at) {
                             $dateString = "<span class='text-[10px] text-gray-500 dark:text-gray-400 font-mono'>" . $record->ojs_synced_at->translatedFormat('d M Y H:i:s') . "</span>";
                         }
 
                         return new \Illuminate\Support\HtmlString("
-                            <div class='flex flex-col gap-1.5 py-1 align-start justify-center'>
+                            <div class='flex flex-col gap-1 py-1 align-start justify-center'>
                                 <div class='flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300'>
-                                    <span class='font-semibold min-w-[32px]'>LOA:</span>
-                                    <span class='px-2 py-0.5 text-[10px] font-semibold rounded-full border {$loaClass}'>
+                                    <span class='font-semibold min-w-[50px]'>Review:</span>
+                                    <span class='inline-flex items-center justify-center w-[80px] py-0.5 text-[10px] font-semibold rounded-full border {$reviewClass}'>
+                                        {$reviewLabel}
+                                    </span>
+                                </div>
+                                <div class='flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300'>
+                                    <span class='font-semibold min-w-[50px]'>LOA:</span>
+                                    <span class='inline-flex items-center justify-center w-[80px] py-0.5 text-[10px] font-semibold rounded-full border {$loaClass}'>
                                         {$loaStatus}
                                     </span>
                                 </div>
                                 <div class='flex items-center gap-1.5 text-xs text-gray-700 dark:text-gray-300'>
-                                    <span class='font-semibold min-w-[32px]'>OJS:</span>
-                                    <span class='px-2 py-0.5 text-[10px] font-semibold rounded-full border {$ojsClass}'>
+                                    <span class='font-semibold min-w-[50px]'>OJS:</span>
+                                    <span class='inline-flex items-center justify-center w-[80px] py-0.5 text-[10px] font-semibold rounded-full border {$ojsClass}'>
                                         {$ojsLabel}
                                     </span>
                                 </div>
@@ -175,6 +193,13 @@ class SubmissionsTable
                         ->color('warning')
                         ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('review', ['record' => $record]))
                         ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved'),
+                    Action::make('request_review_again')
+                        ->label('Minta Review Lagi')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->visible(fn(Submission $record) => in_array($record->review_status, ['failed', 'reviewed']) && $record->status !== 'Approved')
+                        ->action(fn(Submission $record) => $record->processReview()),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')

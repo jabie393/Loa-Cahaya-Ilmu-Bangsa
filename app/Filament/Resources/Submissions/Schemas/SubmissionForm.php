@@ -14,10 +14,7 @@ use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Group;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\Grid;
-use Filament\Infolists\Components\TextEntry;
 
 class SubmissionForm
 {
@@ -26,20 +23,51 @@ class SubmissionForm
     {
         return $schema
             ->components([
-                TextEntry::make('status')
-                    ->badge()
-                    ->color(fn($record): string => match ($record->status) {
-                        'Pending' => 'warning',
-                        'Approved' => 'success',
-                        'Rejected' => 'danger',
-                    })
+                // 1. Tampilan Hasil Review (Hanya muncul jika record ada hasil review-nya)
+                Section::make('Hasil Review Naskah')
+                    ->description('Rekomendasi perbaikan dari Reviewer berdasarkan draf naskah Anda.')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                TextInput::make('review_status')
+                                    ->label('Status Review')
+                                    ->formatStateUsing(fn ($state) => strtoupper($state))
+                                    ->disabled()
+                                    ->dehydrated(false),
+                                TextInput::make('review_email_sent_at')
+                                    ->label('Laporan Review Terkirim')
+                                    ->disabled()
+                                    ->dehydrated(false),
+                            ]),
+                        Textarea::make('general_suggestions')
+                            ->label('Saran Perbaikan Umum')
+                            ->rows(4)
+                            ->disabled()
+                            ->dehydrated(false),
+                        Section::make('Detail Penilaian Struktur')
+                            ->collapsible()
+                            ->collapsed()
+                            ->schema([
+                                Textarea::make('structure_review')->label('Struktur Naskah')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('abstract_review')->label('Analisis Abstrak')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('introduction_review')->label('Analisis Pendahuluan')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('method_review')->label('Analisis Metode')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('results_review')->label('Analisis Hasil & Pembahasan')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('conclusion_review')->label('Analisis Kesimpulan')->rows(3)->disabled()->dehydrated(false),
+                                Textarea::make('bibliography_review')->label('Analisis Daftar Pustaka')->rows(3)->disabled()->dehydrated(false),
+                            ])
+                    ])
+                    ->visible(fn ($record) => $record !== null && $record->review_status === 'reviewed')
                     ->columnSpanFull(),
+
+                // 2. Formulir Utama Pengisian (Bentuk Kolom Kiri untuk Detail Pengajuan)
                 Section::make('Form Submission')
                     ->columnSpan(fn($record) => $record?->status === 'Approved' ? 6 : 4)
-                    ->description('Data form submission')
+                    ->description('Lengkapi data pengajuan dan unggah bukti pembayaran di bawah ini')
                     ->schema([
                         Hidden::make('user_id')
                             ->default(Auth::user()->id),
+
                         Repeater::make('authors')
                             ->label('Daftar Penulis & Instansi')
                             ->schema([
@@ -72,27 +100,31 @@ class SubmissionForm
                                     $component->state($state);
                                 }
                             })
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         TextInput::make('email')
-                            ->label('Email (Maximal 1 Email, Email ini akan digunakan untuk pengiriman LOA)')
+                            ->label('Email (Digunakan untuk pengiriman LOA & laporan review)')
                             ->email()
                             ->required()
+                            ->default(fn() => Auth::user()?->email)
                             ->placeholder('email@example.com')
                             ->columnSpanFull()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         Select::make('journal_id')
-                            ->label('Jurnal (Pilih Salah satu)')
+                            ->label('Jurnal Target')
                             ->relationship('journal', 'name')
                             ->columnSpanFull()
                             ->required()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         TextInput::make('title')
                             ->columnSpanFull()
                             ->label('Judul (Diisi Huruf Besar)')
-                            ->placeholder('Judul Artikel')
+                            ->placeholder('Judul Artikel Lengkap')
                             ->required()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         TagsInput::make('keywords')
                             ->label('Keywords')
                             ->separator(',')
@@ -100,7 +132,8 @@ class SubmissionForm
                             ->placeholder('Tambah kata kunci')
                             ->helperText('Tekan enter untuk memisahkan')
                             ->columnSpanFull()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         Textarea::make('abstract')
                             ->label('Abstract')
                             ->placeholder('Masukkan Abstrak')
@@ -109,79 +142,65 @@ class SubmissionForm
                             ->autosize()
                             ->maxLength(5000)
                             ->rules(['string'])
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+
                         Textarea::make('references')
                             ->label('Referensi / Daftar Pustaka')
-                            ->placeholder('Masukkan daftar pustaka / referensi artikel (satu per baris)')
+                            ->placeholder('Masukkan daftar pustaka')
                             ->required()
                             ->columnSpanFull()
                             ->rows(6)
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         TextInput::make('publication_link')
                             ->label('Link Publikasi')
                             ->url()
                             ->placeholder('Link Publikasi Artikel')
                             ->columnSpanFull()
-                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && $record?->status !== 'Approved'),
+                            ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && $record?->status !== 'Approved')
+                            ->visible(fn($record) => $record !== null),
 
                         DatePicker::make('submission_date')
                             ->default(now())
                             ->native(false)
                             ->disabled()
-                            ->visible(fn() => Auth::user()?->hasRole('super_admin')),
-                        Hidden::make('submission_date')
-                            ->default(now())
-                            ->visible(fn() => !Auth::user()?->hasRole('super_admin')),
+                            ->visible(fn() => Auth::user()?->hasRole('super_admin') && !request()->routeIs('*.create')),
 
                         Select::make('status')
                             ->options(['Pending' => 'Pending', 'Approved' => 'Approved', 'Rejected' => 'Rejected'])
                             ->default(fn($record) => $record?->status ?? 'Pending')
                             ->required()
-                            ->visible(fn() => Auth::user()?->hasRole('super_admin')),
-                        Hidden::make('status')
-                            ->afterStateHydrated(function (Set $set, $state, $record) {
-                                // If status is Rejected and user is not admin, reset to Pending
-                                if ($record?->status === 'Rejected' && !Auth::user()?->hasRole('super_admin')) {
-                                    $set('status', 'Pending');
-                                }
-                            })
-                            ->dehydrated(function ($state, $record) {
-                                // For non-admin users with rejected submissions, always save as Pending
-                                return !Auth::user()?->hasRole('super_admin') && $record?->status === 'Rejected' ? 'Pending' : $state;
-                            })
-                            ->visible(fn() => !Auth::user()?->hasRole('super_admin')),
+                            ->visible(fn() => Auth::user()?->hasRole('super_admin') && !request()->routeIs('*.create')),
                     ])->columns(2),
+
+                // 3. Kolom Kanan untuk File & Bukti Pembayaran
                 Group::make([
-                    Section::make('File PDF')
-                        ->description('File PDF Fix yang sudah disesuaikan template')
+                    Section::make('File Naskah')
+                        ->description('Unggah draf naskah Anda (.pdf)')
                         ->schema([
                             FileUpload::make('manuscript_file')
-                                ->label('Upload File PDF')
+                                ->label('Upload File')
                                 ->required()
                                 ->acceptedFileTypes([
                                     'application/pdf',
-                                    'application/msword',
-                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                                 ])
                                 ->maxSize(20480)
                                 ->disk('public')
                                 ->directory('manuscripts')
                                 ->downloadable()
                                 ->preserveFilenames()
-                                ->rules(['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'])
-                                ->disabled(fn($record) => !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
+                                ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
                         ]),
                     Section::make('Pembayaran')
-                        ->description('Bukti Pembayaran')
-                        ->visible(fn($record) => $record?->status !== 'Approved')
+                        ->description('Bukti Pembayaran LOA')
+                        ->visible(fn($record) => $record === null || $record->status !== 'Approved')
                         ->schema([
                             FileUpload::make('proof_of_payment')
                                 ->label('Upload Bukti Pembayaran')
                                 ->directory('proof-of-payment')
                                 ->disk('public')
                                 ->image()
-                                ->required(),
+                                ->required(fn($record) => $record === null || $record->status === 'Pending'),
                         ]),
                 ])->columnSpan(fn($record) => $record?->status === 'Approved' ? 6 : 2),
             ])->columns(6);

@@ -84,6 +84,17 @@ class Submission extends Model
         'ojs_status',
         'ojs_synced_at',
         'ojs_error_message',
+        'review_status',
+        'structure_review',
+        'abstract_review',
+        'introduction_review',
+        'method_review',
+        'results_review',
+        'conclusion_review',
+        'bibliography_review',
+        'general_suggestions',
+        'review_error_message',
+        'review_email_sent_at',
     ];
 
     protected function casts(): array
@@ -96,6 +107,7 @@ class Submission extends Model
             'approved_date' => 'date',
             'rejected_date' => 'date',
             'ojs_synced_at' => 'datetime',
+            'review_email_sent_at' => 'datetime',
             'authors' => 'array',
         ];
     }
@@ -142,5 +154,69 @@ class Submission extends Model
         $folderName = $mapping[$slug] ?? \Illuminate\Support\Str::studly($slug);
         
         return "filament.loa_pdf.LOA_{$folderName}.LOA_{$folderName}";
+    }
+
+    public function processReview(): void
+    {
+        $this->refresh();
+
+        $this->update(['review_status' => 'processing', 'review_error_message' => null]);
+
+        try {
+            // Resolve AI service through manager
+            $aiService = app('ai-review')->driver();
+
+            // Perform Review
+            $results = $aiService->review($this);
+
+            // Update Record
+            $this->update([
+                'title' => $results['detected_title'] ?? $this->title,
+                'structure_review' => $results['structure_review'] ?? null,
+                'abstract_review' => $results['abstract_review'] ?? null,
+                'introduction_review' => $results['introduction_review'] ?? null,
+                'method_review' => $results['method_review'] ?? null,
+                'results_review' => $results['results_review'] ?? null,
+                'conclusion_review' => $results['conclusion_review'] ?? null,
+                'bibliography_review' => $results['bibliography_review'] ?? null,
+                'general_suggestions' => $results['general_suggestions'] ?? null,
+                'abstract' => $results['detected_abstract'] ?? $this->abstract,
+                'keywords' => isset($results['detected_keywords']) 
+                    ? (is_array($results['detected_keywords']) ? implode(', ', $results['detected_keywords']) : $results['detected_keywords'])
+                    : $this->keywords,
+                'references' => $results['detected_references'] ?? $this->references,
+                'review_status' => 'reviewed',
+                'status' => 'Pending',
+            ]);
+
+            // Consume Quota
+            app(\App\Services\QuotaService::class)->consumeQuota($this->user);
+
+            // Send Email
+            \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\PreSubmissionReviewMail($this));
+
+            $this->update(['review_email_sent_at' => now()]);
+
+            \Filament\Notifications\Notification::make()
+                ->title('Request Review Berhasil Terkirim')
+                ->success()
+                ->send();
+
+        } catch (\Exception $e) {
+            $this->update([
+                'review_status' => 'failed',
+                'review_error_message' => $e->getMessage(),
+            ]);
+
+            $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local')
+                ? $e->getMessage()
+                : 'Mohon maaf reviewer sedang sibuk, coba request ulang naskah ini dalam beberapa menit dengan menekan tombol "Request Again"';
+
+            \Filament\Notifications\Notification::make()
+                ->title('Gagal Memproses Review')
+                ->body($errorMessage)
+                ->danger()
+                ->send();
+        }
     }
 }

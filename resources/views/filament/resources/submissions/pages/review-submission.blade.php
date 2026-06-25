@@ -68,6 +68,88 @@
         <div class="grid grid-cols-1 gap-6 pb-6 md:grid-cols-5">
             <!-- Review Data Left Column -->
             <div class="space-y-4 md:col-span-3">
+                @if ($record->review_status === 'reviewed')
+                    <!-- Hasil Review Naskah -->
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Hasil Review Naskah</h4>
+                    <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col">
+                                <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Status Review</span>
+                                <span class="inline-flex items-center rounded-md bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-900/20 dark:text-green-400 mt-1 w-max">
+                                    {{ strtoupper($record->review_status) }}
+                                </span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Laporan Terkirim</span>
+                                <span class="text-sm font-semibold text-gray-900 dark:text-white mt-1">
+                                    {{ $record->review_email_sent_at ? $record->review_email_sent_at->format('d M Y H:i:s') : '-' }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="wrap-break-word flex flex-col pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                            <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Saran Perbaikan Umum</span>
+                            <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->general_suggestions ?? '-' }}</span>
+                        </div>
+
+                        <!-- Detail Penilaian Struktur -->
+                        <div class="pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                            <details class="group">
+                                <summary class="flex justify-between items-center font-bold text-xs uppercase text-gray-400 dark:text-gray-500 cursor-pointer list-none">
+                                    <span>Detail Penilaian Struktur</span>
+                                    <span class="transition group-open:rotate-180">
+                                        <svg fill="none" height="16" width="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
+                                    </span>
+                                </summary>
+                                <div class="mt-4 space-y-4 pl-2 border-l-2 border-gray-100 dark:border-gray-700">
+                                    @if($record->structure_review)
+                                        <div class="flex flex-col">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Struktur Naskah</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->structure_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->abstract_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Abstrak</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->abstract_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->introduction_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Pendahuluan</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->introduction_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->method_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Metode</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->method_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->results_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Hasil & Pembahasan</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->results_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->conclusion_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Kesimpulan</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->conclusion_review }}</span>
+                                        </div>
+                                    @endif
+                                    @if($record->bibliography_review)
+                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                            <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Daftar Pustaka</span>
+                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->bibliography_review }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                @endif
+
                 <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Informasi Penulis & Publikasi</h4>
                 <div class="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                     <div class="wrap-break-word flex flex-col">

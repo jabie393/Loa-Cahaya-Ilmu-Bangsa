@@ -14,15 +14,15 @@ class MyCertificates extends Page
     use HasPageShield;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 4;
 
     protected string $view = 'filament.pages.my-certificates';
 
     protected static ?string $title = 'My Publication';
 
-    protected static ?string $navigationLabel = '5. My Publication';
+    protected static ?string $navigationLabel = '4. My Publication';
 
-    
+
     public static function canAccess(): bool
     {
         return true;

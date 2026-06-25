@@ -21,8 +21,8 @@ class SubmissionResource extends Resource
     protected static ?string $model = Submission::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-    protected static ?string $navigationLabel = '4. Quick Submit';
-    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationLabel = '3. Quick Submit';
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'id';
 
@@ -45,7 +45,11 @@ class SubmissionResource extends Resource
         $query = parent::getEloquentQuery();
 
         if (Auth::user()->hasRole('super_admin')) {
-            return $query->select('*')
+            return $query->where(function ($q) {
+                $q->where('status', '!=', 'Draft')
+                    ->orWhere('user_id', Auth::id());
+            })
+                ->select('*')
                 ->selectRaw("CASE WHEN status = 'Pending' THEN 0 WHEN status = 'Rejected' THEN 1 ELSE 2 END AS sort_priority");
         }
 

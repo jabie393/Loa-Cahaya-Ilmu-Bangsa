@@ -2,15 +2,15 @@
 
 namespace App\Contracts;
 
-use App\Models\PreSubmissionReview;
+use Illuminate\Database\Eloquent\Model;
 
 interface AiReviewContract
 {
     /**
-     * Perform an AI review on the given pre-submission review record.
+     * Perform an AI review on the given record.
      *
-     * @param PreSubmissionReview $reviewRecord
+     * @param Model $record
      * @return array The review results
      */
-    public function review(PreSubmissionReview $reviewRecord): array;
+    public function review(Model $record): array;
 }
