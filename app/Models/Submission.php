@@ -171,7 +171,6 @@ class Submission extends Model
 
             // Update Record
             $this->update([
-                'title' => $results['detected_title'] ?? $this->title,
                 'structure_review' => $results['structure_review'] ?? null,
                 'abstract_review' => $results['abstract_review'] ?? null,
                 'introduction_review' => $results['introduction_review'] ?? null,
@@ -180,11 +179,6 @@ class Submission extends Model
                 'conclusion_review' => $results['conclusion_review'] ?? null,
                 'bibliography_review' => $results['bibliography_review'] ?? null,
                 'general_suggestions' => $results['general_suggestions'] ?? null,
-                'abstract' => $results['detected_abstract'] ?? $this->abstract,
-                'keywords' => isset($results['detected_keywords']) 
-                    ? (is_array($results['detected_keywords']) ? implode(', ', $results['detected_keywords']) : $results['detected_keywords'])
-                    : $this->keywords,
-                'references' => $results['detected_references'] ?? $this->references,
                 'review_status' => 'reviewed',
                 'status' => 'Pending',
             ]);
