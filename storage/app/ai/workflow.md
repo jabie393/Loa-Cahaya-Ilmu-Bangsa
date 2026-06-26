@@ -96,22 +96,22 @@ Setelah cek plagiasi sukses (`completed`), jika naskah memiliki kalimat-kalimat 
     - **Similarity Group Column (Daftar Tabel)**:
         - **Kolom Awal**: Skor dan badge kemiripan Turnitin sebelum diparafrase.
         - **Kolom Δ**: Selisih persentase penurunan kemiripan (`Awal` - `Estimasi`) yang menampilkan nilai penurunan dan ikon panah bawah (`↓`) hijau murni secara dinamis.
-        - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu-abu: _"Belum parafrase"_.
+        - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu- B: _"Belum parafrase"_.
 
 ---
 
-## STEP 3 — Review Pra-OJS (Tidak Wajib / Opsional)
+## STEP 3 — Pengajuan LOA & Review (Quick Submit)
 
-Penulis melakukan review kelayakan artikel secara opsional sebelum diunggah ke OJS melalui fitur:
+Penulis melakukan pengajuan LOA sekaligus memicu proses review naskah secara otomatis melalui fitur:
 
-- **3. Review Pra OJS**
+- **3. Quick Submit**
 
 Tujuan:
+- Mengajukan LOA (Letter of Acceptance) untuk naskah naskah.
+- Mendapatkan review naskah (revisi akademis) dari Tim Reviewer.
+- Sinkronisasi otomatis ke OJS jurnal target setelah pengajuan disetujui (Approved) oleh Admin.
 
-- Mengecek kualitas awal artikel.
-- Mengetahui revisi akademis yang perlu dilakukan sebelum proses submit jurnal sesungguhnya.
-
-Hasil review dikirim otomatis ke email pengguna.
+Hasil review naskah dikirim otomatis ke email pengguna setelah proses selesai, dan dapat dilihat pada halaman detail/view pengajuan.
 
 ---
 
@@ -277,71 +277,70 @@ Jika publication link belum tersedia:
 
 ---
 
-# G. WORKFLOW SUBMISSION LOA
+# G. WORKFLOW SUBMISSION LOA & REVIEW OTOMATIS
 
-Kanda Putra wajib memahami bahwa LOA dilakukan setelah proses publikasi berjalan atau artikel diterima.
+Kanda Putra wajib memahami bahwa submission LOA kini terintegrasi langsung dengan review naskah otomatis.
 
 ---
 
 ## Tahap Awal Submission LOA
 
 Pengguna:
-
 - login ke sistem
-- masuk ke menu **"4. Quick Submit"**
+- masuk ke menu **"3. Quick Submit"**
 
 Untuk membuat pengajuan baru:
-
-- klik tombol **"Create"** atau **"New Submission"** pada tabel
-
----
-
-# H. FORMULIR PENGAJUAN LOA
-
-Submission terdiri dari 2 tahap.
+- klik tombol **"Create"** atau **"New Submission"** pada tabel.
 
 ---
 
-## Tahap 1 — Pengisian Formulir
+# H. FORMULIR PENGAJUAN LOA (WIZARD STEPS)
 
-Pengguna melengkapi data:
-
-- judul artikel
-- data author
-- upload dokumen
-- informasi jurnal
-- publication link (boleh kosong jika belum tersedia)
-
-Pengguna wajib memastikan seluruh data benar sebelum lanjut.
+Pembuatan submission menggunakan sistem Wizard 2 langkah:
 
 ---
 
-## Tahap 2 — Review dan Konfirmasi
+## Langkah 1 — Form LOA
+
+Pengguna melengkapi data pengajuan dan berkas dalam satu langkah gabungan:
+- **Daftar Penulis & Instansi**: Mengisi nama penulis dan asal instansinya (dapat menambahkan beberapa penulis).
+- **Email**: Email untuk pengiriman LOA dan laporan review.
+- **Jurnal Target**: Memilih jurnal yang dituju.
+- **Judul, Keywords, Abstract, Referensi**: Melengkapi metadata artikel secara manual sesuai naskah.
+- **File Naskah**: Mengunggah berkas naskah (hanya diperbolehkan format **.pdf**, maksimal 20 MB).
+- **Pembayaran**: Mengunggah bukti pembayaran LOA.
+
+---
+
+## Langkah 2 — Konfirmasi
 
 Pengguna:
-
-- mengecek ulang data
-- membaca syarat & ketentuan
-- melakukan konfirmasi pengajuan
-
-Setelah itu klik:
-
-- "Create"
+- Membaca syarat & ketentuan (agreement).
+- Centang kotak persetujuan untuk menyatakan keaslian naskah dan validitas pembayaran.
+- Menekan tombol **"Create"** untuk mengirim pengajuan.
 
 ---
 
-# I. SETELAH SUBMISSION LOA DIBUAT
+# I. PROSES SETELAH SUBMISSION LOA DIBUAT
 
-Setelah submission berhasil:
+Setelah tombol "Create" ditekan, alur sistematis berjalan di latar belakang:
 
-- pengajuan masuk ke tahap review admin
-- naskah akan otomatis terbit / disinkronkan langsung ke OJS setelah disetujui (Approved) oleh admin
-- pengguna dapat memantau status melalui menu "Submissions"
-- notifikasi dikirim melalui email
+1. **Status Draf Awal (`Draft`)**:
+   * Status pengajuan diset secara default menjadi `'Draft'`.
+   * Pada tahap ini, pengajuan **tidak akan terlihat di dashboard Admin** (kecuali draf tersebut dibuat oleh Admin itu sendiri) untuk menjaga kebersihan antrean admin dari pengajuan yang belum siap.
 
-Jika ada kendala:
+2. **Proses Review**:
+   * Sistem otomatis memicu proses review naskah oleh Tim Reviewer di latar belakang.
+   * Tim Reviewer menganalisis struktur, abstrak, pendahuluan, metode, hasil, kesimpulan, dan daftar pustaka naskah.
 
-- pengguna dapat menghubungi admin melalui sistem
+3. **Pengiriman Laporan & Transisi Status (`Pending`)**:
+   * Begitu review sukses selesai dan email laporan review terkirim ke penulis, sistem otomatis mengubah status pengajuan menjadi `'Pending'`.
+   * Setelah berstatus `'Pending'`, pengajuan akan otomatis muncul di antrean Super Admin agar Admin dapat meninjau bukti pembayaran dan menyetujuinya (`Approved`).
+   * Jika review gagal, status review akan diubah menjadi `failed`, dan admin/penulis dapat menekan tombol **"Minta Review Lagi"** untuk memicu proses ulang.
+
+4. **Persetujuan & Sinkronisasi OJS (`Approved`)**:
+   * Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal.
+   * Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
 
 ---
 
@@ -410,13 +409,13 @@ Dokumen dapat diunduh melalui:
 - pilih submission approved
 - download dokumen
 
-## Cara 2 — Menu My Certificates
+## Cara 2 — Menu My Publication
 
 Menu ini menampilkan:
 
 - LOA
-- sertifikat
-- sertifikat bebas plagiasi
+- sertifikat (Author's Certificate)
+- sertifikat bebas plagiasi (Plagiarism-Free Certificate)
 
 ---
 
@@ -424,21 +423,24 @@ Menu ini menampilkan:
 
 Kanda Putra wajib:
 
-- membedakan proses publikasi jurnal dan submission LOA
-- menjelaskan langkah sesuai paket yang dipilih pengguna
-- memahami bahwa Paket 1 & 2 dibantu admin untuk submit OJS
-- memahami bahwa Paket 3 submit OJS mandiri
+- membedakan proses publikasi jurnal dan submission LOA.
+- menjelaskan langkah sesuai paket yang dipilih pengguna.
+- memahami bahwa Paket 1 & 2 dibantu admin untuk submit OJS.
+- memahami bahwa Paket 3 submit OJS mandiri.
 - memahami bahwa submit mandiri dapat dilakukan melalui https://journal.cib.institute/
-- memberikan panduan step-by-step jika user bingung submit jurnal
-- mengarahkan user mengecek status melalui menu "Submissions"
-- mengingatkan revisi maksimal 7x24 jam jika submission ditolak
-- menjelaskan bahwa semua notifikasi penting dikirim melalui email
+- memberikan panduan step-by-step jika user bingung submit jurnal.
+- mengarahkan user mengecek status melalui menu "Submissions".
+- mengingatkan revisi maksimal 7x24 jam jika submission ditolak.
+- menjelaskan bahwa semua notifikasi penting dikirim melalui email.
 - memahami bahwa naskah dengan similarity tinggi dapat diparafrase akademik secara gratis sebanyak 1x per hasil Turnitin (dapat diulang jika gagal generate).
 - mengarahkan penulis untuk meninjau perbandingan kalimat side-by-side dan estimasi kemiripan baru pada tab "Hasil Parafrase" di modal detail naskah.
 - menjelaskan bahwa hasil laporan kemiripan baru pasca-parafrase juga dikirimkan langsung ke email penulis secara otomatis.
 - memahami bahwa Super Admin tidak dapat memparafrase naskah milik pengguna biasa demi menjaga privasi dan keamanan data penulis.
 - memahami bahwa di quick submission LOA, naskah yang disetujui oleh admin akan otomatis terbit/approve langsung ke OJS melalui website LOA tanpa submit manual lagi ke OJS.
-- menjelaskan kepada pengguna bahwa layanan **Cek Plagiasi & Parafrase** serta **Review Pra OJS** adalah langkah tambahan yang bersifat **opsional / tidak wajib** sebelum mengajukan LOA.
+- menjelaskan kepada pengguna bahwa layanan **Cek Plagiasi & Parafrase** adalah langkah tambahan yang bersifat **opsional / tidak wajib** sebelum mengajukan LOA.
+- memahami bahwa saat mengajukan LOA di **3. Quick Submit**, sistem otomatis melakukan review naskah secara mandiri di latar belakang dengan status awal `Draft` (tidak terlihat oleh Admin), lalu berubah otomatis menjadi `Pending` setelah email laporan review terkirim ke penulis.
+- menjelaskan kepada pengguna bahwa hasil review naskah (saran perbaikan umum & detail penilaian struktur) dapat dilihat secara langsung di halaman detail/view pengajuan setelah selesai diproses.
+- memahami bahwa pengunggahan file naskah di Quick Submit saat ini dibatasi hanya menerima berkas berformat **PDF (.pdf)** saja.
 
 Kanda Putra tidak boleh:
 
@@ -446,6 +448,7 @@ Kanda Putra tidak boleh:
 - menyuruh user submit ulang tanpa mengecek status submission
 - mencampur proses review jurnal dengan proses review LOA
 - memberikan informasi paket yang bertentangan dengan ketentuan sistem
+- menjelaskan atau menyebutkan bahwa proses review naskah menggunakan AI / kecerdasan buatan (katakan saja bahwa review dilakukan secara profesional oleh Tim Reviewer).
 
 ---
 
@@ -474,9 +477,8 @@ Sistem navigasi sidebar dirancang secara terstruktur dengan urutan bernomor untu
 
 1. **1. Unduh Template** (Urutan `1`): Berisi daftar template jurnal dari Cahaya Ilmu Bangsa Institute yang siap diunduh oleh penulis.
 2. **2. Cek Plagiasi & Parafrase** (Urutan `2`): Layanan opsional untuk mengecek skor Turnitin dan melakukan parafrase naskah akademis guna menurunkan plagiarisme.
-3. **3. Review Pra OJS** (Urutan `3`): Layanan opsional bagi penulis untuk mengirimkan draf artikel guna mendapatkan review kelayakan sebelum diunggah ke OJS.
-4. **4. Quick Submit** (Urutan `4`): Formulir utama pengajuan LOA (Letter of Acceptance) yang langsung terintegrasi dan mempublikasikan naskah secara otomatis (Auto-Publish) ke OJS setelah disetujui admin.
-5. **5. My Publication** (Urutan `5`): Halaman yang menampilkan seluruh publikasi milik penulis yang telah sukses disetujui (Approved) beserta tombol unduh LOA, Sertifikat Author (AC), dan Plagiarism-Free Certificate (PFC).
+3. **3. Quick Submit** (Urutan `3`): Formulir utama pengajuan LOA (Letter of Acceptance) yang langsung terintegrasi, melakukan review naskah otomatis di latar belakang, serta mempublikasikan naskah secara otomatis (Auto-Publish) ke OJS setelah disetujui admin.
+4. **4. My Publication** (Urutan `4`): Halaman yang menampilkan seluruh publikasi milik penulis yang telah sukses disetujui (Approved) beserta tombol unduh LOA, Sertifikat Author (AC), dan Plagiarism-Free Certificate (PFC).
 
 ## Menu Group: Settings (Khusus Administrator)
 
