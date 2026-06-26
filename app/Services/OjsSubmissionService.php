@@ -210,8 +210,8 @@ class OjsSubmissionService
             // Windows background execution
             pclose(popen("start /B php \"" . $artisanPath . "\" submission:sync-ojs " . $id . " > NUL", "r"));
         } else {
-            // Linux/Unix background execution
-            exec("php \"" . $artisanPath . "\" submission:sync-ojs " . $id . " > /dev/null 2>&1 &");
+            // Linux/Unix background execution - redirect stdin (< /dev/null) to completely detach from PHP-FPM
+            exec("php \"" . $artisanPath . "\" submission:sync-ojs " . $id . " < /dev/null > /dev/null 2>&1 &");
         }
     }
 

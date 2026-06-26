@@ -191,10 +191,12 @@ class Submission extends Model
 
             $this->update(['review_email_sent_at' => now()]);
 
-            \Filament\Notifications\Notification::make()
-                ->title('Request Review Berhasil Terkirim')
-                ->success()
-                ->send();
+            if (!app()->runningInConsole()) {
+                \Filament\Notifications\Notification::make()
+                    ->title('Request Review Berhasil Terkirim')
+                    ->success()
+                    ->send();
+            }
 
         } catch (\Exception $e) {
             $this->update([
@@ -206,11 +208,32 @@ class Submission extends Model
                 ? $e->getMessage()
                 : 'Mohon maaf reviewer sedang sibuk, coba request ulang naskah ini dalam beberapa menit dengan menekan tombol "Request Again"';
 
-            \Filament\Notifications\Notification::make()
-                ->title('Gagal Memproses Review')
-                ->body($errorMessage)
-                ->danger()
-                ->send();
+            if (!app()->runningInConsole()) {
+                \Filament\Notifications\Notification::make()
+                    ->title('Gagal Memproses Review')
+                    ->body($errorMessage)
+                    ->danger()
+                    ->send();
+            }
+        }
+    }
+
+    public function processReviewInBackground(): void
+    {
+        $this->update([
+            'review_status' => 'processing',
+            'review_error_message' => null,
+        ]);
+
+        $id = (int) $this->id;
+        $artisanPath = base_path('artisan');
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Windows background execution
+            pclose(popen("start /B php \"" . $artisanPath . "\" submission:process-review " . $id . " > NUL", "r"));
+        } else {
+            // Linux/Unix background execution - redirect stdin (< /dev/null) to completely detach from PHP-FPM
+            exec("php \"" . $artisanPath . "\" submission:process-review " . $id . " < /dev/null > /dev/null 2>&1 &");
         }
     }
 }

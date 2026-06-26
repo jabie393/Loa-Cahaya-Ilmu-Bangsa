@@ -170,8 +170,8 @@ class CreateSubmission extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Jalankan proses review setelah data disimpan
-        $this->record->processReview();
+        // Jalankan proses review di latar belakang setelah data disimpan
+        $this->record->processReviewInBackground();
     }
 
     protected function getRedirectUrl(): string

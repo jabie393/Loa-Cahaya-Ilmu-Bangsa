@@ -94,15 +94,24 @@ class SubmissionsTable
                         };
 
                         // 2. AI Review Badge Info
-                        $reviewStatus = $record->review_status ?? 'pending';
+                        $reviewStatus = $record->review_status;
+                        if ($reviewStatus !== 'reviewed') {
+                            if ($record->status === 'Approved' || !empty($record->ojs_status)) {
+                                $reviewStatus = 'N/A';
+                            } elseif (empty($reviewStatus)) {
+                                $reviewStatus = 'pending';
+                            }
+                        }
+
                         $reviewClass = match ($reviewStatus) {
                             'pending' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-800/50',
                             'processing' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
                             'reviewed' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
                             'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            'N/A' => 'text-gray-500 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50',
                             default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-850/50'
                         };
-                        $reviewLabel = ucfirst($reviewStatus);
+                        $reviewLabel = $reviewStatus === 'N/A' ? 'N/A' : ucfirst($reviewStatus);
 
                         // 3. OJS Badge Info
                         $ojsStatus = $record->ojs_status ?? 'Not Sent';
@@ -199,7 +208,7 @@ class SubmissionsTable
                         ->color('warning')
                         ->requiresConfirmation()
                         ->visible(fn(Submission $record) => in_array($record->review_status, ['failed', 'reviewed']) && $record->status !== 'Approved')
-                        ->action(fn(Submission $record) => $record->processReview()),
+                        ->action(fn(Submission $record) => $record->processReviewInBackground()),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
