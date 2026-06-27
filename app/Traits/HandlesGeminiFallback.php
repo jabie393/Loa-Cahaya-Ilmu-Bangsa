@@ -168,6 +168,15 @@ trait HandlesGeminiFallback
             $rawContent = trim($rawContent);
         }
 
+        // 1. Pre-escape literal newlines and tabs inside double-quoted string values
+        $rawContent = preg_replace_callback('/"([^"\\\\]*|\\\\.)*"/', function ($matches) {
+            return str_replace(
+                ["\r\n", "\r", "\n", "\t"],
+                ['\n', '\n', '\n', '\t'],
+                $matches[0]
+            );
+        }, $rawContent);
+
         $result = json_decode($rawContent, true);
 
         if (json_last_error() === JSON_ERROR_NONE) {
@@ -177,24 +186,26 @@ trait HandlesGeminiFallback
         // Log initial parsing failure
         Log::warning("Gemini JSON Parsing failed. Error: " . json_last_error_msg() . " | Attempting repair...");
 
-        // 1. Repair missing commas between key-value pairs
+        // 2. Repair missing commas between key-value pairs
         $repaired = preg_replace('/("|\d|true|false|null|\]|\})(\s*\n\s*)"([^"]+)":/i', '$1,$2"$3":', $rawContent);
 
-        // 2. Try parsing again
+        // 3. Try parsing again
         $result = json_decode($repaired, true);
         if (json_last_error() === JSON_ERROR_NONE) {
             return $result;
         }
 
-        // 3. Strip control characters as last resort
-        $clean = preg_replace('/[\x00-\x1F\x7F]/', '', $repaired);
+        // 4. Strip non-printable C0 and C1 control characters as last resort
+        // We strip non-printable C0 control characters (except space, tab, newline, carriage return)
+        // and all C1 control characters (\xC2\x80 to \xC2\x9F)
+        $clean = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $repaired);
         $result = json_decode($clean, true);
 
         if (json_last_error() === JSON_ERROR_NONE) {
             return $result;
         }
 
-        // 4. If still failing, throw exception with details
+        // 5. If still failing, throw exception with details
         Log::error("Failed to parse repaired Gemini JSON: " . json_last_error_msg() . " | Raw Content: " . $rawContent);
         throw new \Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . mb_substr($rawContent, 0, 150) . "...");
     }
