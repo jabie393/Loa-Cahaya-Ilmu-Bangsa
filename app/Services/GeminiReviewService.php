@@ -67,30 +67,7 @@ class GeminiReviewService implements AiReviewContract
             throw new Exception("Format respons AI tidak valid.");
         }
 
-        // Clean up the response from markdown backticks if present
-        $rawContent = trim($rawContent);
-        if (str_starts_with($rawContent, '```')) {
-            $rawContent = preg_replace('/^```(?:json)?\s+/', '', $rawContent);
-            $rawContent = preg_replace('/\s+```$/', '', $rawContent);
-            $rawContent = trim($rawContent);
-        }
-
-        $result = json_decode($rawContent, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            // Log full raw content for debugging
-            \Illuminate\Support\Facades\Log::error("Gemini JSON Parsing failed. Error: " . json_last_error_msg() . " | Raw Content: " . $rawContent);
-            
-            // Try fallback by stripping control characters
-            $cleanRawContent = preg_replace('/[\x00-\x1F\x7F]/', '', $rawContent);
-            $result = json_decode($cleanRawContent, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . substr($rawContent, 0, 150) . "...");
-            }
-        }
-
-        return $result;
+        return $this->decodeGeminiJson($rawContent);
     }
 
     /**
@@ -106,18 +83,17 @@ class GeminiReviewService implements AiReviewContract
         }
 
         $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+        $text = '';
 
         if ($extension === 'pdf') {
             $parser = new Parser();
             $pdf = $parser->parseFile($absolutePath);
-            return $pdf->getText();
+            $text = $pdf->getText();
+        } elseif ($extension === 'docx') {
+            $text = $this->extractTextFromDocx($absolutePath);
         }
 
-        if ($extension === 'docx') {
-            return $this->extractTextFromDocx($absolutePath);
-        }
-
-        return '';
+        return mb_convert_encoding($text, 'UTF-8', 'UTF-8');
     }
 
     /**
@@ -146,7 +122,7 @@ class GeminiReviewService implements AiReviewContract
     protected function buildPrompt(string $text): string
     {
         // Limit text length to avoid token limits (approx 150k chars)
-        $text = substr($text, 0, 150000);
+        $text = mb_substr($text, 0, 150000, 'UTF-8');
 
         return 'Anda adalah seorang reviewer jurnal profesional senior dari \'Cahaya Ilmu Bangsa\'. 
         Tugas Anda adalah memberikan review \'Pra-OJS\' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.

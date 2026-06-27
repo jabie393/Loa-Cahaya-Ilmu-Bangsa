@@ -58,20 +58,7 @@ class GeminiPlagiarismParaphraseService implements PlagiarismParaphraseContract
             throw new Exception("Format respons AI tidak valid.");
         }
 
-        $rawContent = trim($rawContent);
-        if (str_starts_with($rawContent, '```')) {
-            $rawContent = preg_replace('/^```(?:json)?\s+/', '', $rawContent);
-            $rawContent = preg_replace('/\s+```$/', '', $rawContent);
-            $rawContent = trim($rawContent);
-        }
-
-        $result = json_decode($rawContent, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Gagal memparsing JSON hasil parafrase dari AI.");
-        }
-
-        return $result;
+        return $this->decodeGeminiJson($rawContent);
     }
 
     /**

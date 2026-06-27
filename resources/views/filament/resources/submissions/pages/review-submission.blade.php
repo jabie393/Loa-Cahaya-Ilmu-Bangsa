@@ -1,4 +1,39 @@
 <x-filament-panels::page>
+    <style>
+        .markdown-content ul {
+            list-style-type: disc !important;
+            padding-left: 1.5rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .markdown-content ol {
+            list-style-type: decimal !important;
+            padding-left: 1.5rem !important;
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        .markdown-content li {
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+            line-height: 1.6 !important;
+        }
+        .markdown-content p {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+            line-height: 1.6 !important;
+        }
+        .markdown-content strong {
+            font-weight: 700 !important;
+        }
+    </style>
+    @php
+        $formatMarkdown = function($text) {
+            if (empty($text)) return '-';
+            // Ensure newlines before list items if AI returned them on the same line
+            $text = preg_replace('/(?<!\n)(\s+)(\d+\.\s+\*\*)/', "\n$2", $text);
+            return \Illuminate\Support\Str::markdown($text);
+        };
+    @endphp
     <div class="space-y-6">
         @if (Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->status !== 'Rejected')
             <div class="bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-900/30 flex items-center gap-3 rounded-xl border p-4">
@@ -89,7 +124,9 @@
                         
                         <div class="wrap-break-word flex flex-col pt-2 border-t border-gray-100 dark:border-gray-700/50">
                             <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">Saran Perbaikan Umum</span>
-                            <span class="text-sm text-gray-900 dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $record->general_suggestions ?? '-' }}</span>
+                            <div class="text-sm text-gray-900 dark:text-white mt-1 leading-relaxed markdown-content">
+                                {!! $formatMarkdown($record->general_suggestions) !!}
+                            </div>
                         </div>
 
                         <!-- Detail Penilaian Struktur -->
@@ -105,43 +142,57 @@
                                     @if($record->structure_review)
                                         <div class="flex flex-col">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Struktur Naskah</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->structure_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->structure_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->abstract_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Abstrak</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->abstract_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->abstract_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->introduction_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Pendahuluan</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->introduction_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->introduction_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->method_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Metode</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->method_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->method_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->results_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Hasil & Pembahasan</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->results_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->results_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->conclusion_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Kesimpulan</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->conclusion_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->conclusion_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                     @if($record->bibliography_review)
-                                        <div class="flex flex-col pt-2 border-t border-gray-50 dark:border-gray-700/30">
+                                        <div class="flex flex-col pt-2 border-t border-gray-550 dark:border-gray-700/30">
                                             <span class="text-[11px] font-bold uppercase text-gray-400 dark:text-gray-500">Analisis Daftar Pustaka</span>
-                                            <span class="text-xs text-gray-900 dark:text-white mt-0.5 whitespace-pre-line">{{ $record->bibliography_review }}</span>
+                                            <div class="text-xs text-gray-900 dark:text-white mt-0.5 leading-relaxed markdown-content">
+                                                {!! $formatMarkdown($record->bibliography_review) !!}
+                                            </div>
                                         </div>
                                     @endif
                                 </div>
@@ -478,6 +529,75 @@
                         </div>
                     </div>
                 @endif
+
+                @php
+                    // 1. LOA Badge Info
+                    $loaStatus = $record->status;
+                    $loaClass = match ($loaStatus) {
+                        'Approved' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                        'Rejected' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                        'Draft' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50',
+                        default => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50' // Pending
+                    };
+
+                    // 2. AI Review Badge Info
+                    $reviewStatus = $record->review_status;
+                    if ($reviewStatus !== 'reviewed') {
+                        if ($record->status === 'Approved' || !empty($record->ojs_status)) {
+                            $reviewStatus = 'N/A';
+                        } elseif (empty($reviewStatus)) {
+                            $reviewStatus = 'pending';
+                        }
+                    }
+
+                    $reviewClass = match ($reviewStatus) {
+                        'pending' => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-800/50',
+                        'processing' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
+                        'reviewed' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                        'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                        'N/A' => 'text-gray-500 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50',
+                        default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-850/30 dark:border-gray-850/50'
+                    };
+                    $reviewLabel = $reviewStatus === 'N/A' ? 'N/A' : ucfirst($reviewStatus);
+
+                    // 3. OJS Badge Info
+                    $ojsStatus = $record->ojs_status ?? 'Not Sent';
+                    $ojsClass = match ($record->ojs_status) {
+                        'pending' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
+                        'submitted' => 'text-sky-700 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/30 dark:border-sky-800/50',
+                        'accepted' => 'text-indigo-700 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950/30 dark:border-indigo-800/50',
+                        'published' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                        'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                        default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50' // null / not sent
+                    };
+                    $ojsLabel = ucfirst($ojsStatus);
+                @endphp
+
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Status Pengajuan</h4>
+                    <div class="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-3">
+                            <span class="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">Status Review</span>
+                            <span class="inline-flex items-center justify-center w-[85px] py-0.5 text-[10px] font-semibold rounded-full border {{ $reviewClass }}">
+                                {{ $reviewLabel }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700/50 pb-3">
+                            <span class="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">Status LOA</span>
+                            <span class="inline-flex items-center justify-center w-[85px] py-0.5 text-[10px] font-semibold rounded-full border {{ $loaClass }}">
+                                {{ $loaStatus }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase text-gray-400 dark:text-gray-500">Status OJS</span>
+                            <span class="inline-flex items-center justify-center w-[85px] py-0.5 text-[10px] font-semibold rounded-full border {{ $ojsClass }}">
+                                {{ $ojsLabel }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>

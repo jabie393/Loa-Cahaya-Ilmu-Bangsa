@@ -202,6 +202,36 @@ class SubmissionForm
                                 ->image()
                                 ->required(fn($record) => $record === null || $record->status === 'Pending'),
                         ]),
+                    Section::make('Status Pengajuan')
+                        ->description('Status pemrosesan artikel Anda')
+                        ->visible(fn($record) => $record !== null)
+                        ->schema([
+                            TextInput::make('status')
+                                ->label('Status LOA')
+                                ->formatStateUsing(fn ($state) => strtoupper($state ?? 'DRAFT'))
+                                ->disabled()
+                                ->dehydrated(false),
+                            TextInput::make('review_status')
+                                ->label('Status Review')
+                                ->formatStateUsing(function ($state, $record) {
+                                    $reviewStatus = $state;
+                                    if ($reviewStatus !== 'reviewed' && $record) {
+                                        if ($record->status === 'Approved' || !empty($record->ojs_status)) {
+                                            $reviewStatus = 'N/A';
+                                        } elseif (empty($reviewStatus)) {
+                                            $reviewStatus = 'pending';
+                                        }
+                                    }
+                                    return strtoupper($reviewStatus ?? 'PENDING');
+                                })
+                                ->disabled()
+                                ->dehydrated(false),
+                            TextInput::make('ojs_status')
+                                ->label('Status OJS')
+                                ->formatStateUsing(fn ($state) => strtoupper($state ?? 'NOT SENT'))
+                                ->disabled()
+                                ->dehydrated(false),
+                        ]),
                 ])->columnSpan(fn($record) => $record?->status === 'Approved' ? 6 : 2),
             ])->columns(6);
     }

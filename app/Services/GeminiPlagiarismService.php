@@ -60,20 +60,7 @@ class GeminiPlagiarismService implements PlagiarismContract
             throw new Exception("Format respons AI tidak valid.");
         }
 
-        $rawContent = trim($rawContent);
-        if (str_starts_with($rawContent, '```')) {
-            $rawContent = preg_replace('/^```(?:json)?\s+/', '', $rawContent);
-            $rawContent = preg_replace('/\s+```$/', '', $rawContent);
-            $rawContent = trim($rawContent);
-        }
-
-        $result = json_decode($rawContent, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Gagal memparsing JSON dari AI.");
-        }
-
-        return $result;
+        return $this->decodeGeminiJson($rawContent);
     }
 
     /**
@@ -88,18 +75,17 @@ class GeminiPlagiarismService implements PlagiarismContract
         }
 
         $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+        $text = '';
 
         if ($extension === 'pdf') {
             $parser = new Parser();
             $pdf = $parser->parseFile($absolutePath);
-            return $pdf->getText();
+            $text = $pdf->getText();
+        } elseif ($extension === 'docx') {
+            $text = $this->extractTextFromDocx($absolutePath);
         }
 
-        if ($extension === 'docx') {
-            return $this->extractTextFromDocx($absolutePath);
-        }
-
-        return '';
+        return mb_convert_encoding($text, 'UTF-8', 'UTF-8');
     }
 
     protected function extractTextFromDocx(string $filePath): string
@@ -120,7 +106,7 @@ class GeminiPlagiarismService implements PlagiarismContract
 
     protected function buildPrompt(string $text): string
     {
-        $text = substr($text, 0, 100000); // Limit to 100k chars for plagiarism check
+        $text = mb_substr($text, 0, 100000, 'UTF-8'); // Limit to 100k chars for plagiarism check
 
         return "Anda adalah sistem 'Cek Plagiasi' cerdas.
         Tugas Anda adalah menganalisis teks berikut dan memberikan estimasi kemiripan (similarity score) berdasarkan pengetahuan luas Anda tentang literatur akademik.

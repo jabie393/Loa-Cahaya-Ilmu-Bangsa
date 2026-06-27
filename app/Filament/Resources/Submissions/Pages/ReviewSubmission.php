@@ -159,6 +159,34 @@ class ReviewSubmission extends Page
                 EditAction::make()
                     ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square'),
+                Action::make('request_review_again')
+                    ->label('Minta Review Lagi')
+                    ->icon('heroicon-m-arrow-path')
+                    ->color('warning')
+                    ->action(function () {
+                        $quotaService = app(\App\Services\QuotaService::class);
+                        $user = Auth::user();
+
+                        if (!$quotaService->canRequestReview($user)) {
+                            Notification::make()
+                                ->title('Batas Review Tercapai')
+                                ->body('Maaf, kuota review harian Anda telah habis. Silakan hubungi admin untuk kuota tambahan.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $this->record->processReviewInBackground();
+
+                        Notification::make()
+                            ->title('Proses Review Dimulai Kembali')
+                            ->body('Review naskah Anda sedang diproses di latar belakang.')
+                            ->info()
+                            ->send();
+
+                        $this->redirect(static::$resource::getUrl('view', ['record' => $this->record]));
+                    })
+                    ->visible(fn() => $this->record->review_status === 'failed'),
                 Action::make('Konfirmasi LOA ke Admin')
                     ->label('Konfirmasi LOA ke Admin')
                     ->icon('heroicon-m-chat-bubble-left-right')
