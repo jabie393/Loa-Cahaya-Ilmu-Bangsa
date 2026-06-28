@@ -121,8 +121,8 @@ class GeminiReviewService implements AiReviewContract
      */
     protected function buildPrompt(string $text): string
     {
-        // Limit text length to avoid token limits (approx 150k chars)
-        $text = mb_substr($text, 0, 150000, 'UTF-8');
+        // Limit text length to avoid token limits (approx 75k chars is ~12k words, more than enough for standard journal paper)
+        $text = mb_substr($text, 0, 75000, 'UTF-8');
 
         return 'Anda adalah seorang reviewer jurnal profesional senior dari \'Cahaya Ilmu Bangsa\'. 
         Tugas Anda adalah memberikan review \'Pra-OJS\' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.

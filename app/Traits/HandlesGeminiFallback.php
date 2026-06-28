@@ -168,7 +168,29 @@ trait HandlesGeminiFallback
             $rawContent = trim($rawContent);
         }
 
-        // 1. Pre-escape literal newlines and tabs inside double-quoted string values
+        // Extract JSON block between first {/[ and last }/]
+        $firstBrace = strpos($rawContent, '{');
+        $lastBrace = strrpos($rawContent, '}');
+        $firstBracket = strpos($rawContent, '[');
+        $lastBracket = strrpos($rawContent, ']');
+
+        if ($firstBrace !== false && $lastBrace !== false && $lastBrace > $firstBrace) {
+            if ($firstBracket !== false && $firstBracket < $firstBrace && $lastBracket !== false && $lastBracket > $lastBrace) {
+                $rawContent = substr($rawContent, $firstBracket, $lastBracket - $firstBracket + 1);
+            } else {
+                $rawContent = substr($rawContent, $firstBrace, $lastBrace - $firstBrace + 1);
+            }
+        } elseif ($firstBracket !== false && $lastBracket !== false && $lastBracket > $firstBracket) {
+            $rawContent = substr($rawContent, $firstBracket, $lastBracket - $firstBracket + 1);
+        }
+
+        // 1. Repair truncated JSON (balance quotes and braces)
+        $rawContent = $this->repairTruncatedJson($rawContent);
+
+        // 2. Escape unescaped inner double quotes
+        $rawContent = $this->escapeInnerQuotes($rawContent);
+
+        // 3. Pre-escape literal newlines and tabs inside double-quoted string values
         $rawContent = preg_replace_callback('/"([^"\\\\]*|\\\\.)*"/', function ($matches) {
             return str_replace(
                 ["\r\n", "\r", "\n", "\t"],
@@ -186,18 +208,15 @@ trait HandlesGeminiFallback
         // Log initial parsing failure
         Log::warning("Gemini JSON Parsing failed. Error: " . json_last_error_msg() . " | Attempting repair...");
 
-        // 2. Repair missing commas between key-value pairs
+        // 4. Repair missing commas between key-value pairs
         $repaired = preg_replace('/("|\d|true|false|null|\]|\})(\s*\n\s*)"([^"]+)":/i', '$1,$2"$3":', $rawContent);
 
-        // 3. Try parsing again
         $result = json_decode($repaired, true);
         if (json_last_error() === JSON_ERROR_NONE) {
             return $result;
         }
 
-        // 4. Strip non-printable C0 and C1 control characters as last resort
-        // We strip non-printable C0 control characters (except space, tab, newline, carriage return)
-        // and all C1 control characters (\xC2\x80 to \xC2\x9F)
+        // 5. Strip non-printable C0 and C1 control characters as last resort
         $clean = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]|\xC2[\x80-\x9F]/', '', $repaired);
         $result = json_decode($clean, true);
 
@@ -205,8 +224,122 @@ trait HandlesGeminiFallback
             return $result;
         }
 
-        // 5. If still failing, throw exception with details
+        // 6. If still failing, throw exception with details
         Log::error("Failed to parse repaired Gemini JSON: " . json_last_error_msg() . " | Raw Content: " . $rawContent);
         throw new \Exception("Gagal memparsing JSON dari AI: " . json_last_error_msg() . " | Raw Content: " . mb_substr($rawContent, 0, 150) . "...");
+    }
+
+    /**
+     * Balances open quotes, brackets, and braces to repair truncated JSON.
+     */
+    protected function repairTruncatedJson(string $json): string
+    {
+        $json = trim($json);
+        if (empty($json)) return '{}';
+
+        $len = strlen($json);
+        $inQuote = false;
+        $escaped = false;
+        $stack = [];
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $json[$i];
+
+            if ($escaped) {
+                $escaped = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $escaped = true;
+                continue;
+            }
+
+            if ($char === '"') {
+                $inQuote = !$inQuote;
+                continue;
+            }
+
+            if (!$inQuote) {
+                if ($char === '{' || $char === '[') {
+                    $stack[] = $char;
+                } elseif ($char === '}' || $char === ']') {
+                    array_pop($stack);
+                }
+            }
+        }
+
+        if ($inQuote) {
+            $json .= '"';
+        }
+
+        while (!empty($stack)) {
+            $open = array_pop($stack);
+            if ($open === '{') {
+                $json .= '}';
+            } elseif ($open === '[') {
+                $json .= ']';
+            }
+        }
+
+        return $json;
+    }
+
+    /**
+     * Escapes unescaped inner double quotes in string values.
+     */
+    protected function escapeInnerQuotes(string $json): string
+    {
+        $len = strlen($json);
+        $result = '';
+        $inQuote = false;
+        $escaped = false;
+
+        for ($i = 0; $i < $len; $i++) {
+            $char = $json[$i];
+
+            if ($escaped) {
+                $result .= $char;
+                $escaped = false;
+                continue;
+            }
+
+            if ($char === '\\') {
+                $result .= $char;
+                $escaped = true;
+                continue;
+            }
+
+            if ($char === '"') {
+                if (!$inQuote) {
+                    $inQuote = true;
+                    $result .= $char;
+                } else {
+                    $nextChars = '';
+                    $k = $i + 1;
+                    while ($k < $len && ctype_space($json[$k])) {
+                        $k++;
+                    }
+                    if ($k < $len) {
+                        $nextChar = $json[$k];
+                    } else {
+                        $nextChar = '';
+                    }
+
+                    $isStructural = ($nextChar === ':' || $nextChar === ',' || $nextChar === '}' || $nextChar === ']' || $nextChar === '');
+
+                    if ($isStructural) {
+                        $inQuote = false;
+                        $result .= $char;
+                    } else {
+                        $result .= '\\"';
+                    }
+                }
+            } else {
+                $result .= $char;
+            }
+        }
+
+        return $result;
     }
 }

@@ -106,7 +106,7 @@ class GeminiPlagiarismService implements PlagiarismContract
 
     protected function buildPrompt(string $text): string
     {
-        $text = mb_substr($text, 0, 100000, 'UTF-8'); // Limit to 100k chars for plagiarism check
+        $text = mb_substr($text, 0, 50000, 'UTF-8'); // Limit to 50k chars for plagiarism check (~8k words)
 
         return "Anda adalah sistem 'Cek Plagiasi' cerdas.
         Tugas Anda adalah menganalisis teks berikut dan memberikan estimasi kemiripan (similarity score) berdasarkan pengetahuan luas Anda tentang literatur akademik.
