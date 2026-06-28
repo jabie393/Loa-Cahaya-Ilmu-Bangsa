@@ -196,29 +196,57 @@ class SubmissionsTable
                 SelectFilter::make('review_status')
                     ->label('Status Review')
                     ->options([
-                        'pending' => 'Pending',
                         'processing' => 'Processing',
                         'reviewed' => 'Reviewed',
                         'failed' => 'Failed',
                         'N/A' => 'N/A',
-                    ]),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
+                        $value = $data['value'];
+                        if (empty($value)) {
+                            return $query;
+                        }
+
+                        if ($value === 'N/A') {
+                            return $query->where(function ($q) {
+                                $q->where('review_status', 'N/A')
+                                  ->orWhere('status', 'Approved')
+                                  ->orWhere(fn($sub) => $sub->whereNotNull('ojs_status')->where('ojs_status', '!=', ''));
+                            });
+                        }
+
+                        return $query->where('review_status', $value);
+                    }),
                 SelectFilter::make('status')
                     ->label('Status LOA')
                     ->options([
                         'Pending' => 'Pending',
                         'Approved' => 'Approved',
                         'Rejected' => 'Rejected',
-                        'Draft' => 'Draft',
                     ]),
                 SelectFilter::make('ojs_status')
                     ->label('Status OJS')
                     ->options([
+                        'not_sent' => 'Not Sent',
                         'pending' => 'Pending',
                         'submitted' => 'Submitted',
-                        'accepted' => 'Accepted',
-                        'published' => 'Published',
                         'failed' => 'Failed',
-                    ]),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
+                        $value = $data['value'];
+                        if (empty($value)) {
+                            return $query;
+                        }
+
+                        if ($value === 'not_sent') {
+                            return $query->where(function ($q) {
+                                $q->whereNull('ojs_status')
+                                  ->orWhere('ojs_status', '');
+                            });
+                        }
+
+                        return $query->where('ojs_status', $value);
+                    }),
             ])
             ->recordUrl(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
             ->recordActions([
@@ -234,7 +262,7 @@ class SubmissionsTable
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
                         ->requiresConfirmation()
-                        ->visible(fn(Submission $record) => in_array($record->review_status, ['failed', 'reviewed']) && $record->status !== 'Approved')
+                        ->visible(fn(Submission $record) => $record->review_status === 'failed' && $record->status !== 'Approved')
                         ->action(fn(Submission $record) => $record->processReviewInBackground()),
                     Action::make('approve')
                         ->label('Approve LOA')

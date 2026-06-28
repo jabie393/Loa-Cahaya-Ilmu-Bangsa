@@ -178,7 +178,7 @@ class ReviewSubmission extends Page
 
                         $this->redirect(static::$resource::getUrl('view', ['record' => $this->record]));
                     })
-                    ->visible(fn() => in_array($this->record->review_status, ['failed', 'reviewed']) && $this->record->status !== 'Approved'),
+                    ->visible(fn() => $this->record->review_status === 'failed' && $this->record->status !== 'Approved'),
                 Action::make('Konfirmasi LOA ke Admin')
                     ->label('Konfirmasi LOA ke Admin')
                     ->icon('heroicon-m-chat-bubble-left-right')
