@@ -209,6 +209,62 @@ class SubmissionsTable
                         ->requiresConfirmation()
                         ->visible(fn(Submission $record) => in_array($record->review_status, ['failed', 'reviewed']) && $record->status !== 'Approved')
                         ->action(fn(Submission $record) => $record->processReviewInBackground()),
+                    Action::make('approve')
+                        ->label('Approve LOA')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
+                        ->action(function (Submission $record) {
+                            if ($record->proof_of_payment) {
+                                Storage::disk('public')->delete($record->proof_of_payment);
+                            }
+
+                            // Run OJS Submission in background
+                            try {
+                                \App\Services\OjsSubmissionService::submitInBackground($record);
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
+                            }
+
+                            $updateData = [
+                                'status' => 'Approved',
+                                'approved_date' => now(),
+                                'proof_of_payment' => null,
+                            ];
+                            if ($record->review_status === 'failed') {
+                                $updateData['review_status'] = 'N/A';
+                            }
+                            $record->update($updateData);
+
+                            Mail::to($record->email)->send(new SubmissionApproved($record));
+
+                            Notification::make()
+                                ->title('Submission approved successfully')
+                                ->success()
+                                ->send();
+                        }),
+                    Action::make('resubmit_ojs')
+                        ->label('Resubmit to OJS')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->visible(fn(Submission $record) => $record->status === 'Approved' && $record->ojs_status === 'failed' && Auth::user()->hasRole('super_admin'))
+                        ->action(function (Submission $record) {
+                            try {
+                                \App\Services\OjsSubmissionService::submitInBackground($record);
+                                Notification::make()
+                                    ->title('Resubmission dispatched in background')
+                                    ->info()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('OJS Resubmission Failed to Dispatch')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')
@@ -271,11 +327,15 @@ class SubmissionsTable
                                         \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
                                     }
 
-                                    $record->update([
+                                    $updateData = [
                                         'status' => 'Approved',
                                         'approved_date' => now(),
                                         'proof_of_payment' => null,
-                                    ]);
+                                    ];
+                                    if ($record->review_status === 'failed') {
+                                        $updateData['review_status'] = 'N/A';
+                                    }
+                                    $record->update($updateData);
 
                                     Mail::to($record->email)->send(new SubmissionApproved($record));
                                     $count++;

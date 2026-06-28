@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Services\QuotaService;
 use App\Services\PlagiarismQuotaService;
 use Illuminate\Console\Command;
 
@@ -25,11 +24,8 @@ class ResetDailyQuota extends Command
     /**
      * Execute the console command.
      */
-    public function handle(QuotaService $quotaService, PlagiarismQuotaService $plagiarismQuotaService)
+    public function handle(PlagiarismQuotaService $plagiarismQuotaService)
     {
-        $this->info('Resetting daily review quotas...');
-        $quotaService->resetAllDailyQuotas();
-
         $this->info('Resetting daily plagiarism quotas...');
         $plagiarismQuotaService->resetAllDailyQuotas();
         

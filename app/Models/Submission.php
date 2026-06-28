@@ -183,9 +183,6 @@ class Submission extends Model
                 'status' => 'Pending',
             ]);
 
-            // Consume Quota
-            app(\App\Services\QuotaService::class)->consumeQuota($this->user);
-
             // Send Email
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\PreSubmissionReviewMail($this));
 
@@ -200,6 +197,7 @@ class Submission extends Model
 
         } catch (\Exception $e) {
             $this->update([
+                'status' => 'Pending',
                 'review_status' => 'failed',
                 'review_error_message' => $e->getMessage(),
             ]);

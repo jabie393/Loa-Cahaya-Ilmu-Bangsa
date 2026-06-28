@@ -103,6 +103,33 @@
         <div class="grid grid-cols-1 gap-6 pb-6 md:grid-cols-5">
             <!-- Review Data Left Column -->
             <div class="space-y-4 md:col-span-3">
+                @if ($record->review_status === 'failed')
+                    <!-- Hasil Review Naskah (Failed) -->
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Hasil Review Naskah</h4>
+                    <div class="space-y-4 rounded-2xl border border-red-100 bg-red-50/50 p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-red-900/30 dark:bg-red-950/20">
+                        <div class="flex items-center gap-3">
+                            <div class="rounded-lg bg-red-100 dark:bg-red-900/30 p-2 text-red-600 dark:text-red-400">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-semibold text-red-900 dark:text-red-100">Review AI Gagal Diproses</h5>
+                                @if (Auth::user()->hasRole('super_admin'))
+                                    <p class="text-xs text-red-700 dark:text-red-300 mt-0.5">Sistem gagal memproses review naskah menggunakan model AI.</p>
+                                @else
+                                    <p class="text-xs text-red-700 dark:text-red-300 mt-0.5">Tim reviewer sedang sibuk, coba minta review lagi dalam beberapa saat. atau hubungi admin untuk melewati tahap review.</p>
+                                @endif
+                            </div>
+                        </div>
+                        @if (Auth::user()->hasRole('super_admin') && $record->review_error_message)
+                            <div class="mt-3 pl-4 border-l-2 border-red-350 text-xs text-red-800 dark:text-red-200">
+                                <strong class="font-bold">Detail Error:</strong> {{ $record->review_error_message }}
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 @if ($record->review_status === 'reviewed')
                     <!-- Hasil Review Naskah -->
                     <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Hasil Review Naskah</h4>

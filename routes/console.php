@@ -13,7 +13,7 @@ Artisan::command('inspire', function () {
 Schedule::command('submissions:delete-rejected')
     ->dailyAt('02:00');
 
-// Reset daily review quota at midnight
+// Reset daily plagiarism quota at midnight
 Schedule::command('quota:reset')
     ->dailyAt('00:00');
 

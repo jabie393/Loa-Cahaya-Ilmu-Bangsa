@@ -41,20 +41,13 @@ class UsersTable
                 TextColumn::make('daily_stats')
                     ->label('Sisa (Hari Ini)')
                     ->getStateUsing(function ($record) {
-                        $review = $record?->hasRole('super_admin')
-                            ? 'Unlimited'
-                            : (max(0, ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')) - ($record?->userQuota?->daily_used ?? 0)) . ' / ' . ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')));
-
                         $plagiarism = $record?->hasRole('super_admin')
                             ? 'Unlimited'
                             : (max(0, ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')) - ($record?->userPlagiarismQuota?->daily_used ?? 0)) . ' / ' . ($record?->userPlagiarismQuota?->daily_limit ?? config('quota.plagiarism_daily_limit')));
 
                         return new HtmlString("
-                            <div style='display: grid; grid-template-columns: 75px auto; font-size: 0.85rem; row-gap: 2px;'>
-                                <span style='color: #6b7280;'>Review</span>
-                                <span>: {$review}</span>
-                                <span style='color: #6b7280;'>Plagiarism</span>
-                                <span>: {$plagiarism}</span>
+                            <div style='font-size: 0.85rem;'>
+                                <span>Plagiarism: {$plagiarism}</span>
                             </div>
                         ");
                     })
@@ -64,15 +57,11 @@ class UsersTable
                 TextColumn::make('credits_stats')
                     ->label('Credits')
                     ->getStateUsing(function ($record) {
-                        $reviewCredits = $record->hasRole('super_admin') ? 'Unlimited' : ($record?->userQuota?->review_credits ?? 0);
                         $plagiarismCredits = $record->hasRole('super_admin') ? 'Unlimited' : ($record?->userPlagiarismQuota?->additional_credits ?? 0);
 
                         return new HtmlString("
-                            <div style='display: grid; grid-template-columns: 75px auto; font-size: 0.85rem; row-gap: 2px;'>
-                                <span style='color: #6b7280;'>Review</span>
-                                <span>: {$reviewCredits}</span>
-                                <span style='color: #6b7280;'>Plagiarism</span>
-                                <span>: {$plagiarismCredits}</span>
+                            <div style='font-size: 0.85rem;'>
+                                <span>Plagiarism: {$plagiarismCredits}</span>
                             </div>
                         ");
                     })

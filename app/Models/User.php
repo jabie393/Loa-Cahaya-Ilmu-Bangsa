@@ -42,14 +42,6 @@ class User extends Authenticatable implements FilamentUser
     {
         static::created(function (User $user) {
             $user->assignRole('panel_user');
-
-            // Create default quota
-            $user->userQuota()->create([
-                'daily_limit' => config('quota.default_daily_limit', 2),
-                'daily_used' => 0,
-                'bonus_tokens' => 0,
-                'total_used' => 0,
-            ]);
         });
     }
 

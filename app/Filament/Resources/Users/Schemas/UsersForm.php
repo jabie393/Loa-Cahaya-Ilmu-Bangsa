@@ -56,41 +56,8 @@ class UsersForm
 
                             // Right Column: Quota Management (7/12 width)
                             Section::make('Manajemen Kuota')
-                                ->description('Statistik penggunaan review dan plagiarism.')
+                                ->description('Statistik penggunaan plagiarism.')
                                 ->schema([
-                                    Placeholder::make('review_header')->label('REVIEW JURNAL')->content(''),
-                                    Grid::make(3)
-                                        ->schema([
-                                            Placeholder::make('daily_used_stats')
-                                                ->label('Sisa Kuota Hari Ini')
-                                                ->content(fn($record) => $record?->hasRole('super_admin')
-                                                    ? 'Unlimited'
-                                                    : (max(0, ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')) - ($record?->userQuota?->daily_used ?? 0)) . ' / ' . ($record?->userQuota?->daily_limit ?? config('quota.default_daily_limit')))),
-
-                                            Placeholder::make('review_credits_stats')
-                                                ->label('Review Credits')
-                                                ->content(fn($record) => $record?->hasRole('super_admin') ? 'Unlimited' : ($record?->userQuota?->review_credits ?? 0)),
-
-                                            Placeholder::make('total_used_stats')
-                                                ->label('Total Review')
-                                                ->content(fn($record) => $record?->userQuota?->total_used ?? 0),
-                                        ]),
-
-                                    Grid::make(1)
-                                        ->relationship('userQuota')
-                                        ->schema([
-                                            TextInput::make('review_credits')
-                                                ->label('Review Credits (Manual)')
-                                                ->helperText('Input angka untuk tambahan review credits.')
-                                                ->numeric()
-                                                ->default(0)
-                                                ->required(),
-                                        ]),
-
-                                    Placeholder::make('plagiarism_divider')
-                                        ->label('')
-                                        ->content(fn() => new \Illuminate\Support\HtmlString('<hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 1rem 0;">')),
-
                                     Placeholder::make('plagiarism_header')->label('CEK PLAGIASI')->content(''),
 
                                     Grid::make(3)

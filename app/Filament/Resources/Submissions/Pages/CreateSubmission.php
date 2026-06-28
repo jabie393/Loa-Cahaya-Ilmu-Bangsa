@@ -147,20 +147,7 @@ class CreateSubmission extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $quotaService = app(\App\Services\QuotaService::class);
         $user = Auth::user();
-
-        // Check quota first
-        if (!$quotaService->canRequestReview($user)) {
-            \Filament\Notifications\Notification::make()
-                ->title('Batas Review Tercapai')
-                ->body('Maaf, kuota review harian Anda telah habis. Silakan hubungi admin untuk kuota tambahan.')
-                ->danger()
-                ->send();
-
-            $this->halt();
-        }
-
         $data['user_id'] = $user->id;
         $data['status'] = 'Draft';
         $data['review_status'] = 'processing';
