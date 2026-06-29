@@ -13,6 +13,8 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Group;
@@ -129,6 +131,9 @@ class CreateSubmission extends CreateRecord
                                             ->disk('public')
                                             ->image()
                                             ->required(),
+                                        Placeholder::make('qris_image')
+                                            ->label('QRIS Pembayaran')
+                                            ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '" alt="QRIS" class="w-full max-w-xs rounded-lg shadow-sm" style="max-height: 250px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Scan QRIS di atas untuk melakukan pembayaran</span></div>')),
                                     ]),
                             ])->columnSpan(2),
                         ])

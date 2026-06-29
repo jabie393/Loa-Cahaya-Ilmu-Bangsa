@@ -10,6 +10,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Placeholder;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
@@ -195,13 +197,16 @@ class SubmissionForm
                         ->description('Bukti Pembayaran LOA')
                         ->visible(fn($record) => $record === null || $record->status !== 'Approved')
                         ->schema([
-                            FileUpload::make('proof_of_payment')
-                                ->label('Upload Bukti Pembayaran')
-                                ->directory('proof-of-payment')
-                                ->disk('public')
-                                ->image()
-                                ->required(fn($record) => $record === null || $record->status === 'Pending'),
-                        ]),
+                             FileUpload::make('proof_of_payment')
+                                 ->label('Upload Bukti Pembayaran')
+                                 ->directory('proof-of-payment')
+                                 ->disk('public')
+                                 ->image()
+                                 ->required(fn($record) => $record === null || $record->status === 'Pending'),
+                             Placeholder::make('qris_image')
+                                 ->label('QRIS Pembayaran')
+                                 ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '" alt="QRIS" class="w-full max-w-xs rounded-lg shadow-sm" style="max-height: 250px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Scan QRIS di atas untuk melakukan pembayaran</span></div>')),
+                         ]),
                     Section::make('Status Pengajuan')
                         ->description('Status pemrosesan artikel Anda')
                         ->visible(fn($record) => $record !== null)
