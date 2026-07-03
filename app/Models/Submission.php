@@ -187,6 +187,17 @@ class Submission extends Model
     {
         $this->refresh();
 
+        $journal = $this->journal;
+        $defaultUrl = config('ojs.base_url');
+
+        if ($journal && !empty($journal->ojs_base_url) && rtrim($journal->ojs_base_url, '/') !== rtrim($defaultUrl, '/')) {
+            $this->update([
+                'review_status' => 'skipped',
+                'status' => 'Pending',
+            ]);
+            return;
+        }
+
         $this->update(['review_status' => 'processing', 'review_error_message' => null]);
 
         try {
@@ -218,13 +229,15 @@ class Submission extends Model
             if (!app()->runningInConsole()) {
                 \Filament\Notifications\Notification::make()
                     ->title('Request Review Berhasil Terkirim')
+                    ->body('Review sedang berjalan di latar belakang.')
                     ->success()
                     ->send();
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AI Review Error: ' . $e->getMessage());
+
             $this->update([
-                'status' => 'Pending',
                 'review_status' => 'failed',
                 'review_error_message' => $e->getMessage(),
             ]);
@@ -245,6 +258,17 @@ class Submission extends Model
 
     public function processReviewInBackground(): void
     {
+        $journal = $this->journal;
+        $defaultUrl = config('ojs.base_url');
+
+        if ($journal && !empty($journal->ojs_base_url) && rtrim($journal->ojs_base_url, '/') !== rtrim($defaultUrl, '/')) {
+            $this->update([
+                'review_status' => 'skipped',
+                'status' => 'Pending',
+            ]);
+            return;
+        }
+
         $this->update([
             'review_status' => 'processing',
             'review_error_message' => null,

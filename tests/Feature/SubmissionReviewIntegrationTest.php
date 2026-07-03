@@ -64,6 +64,10 @@ class SubmissionReviewIntegrationTest extends TestCase
             'email' => 'author@example.com',
             'manuscript_file' => 'manuscripts/test.docx',
             'status' => 'Draft',
+            'title' => 'Original Title',
+            'abstract' => 'Original Abstract',
+            'keywords' => 'original, keywords',
+            'references' => 'Original Reference',
         ]);
 
         // Process review manually (representing afterCreate/afterSave page hooks)
@@ -73,10 +77,10 @@ class SubmissionReviewIntegrationTest extends TestCase
 
         // Assert review status and results are populated correctly
         $this->assertEquals('reviewed', $submission->review_status);
-        $this->assertEquals('DETECTED TITLE', $submission->title);
-        $this->assertEquals('DETECTED ABSTRACT', $submission->abstract);
-        $this->assertEquals('keyword1, keyword2', $submission->keywords);
-        $this->assertEquals("Reference 1\nReference 2", $submission->references);
+        $this->assertEquals('Original Title', $submission->title);
+        $this->assertEquals('Original Abstract', $submission->abstract);
+        $this->assertEquals('original, keywords', $submission->keywords);
+        $this->assertEquals('Original Reference', $submission->references);
         $this->assertEquals('Structure review notes', $submission->structure_review);
         $this->assertEquals('General suggestions notes', $submission->general_suggestions);
         $this->assertNotNull($submission->review_email_sent_at);
@@ -124,5 +128,40 @@ class SubmissionReviewIntegrationTest extends TestCase
         $this->assertEquals('Pending', $submission->status);
         $this->assertEquals('proofs/proof.png', $submission->proof_of_payment);
         $this->assertEquals('UPDATED TITLE', $submission->title);
+    }
+
+    /**
+     * Test that Gemini review and emails are skipped for non-default journals.
+     */
+    public function test_review_is_skipped_for_non_default_journals(): void
+    {
+        Mail::fake();
+
+        $journal = Journal::create([
+            'name' => 'External Journal',
+            'slug' => 'external-journal',
+            'link' => 'https://external-domain.com/index.php/external',
+            'ojs_base_url' => 'https://external-domain.com',
+            'ojs_secret_key' => 'some-secret-key',
+        ]);
+
+        $submission = Submission::create([
+            'journal_id' => $journal->id,
+            'author_name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+            'manuscript_file' => 'manuscripts/test.pdf',
+            'status' => 'Draft',
+        ]);
+
+        $submission->processReview();
+
+        $submission->refresh();
+
+        // Assert review status is skipped, and main status is Pending
+        $this->assertEquals('skipped', $submission->review_status);
+        $this->assertEquals('Pending', $submission->status);
+
+        // Assert no pre-submission review mail was sent
+        Mail::assertNotSent(\App\Mail\PreSubmissionReviewMail::class);
     }
 }
