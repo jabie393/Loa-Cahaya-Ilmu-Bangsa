@@ -121,13 +121,16 @@ class SubmissionForm
                                 modifyQueryUsing: function ($query, $record) {
                                     if ($record && $record->journal) {
                                         $url = $record->journal->ojs_base_url;
-                                        if (!empty($url)) {
-                                            return $query->where('ojs_base_url', $url);
+                                        $defaultUrl = config('ojs.base_url');
+                                        if (empty($url) || rtrim($url, '/') === rtrim($defaultUrl, '/')) {
+                                            return $query->where(function ($q) use ($defaultUrl) {
+                                                $q->whereNull('ojs_base_url')
+                                                  ->orWhere('ojs_base_url', '')
+                                                  ->orWhere('ojs_base_url', $defaultUrl)
+                                                  ->orWhere('ojs_base_url', rtrim($defaultUrl, '/'));
+                                            });
                                         }
-                                        return $query->where(function ($q) {
-                                            $q->whereNull('ojs_base_url')
-                                              ->orWhere('ojs_base_url', '');
-                                        });
+                                        return $query->where('ojs_base_url', $url);
                                     }
                                     return $query;
                                 }

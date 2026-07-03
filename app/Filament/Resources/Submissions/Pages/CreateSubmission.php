@@ -90,6 +90,15 @@ class CreateSubmission extends CreateRecord
                                             modifyQueryUsing: function ($query, $livewire) {
                                                 $filterUrl = $livewire->ojs_base_url;
                                                 if (!empty($filterUrl)) {
+                                                    $defaultUrl = config('ojs.base_url');
+                                                    if ($filterUrl === 'default_env' || rtrim($filterUrl, '/') === rtrim($defaultUrl, '/')) {
+                                                        return $query->where(function ($q) use ($defaultUrl) {
+                                                            $q->whereNull('ojs_base_url')
+                                                              ->orWhere('ojs_base_url', '')
+                                                              ->orWhere('ojs_base_url', $defaultUrl)
+                                                              ->orWhere('ojs_base_url', rtrim($defaultUrl, '/'));
+                                                        });
+                                                    }
                                                     return $query->where('ojs_base_url', $filterUrl);
                                                 }
                                                 return $query;
