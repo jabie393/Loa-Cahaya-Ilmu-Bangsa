@@ -15,8 +15,64 @@ class Journal extends Page
     protected static ?string $navigationLabel = '1. Unduh Template';
     protected static ?string $title = 'Unduh Template';
 
+    // Livewire property for filtering website OJS
+    public ?string $ojs_base_url = 'default_env';
+
     public function getJurnals(): array
     {
-        return JournalModel::all()->toArray();
+        $query = JournalModel::query();
+        
+        if ($this->ojs_base_url === 'default_env') {
+            $query->where(function ($q) {
+                $q->whereNull('ojs_base_url')
+                  ->orWhere('ojs_base_url', '');
+            });
+        } elseif ($this->ojs_base_url === 'all') {
+            // No filter
+        } elseif (!empty($this->ojs_base_url)) {
+            $query->where('ojs_base_url', $this->ojs_base_url);
+        }
+
+        return $query->get()->toArray();
+    }
+
+    public function getOjsWebsites(): array
+    {
+        $defaultUrl = config('ojs.base_url');
+        $defaultHost = null;
+        if (!empty($defaultUrl)) {
+            $defaultHost = parse_url($defaultUrl, PHP_URL_HOST);
+            if (empty($defaultHost)) {
+                $defaultHost = str_replace(['https://', 'http://', '/'], '', $defaultUrl);
+            }
+        }
+
+        $dbUrls = JournalModel::query()
+            ->whereNotNull('ojs_base_url')
+            ->where('ojs_base_url', '<>', '')
+            ->distinct()
+            ->pluck('ojs_base_url')
+            ->toArray();
+
+        $options = [];
+        if (!empty($defaultUrl)) {
+            $options['default_env'] = $defaultHost ?: 'Internal Website';
+        }
+
+        foreach ($dbUrls as $url) {
+            if (!empty($defaultUrl) && rtrim($url, '/') === rtrim($defaultUrl, '/')) {
+                continue;
+            }
+
+            $host = parse_url($url, PHP_URL_HOST);
+            if (empty($host)) {
+                $host = str_replace(['https://', 'http://', '/'], '', $url);
+            }
+            $options[$url] = $host ?: $url;
+        }
+
+        $options['all'] = 'Tampilkan Semua';
+
+        return $options;
     }
 }

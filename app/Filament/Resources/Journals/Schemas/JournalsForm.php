@@ -29,6 +29,15 @@ class JournalsForm
                     ->label('Template Link')
                     ->url()
                     ->placeholder('https://...'),
+                TextInput::make('ojs_base_url')
+                    ->label('OJS Base URL (Khusus Jurnal ini)')
+                    ->helperText('Kosongkan untuk menggunakan URL bawaan di .env')
+                    ->url()
+                    ->placeholder('https://...'),
+                TextInput::make('ojs_secret_key')
+                    ->label('OJS Secret Key (Khusus Jurnal ini)')
+                    ->helperText('Kosongkan untuk menggunakan Secret Key bawaan di .env')
+                    ->placeholder('Kunci keamanan integrasi OJS'),
             ]);
     }
 }

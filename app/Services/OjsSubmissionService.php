@@ -33,19 +33,19 @@ class OjsSubmissionService
                 'ojs_error_message' => null,
             ]);
 
-            $baseUrl = rtrim(config('ojs.base_url'), '/');
+            $journal = $submission->journal;
+            if (!$journal) {
+                throw new \Exception('Journal association not found for this submission.');
+            }
+
+            $baseUrl = rtrim($journal->ojs_base_url ?: config('ojs.base_url'), '/');
             if (empty($baseUrl)) {
                 throw new \Exception('OJS Base URL is not configured.');
             }
 
-            $secretKey = config('ojs.secret_key');
+            $secretKey = $journal->ojs_secret_key ?: config('ojs.secret_key');
             if (empty($secretKey)) {
                 throw new \Exception('OJS Secret Key is not configured.');
-            }
-
-            $journal = $submission->journal;
-            if (!$journal) {
-                throw new \Exception('Journal association not found for this submission.');
             }
 
             $journalPath = $journal->slug;

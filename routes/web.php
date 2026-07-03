@@ -34,7 +34,7 @@ Route::get('/ac/preview/{record}', function (App\Models\Submission $record) {
         abort(403, 'Sertifikat tidak tersedia.');
     }
 
-    $content = view('filament.ac.ac_pdf', ['record' => $record])->render();
+    $content = view($record->getAcTemplateView(), ['record' => $record])->render();
 
     return view('layouts.public-loa', [
         'slot' => new \Illuminate\Support\HtmlString($content . (
@@ -52,7 +52,7 @@ Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
         abort(403, 'Sertifikat tidak tersedia.');
     }
 
-    $content = view('filament.pfc.pfc_pdf', ['record' => $record])->render();
+    $content = view($record->getPfcTemplateView(), ['record' => $record])->render();
 
     return view('layouts.public-loa', [
         'slot' => new \Illuminate\Support\HtmlString($content . (

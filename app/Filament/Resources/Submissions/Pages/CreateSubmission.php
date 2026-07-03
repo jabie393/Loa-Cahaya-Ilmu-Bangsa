@@ -71,7 +71,17 @@ class CreateSubmission extends CreateRecord
 
                                     Select::make('journal_id')
                                         ->label('Jurnal Target')
-                                        ->relationship('journal', 'name')
+                                        ->relationship(
+                                            name: 'journal',
+                                            titleAttribute: 'name',
+                                            modifyQueryUsing: function ($query) {
+                                                $filterUrl = request()->query('ojs_base_url');
+                                                if (!empty($filterUrl)) {
+                                                    return $query->where('ojs_base_url', $filterUrl);
+                                                }
+                                                return $query;
+                                            }
+                                        )
                                         ->columnSpanFull()
                                         ->required(),
 

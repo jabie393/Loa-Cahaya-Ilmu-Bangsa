@@ -298,5 +298,50 @@ class OjsSubmissionServiceTest extends TestCase
                 $request['keywords'] === 'test s, t, ';
         });
     }
+
+    /**
+     * Test that OjsSubmissionService uses journal-specific base URL and secret key if defined.
+     */
+    public function test_submitting_uses_journal_specific_credentials(): void
+    {
+        Http::fake([
+            'https://custom-journal-domain.com/index.php/custom-slug/loa-api/submissions' => Http::response([
+                'success' => true,
+                'message' => 'Submission created successfully',
+                'submission_id' => 999111,
+            ], 200)
+        ]);
+
+        $journal = Journal::create([
+            'name' => 'Custom OJS Journal',
+            'slug' => 'custom-slug',
+            'link' => 'https://custom-journal-domain.com/index.php/custom-slug',
+            'ojs_base_url' => 'https://custom-journal-domain.com',
+            'ojs_secret_key' => 'custom-secret-key-123',
+        ]);
+
+        $submission = Submission::create([
+            'authors' => [
+                ['name' => 'Jane Doe', 'institution' => 'University B'],
+            ],
+            'title' => 'Test Article',
+            'email' => 'jane@example.com',
+            'journal_id' => $journal->id,
+            'status' => 'Pending',
+        ]);
+
+        $service = new OjsSubmissionService();
+        $result = $service->submit($submission);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals(999111, $result['ojs_submission_id']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://custom-journal-domain.com/index.php/custom-slug/loa-api/submissions' &&
+                $request['secret'] === 'custom-secret-key-123' &&
+                $request['journal_path'] === 'custom-slug';
+        });
+    }
 }
+
 

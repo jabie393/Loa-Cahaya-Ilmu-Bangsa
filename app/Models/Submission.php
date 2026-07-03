@@ -143,7 +143,7 @@ class Submission extends Model
     {
         $journal = $this->journal;
         if (!$journal) {
-            return 'filament.loa_pdf.default';
+            return 'filament.loa_pdf.LOA_Argopuro.LOA_Argopuro';
         }
 
         $slug = $journal->slug;
@@ -152,8 +152,35 @@ class Submission extends Model
         ];
 
         $folderName = $mapping[$slug] ?? \Illuminate\Support\Str::studly($slug);
+        $view = "filament.loa_pdf.LOA_{$folderName}.LOA_{$folderName}";
         
-        return "filament.loa_pdf.LOA_{$folderName}.LOA_{$folderName}";
+        return view()->exists($view) ? $view : 'filament.loa_pdf.LOA_Argopuro.LOA_Argopuro';
+    }
+
+    public function getAcTemplateView(): string
+    {
+        $journal = $this->journal;
+        if (!$journal) {
+            return 'filament.ac.ac_pdf';
+        }
+
+        $folderName = \Illuminate\Support\Str::studly($journal->slug);
+        $customView = "filament.ac.AC_{$folderName}";
+        
+        return view()->exists($customView) ? $customView : 'filament.ac.ac_pdf';
+    }
+
+    public function getPfcTemplateView(): string
+    {
+        $journal = $this->journal;
+        if (!$journal) {
+            return 'filament.pfc.pfc_pdf';
+        }
+
+        $folderName = \Illuminate\Support\Str::studly($journal->slug);
+        $customView = "filament.pfc.PFC_{$folderName}";
+        
+        return view()->exists($customView) ? $customView : 'filament.pfc.pfc_pdf';
     }
 
     public function processReview(): void
