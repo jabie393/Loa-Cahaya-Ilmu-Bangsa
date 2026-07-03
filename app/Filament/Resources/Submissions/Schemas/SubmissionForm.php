@@ -115,7 +115,23 @@ class SubmissionForm
 
                         Select::make('journal_id')
                             ->label('Jurnal Target')
-                            ->relationship('journal', 'name')
+                            ->relationship(
+                                name: 'journal',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: function ($query, $record) {
+                                    if ($record && $record->journal) {
+                                        $url = $record->journal->ojs_base_url;
+                                        if (!empty($url)) {
+                                            return $query->where('ojs_base_url', $url);
+                                        }
+                                        return $query->where(function ($q) {
+                                            $q->whereNull('ojs_base_url')
+                                              ->orWhere('ojs_base_url', '');
+                                        });
+                                    }
+                                    return $query;
+                                }
+                            )
                             ->columnSpanFull()
                             ->required()
                             ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),

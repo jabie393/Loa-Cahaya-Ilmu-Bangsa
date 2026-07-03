@@ -21,11 +21,24 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\View;
 
+use Livewire\Attributes\Url;
+
 class CreateSubmission extends CreateRecord
 {
     use CreateRecord\Concerns\HasWizard;
 
+    #[Url]
+    public ?string $ojs_base_url = null;
+
     protected static string $resource = SubmissionResource::class;
+
+    public function mount(): void
+    {
+        parent::mount();
+        if (empty($this->ojs_base_url)) {
+            $this->ojs_base_url = request()->query('ojs_base_url');
+        }
+    }
 
     protected function getSteps(): array
     {
@@ -74,8 +87,8 @@ class CreateSubmission extends CreateRecord
                                         ->relationship(
                                             name: 'journal',
                                             titleAttribute: 'name',
-                                            modifyQueryUsing: function ($query) {
-                                                $filterUrl = request()->query('ojs_base_url');
+                                            modifyQueryUsing: function ($query, $livewire) {
+                                                $filterUrl = $livewire->ojs_base_url;
                                                 if (!empty($filterUrl)) {
                                                     return $query->where('ojs_base_url', $filterUrl);
                                                 }

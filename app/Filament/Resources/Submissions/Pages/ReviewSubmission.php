@@ -90,7 +90,7 @@ class ReviewSubmission extends Page
                         }
                         $this->record->update($updateData);
 
-                        Mail::to($this->record->email)->send(new SubmissionApproved($this->record));
+                        $this->record->sendApprovalEmail();
 
                         Notification::make()
                             ->title('Submission Approved')

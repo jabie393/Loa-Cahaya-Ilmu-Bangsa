@@ -193,6 +193,52 @@ class SubmissionsTable
             ])
             ->defaultSort('sort_priority', 'asc')
             ->filters([
+                SelectFilter::make('ojs_base_url')
+                    ->label('Filter Website OJS')
+                    ->placeholder('Semua Website')
+                    ->options(function () {
+                        $dbUrls = \App\Models\Journal::query()
+                            ->whereNotNull('ojs_base_url')
+                            ->where('ojs_base_url', '<>', '')
+                            ->distinct()
+                            ->pluck('ojs_base_url')
+                            ->toArray();
+                        
+                        $urls = [];
+                        $defaultUrl = config('ojs.base_url');
+                        $defaultHost = 'Default';
+                        if (!empty($defaultUrl)) {
+                            $parsed = parse_url($defaultUrl, PHP_URL_HOST);
+                            $defaultHost = $parsed ?: str_replace(['https://', 'http://', '/'], '', $defaultUrl);
+                        }
+                        $urls['default_env'] = $defaultHost;
+                        
+                        foreach ($dbUrls as $url) {
+                            $host = parse_url($url, PHP_URL_HOST);
+                            if (empty($host)) {
+                                $host = str_replace(['https://', 'http://', '/'], '', $url);
+                            }
+                            $urls[$url] = $host ?: $url;
+                        }
+                        
+                        return $urls;
+                    })
+                    ->query(function ($query, array $data) {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        if ($data['value'] === 'default_env') {
+                            return $query->whereHas('journal', function ($q) {
+                                $q->whereNull('ojs_base_url')
+                                  ->orWhere('ojs_base_url', '');
+                            });
+                        }
+
+                        return $query->whereHas('journal', function ($q) use ($data) {
+                            $q->where('ojs_base_url', $data['value']);
+                        });
+                    }),
                 SelectFilter::make('review_status')
                     ->label('Status Review')
                     ->options([
@@ -292,7 +338,7 @@ class SubmissionsTable
                             }
                             $record->update($updateData);
 
-                            Mail::to($record->email)->send(new SubmissionApproved($record));
+                            $record->sendApprovalEmail();
 
                             Notification::make()
                                 ->title('Submission approved successfully')
@@ -346,14 +392,44 @@ class SubmissionsTable
                         ->color('info')
                         ->url(fn(Submission $record) => route('public.ac.preview', ['record' => $record, 'download' => 1]))
                         ->openUrlInNewTab()
-                        ->visible(fn(Submission $record) => $record->status === 'Approved'),
+                        ->visible(function (Submission $record) {
+                            if ($record->status !== 'Approved') {
+                                return false;
+                            }
+                            $ojsUrl = $record->journal?->ojs_base_url;
+                            if (!empty($ojsUrl)) {
+                                $host = parse_url($ojsUrl, PHP_URL_HOST);
+                                if (empty($host)) {
+                                    $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
+                                }
+                                if (in_array($host, ['pjlsedu.com', 'ijefijournal.com'])) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }),
                     Action::make('download_pfc')
                         ->label('Download PFC')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('info')
                         ->url(fn(Submission $record) => route('public.pfc.preview', ['record' => $record, 'download' => 1]))
                         ->openUrlInNewTab()
-                        ->visible(fn(Submission $record) => $record->status === 'Approved'),
+                        ->visible(function (Submission $record) {
+                            if ($record->status !== 'Approved') {
+                                return false;
+                            }
+                            $ojsUrl = $record->journal?->ojs_base_url;
+                            if (!empty($ojsUrl)) {
+                                $host = parse_url($ojsUrl, PHP_URL_HOST);
+                                if (empty($host)) {
+                                    $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
+                                }
+                                if (in_array($host, ['pjlsedu.com', 'ijefijournal.com'])) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }),
                 ])
                     ->label('')
                     ->button()
@@ -392,7 +468,7 @@ class SubmissionsTable
                                     }
                                     $record->update($updateData);
 
-                                    Mail::to($record->email)->send(new SubmissionApproved($record));
+                                    $record->sendApprovalEmail();
                                     $count++;
                                 }
                             });
@@ -408,7 +484,5 @@ class SubmissionsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
-
-
     }
 }

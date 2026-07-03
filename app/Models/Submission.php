@@ -285,4 +285,25 @@ class Submission extends Model
             exec("php \"" . $artisanPath . "\" submission:process-review " . $id . " < /dev/null > /dev/null 2>&1 &");
         }
     }
+
+    public function sendApprovalEmail(): void
+    {
+        $ojsUrl = $this->journal?->ojs_base_url;
+        $isExternal = false;
+        if (!empty($ojsUrl)) {
+            $host = parse_url($ojsUrl, PHP_URL_HOST);
+            if (empty($host)) {
+                $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
+            }
+            if (in_array($host, ['pjlsedu.com', 'ijefijournal.com'])) {
+                $isExternal = true;
+            }
+        }
+
+        if ($isExternal) {
+            \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\ExternalSubmissionApproved($this));
+        } else {
+            \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\SubmissionApproved($this));
+        }
+    }
 }

@@ -32,9 +32,19 @@ class JournalsTable
                     ->sortable(),
                 TextColumn::make('ojs_base_url')
                     ->label('Website OJS')
-                    ->placeholder('Default (.env)')
+                    ->placeholder('Default')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return 'Default';
+                        }
+                        $host = parse_url($state, PHP_URL_HOST);
+                        if (empty($host)) {
+                            $host = str_replace(['https://', 'http://', '/'], '', $state);
+                        }
+                        return $host;
+                    }),
                 TextColumn::make('link')
                     ->label('Link Jurnal')
                     ->badge()
@@ -53,7 +63,22 @@ class JournalsTable
                 Group::make('ojs_base_url')
                     ->label('Website OJS')
                     ->collapsible()
-                    ->getTitleFromRecordUsing(fn ($record) => $record->ojs_base_url ?: 'Default (.env)'),
+                    ->getTitleFromRecordUsing(function ($record) {
+                        $url = $record->ojs_base_url;
+                        if (empty($url)) {
+                            $defaultUrl = config('ojs.base_url');
+                            if (!empty($defaultUrl)) {
+                                $defaultHost = parse_url($defaultUrl, PHP_URL_HOST);
+                                return $defaultHost ?: str_replace(['https://', 'http://', '/'], '', $defaultUrl);
+                            }
+                            return 'Default';
+                        }
+                        $host = parse_url($url, PHP_URL_HOST);
+                        if (empty($host)) {
+                            $host = str_replace(['https://', 'http://', '/'], '', $url);
+                        }
+                        return $host;
+                    }),
             ])
             ->defaultGroup('ojs_base_url')
             ->groupingSettingsHidden()
@@ -62,15 +87,29 @@ class JournalsTable
                     ->label('Filter Website OJS')
                     ->placeholder('Semua Website')
                     ->options(function () {
-                        $urls = \App\Models\Journal::query()
+                        $dbUrls = \App\Models\Journal::query()
                             ->whereNotNull('ojs_base_url')
                             ->where('ojs_base_url', '<>', '')
                             ->distinct()
-                            ->pluck('ojs_base_url', 'ojs_base_url')
+                            ->pluck('ojs_base_url')
                             ->toArray();
                         
-                        $defaultUrl = config('ojs.base_url') ?: 'Default (.env)';
-                        $urls['default_env'] = $defaultUrl . ' (Default)';
+                        $urls = [];
+                        $defaultUrl = config('ojs.base_url');
+                        $defaultHost = 'Default';
+                        if (!empty($defaultUrl)) {
+                            $parsed = parse_url($defaultUrl, PHP_URL_HOST);
+                            $defaultHost = $parsed ?: str_replace(['https://', 'http://', '/'], '', $defaultUrl);
+                        }
+                        $urls['default_env'] = $defaultHost;
+                        
+                        foreach ($dbUrls as $url) {
+                            $host = parse_url($url, PHP_URL_HOST);
+                            if (empty($host)) {
+                                $host = str_replace(['https://', 'http://', '/'], '', $url);
+                            }
+                            $urls[$url] = $host ?: $url;
+                        }
                         
                         return $urls;
                     })
