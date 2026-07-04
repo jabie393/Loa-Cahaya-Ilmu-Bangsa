@@ -57,23 +57,6 @@ class ExternalSubmissionApproved extends Mailable
      */
     public function attachments(): array
     {
-        $attachments = [];
-
-        // Only attach Letter of Acceptance (LOA)
-        try {
-            $loaView = $this->submission->getTemplateView();
-            $loaPdf = Pdf::loadView($loaView, ['record' => $this->submission])
-                ->setPaper('a4', 'portrait')
-                ->output();
-            
-            $attachments[] = Attachment::fromData(
-                fn () => $loaPdf,
-                'Letter_of_Acceptance.pdf'
-            )->withMime('application/pdf');
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to attach LOA PDF to external approval email: " . $e->getMessage());
-        }
-
-        return $attachments;
+        return [];
     }
 }

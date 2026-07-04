@@ -191,7 +191,7 @@ class SubmissionsTable
                     })
                     ->sortable(),
             ])
-            ->defaultSort('sort_priority', 'asc')
+            ->defaultSort('volume_sort_key', 'desc')
             ->filters([
                 SelectFilter::make('ojs_base_url')
                     ->label('Filter Website OJS')
@@ -205,20 +205,21 @@ class SubmissionsTable
                             ->toArray();
                         
                         $urls = [];
-                        $defaultUrl = config('ojs.base_url');
-                        $defaultHost = 'Default';
-                        if (!empty($defaultUrl)) {
-                            $parsed = parse_url($defaultUrl, PHP_URL_HOST);
-                            $defaultHost = $parsed ?: str_replace(['https://', 'http://', '/'], '', $defaultUrl);
-                        }
-                        $urls['default_env'] = $defaultHost;
+                        $urls['default_env'] = 'a. Jurnal Nasional Non Sinta';
                         
                         foreach ($dbUrls as $url) {
                             $host = parse_url($url, PHP_URL_HOST);
                             if (empty($host)) {
                                 $host = str_replace(['https://', 'http://', '/'], '', $url);
                             }
-                            $urls[$url] = $host ?: $url;
+
+                            if ($host === 'ijefijournal.com') {
+                                $urls[$url] = 'b. IJEFI Non-Scopus Indexed Journal of Economics and Management';
+                            } elseif ($host === 'pjlsedu.com') {
+                                $urls[$url] = 'c. PJLSS Non-Scopus Indexed Multidisciplinary Journal';
+                            } else {
+                                $urls[$url] = $host ?: $url;
+                            }
                         }
                         
                         return $urls;

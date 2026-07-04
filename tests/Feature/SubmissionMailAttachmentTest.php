@@ -39,14 +39,11 @@ class SubmissionMailAttachmentTest extends TestCase
         // Build the attachments
         $attachments = $mailable->attachments();
 
-        $this->assertCount(3, $attachments);
-        $this->assertEquals('Letter_of_Acceptance.pdf', $attachments[0]->as);
-        $this->assertEquals('Author_Certificate.pdf', $attachments[1]->as);
-        $this->assertEquals('Plagiarism_Free_Certificate.pdf', $attachments[2]->as);
+        $this->assertCount(0, $attachments);
     }
 
     /**
-     * Test that SubmissionApproved email contains only LOA attachment for IJEFI.
+     * Test that SubmissionApproved email has zero attachments for IJEFI.
      */
     public function test_submission_approved_mail_has_only_loa_for_ijefi(): void
     {
@@ -77,8 +74,7 @@ class SubmissionMailAttachmentTest extends TestCase
 
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\ExternalSubmissionApproved::class, function ($mail) use ($submission) {
             $attachments = $mail->attachments();
-            $this->assertCount(1, $attachments);
-            $this->assertEquals('Letter_of_Acceptance.pdf', $attachments[0]->as);
+            $this->assertCount(0, $attachments);
             $this->assertEquals('Letter of Acceptance - ' . $submission->journal->name, $mail->envelope()->subject);
             return $mail->hasTo('john@example.com');
         });

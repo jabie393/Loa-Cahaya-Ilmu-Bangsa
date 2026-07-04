@@ -45,15 +45,9 @@ class SubmissionResource extends Resource
         $query = parent::getEloquentQuery();
 
         $selectRaw = "CASE 
-            WHEN review_status = 'failed' THEN 0
-            WHEN ojs_status = 'failed' THEN 1
-            WHEN status = 'Pending' THEN 2
-            WHEN ojs_status = 'pending' THEN 3
-            WHEN review_status = 'reviewed' THEN 4
-            WHEN status = 'Approved' THEN 5
-            WHEN ojs_status = 'submitted' THEN 6
-            ELSE 7
-        END AS sort_priority";
+            WHEN volume IS NULL OR volume = '' THEN '2'
+            ELSE CONCAT('1_', volume)
+        END AS volume_sort_key";
 
         if (Auth::user()->hasRole('super_admin')) {
             $query->where(function ($q) {

@@ -5,7 +5,7 @@
         <div>
             <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400">Filter Website Jurnal</h3>
         </div>
-        <div class="w-full sm:w-72">
+        <div class="w-full sm:w-[480px]">
             <select wire:model.live="ojs_base_url"
                 class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white">
                 @foreach ($this->getOjsWebsites() as $value => $label)

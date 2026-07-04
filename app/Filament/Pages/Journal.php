@@ -56,7 +56,7 @@ class Journal extends Page
 
         $options = [];
         if (!empty($defaultUrl)) {
-            $options['default_env'] = $defaultHost ?: 'Internal Website';
+            $options['default_env'] = 'a. Jurnal Nasional Non Sinta';
         }
 
         foreach ($dbUrls as $url) {
@@ -68,7 +68,14 @@ class Journal extends Page
             if (empty($host)) {
                 $host = str_replace(['https://', 'http://', '/'], '', $url);
             }
-            $options[$url] = $host ?: $url;
+
+            if ($host === 'ijefijournal.com') {
+                $options[$url] = 'b. IJEFI Non-Scopus Indexed Journal of Economics and Management';
+            } elseif ($host === 'pjlsedu.com') {
+                $options[$url] = 'c. PJLSS Non-Scopus Indexed Multidisciplinary Journal';
+            } else {
+                $options[$url] = $host ?: $url;
+            }
         }
 
         $options['all'] = 'Tampilkan Semua';

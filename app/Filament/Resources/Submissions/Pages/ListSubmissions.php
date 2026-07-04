@@ -26,14 +26,6 @@ class ListSubmissions extends ListRecords
                         ->label('Pilih Website Jurnal')
                         ->options(function () {
                             $defaultUrl = config('ojs.base_url');
-                            $defaultHost = null;
-                            if (!empty($defaultUrl)) {
-                                $defaultHost = parse_url($defaultUrl, PHP_URL_HOST);
-                                if (empty($defaultHost)) {
-                                    $defaultHost = str_replace(['https://', 'http://', '/'], '', $defaultUrl);
-                                }
-                            }
-
                             $dbUrls = Journal::query()
                                 ->whereNotNull('ojs_base_url')
                                 ->where('ojs_base_url', '<>', '')
@@ -44,7 +36,7 @@ class ListSubmissions extends ListRecords
                             $options = [];
 
                             if (!empty($defaultUrl)) {
-                                $options[$defaultUrl] = $defaultHost ?: 'Internal Website';
+                                $options[$defaultUrl] = 'a. Jurnal Nasional Non Sinta';
                             }
 
                             foreach ($dbUrls as $url) {
@@ -56,7 +48,14 @@ class ListSubmissions extends ListRecords
                                 if (empty($host)) {
                                     $host = str_replace(['https://', 'http://', '/'], '', $url);
                                 }
-                                $options[$url] = $host ?: $url;
+
+                                if ($host === 'ijefijournal.com') {
+                                    $options[$url] = 'b. IJEFI Non-Scopus Indexed Journal of Economics and Management';
+                                } elseif ($host === 'pjlsedu.com') {
+                                    $options[$url] = 'c. PJLSS Non-Scopus Indexed Multidisciplinary Journal';
+                                } else {
+                                    $options[$url] = $host ?: $url;
+                                }
                             }
 
                             return $options;

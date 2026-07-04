@@ -57,67 +57,6 @@ class SubmissionApproved extends Mailable
      */
     public function attachments(): array
     {
-        $attachments = [];
-
-        $ojsUrl = $this->submission->journal?->ojs_base_url;
-        $skipAcPfc = false;
-        if (!empty($ojsUrl)) {
-            $host = parse_url($ojsUrl, PHP_URL_HOST);
-            if (empty($host)) {
-                $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
-            }
-            if (in_array($host, ['pjlsedu.com', 'ijefijournal.com'])) {
-                $skipAcPfc = true;
-            }
-        }
-
-        // 1. Lampiran LOA PDF
-        try {
-            $loaView = $this->submission->getTemplateView();
-            $loaPdf = Pdf::loadView($loaView, ['record' => $this->submission])
-                ->setPaper('a4', 'portrait')
-                ->output();
-            
-            $attachments[] = Attachment::fromData(
-                fn () => $loaPdf,
-                'Letter_of_Acceptance.pdf'
-            )->withMime('application/pdf');
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("Gagal melampirkan LOA PDF ke email persetujuan: " . $e->getMessage());
-        }
-
-        if (!$skipAcPfc) {
-            // 2. Lampiran Author Certificate (AC) PDF
-            try {
-                $acView = $this->submission->getAcTemplateView();
-                $acPdf = Pdf::loadView($acView, ['record' => $this->submission])
-                    ->setPaper('a4', 'landscape')
-                    ->output();
-                
-                $attachments[] = Attachment::fromData(
-                    fn () => $acPdf,
-                    'Author_Certificate.pdf'
-                )->withMime('application/pdf');
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Gagal melampirkan AC PDF ke email persetujuan: " . $e->getMessage());
-            }
-
-            // 3. Lampiran Plagiarism-Free Certificate (PFC) PDF
-            try {
-                $pfcView = $this->submission->getPfcTemplateView();
-                $pfcPdf = Pdf::loadView($pfcView, ['record' => $this->submission])
-                    ->setPaper('a4', 'landscape')
-                    ->output();
-                
-                $attachments[] = Attachment::fromData(
-                    fn () => $pfcPdf,
-                    'Plagiarism_Free_Certificate.pdf'
-                )->withMime('application/pdf');
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error("Gagal melampirkan PFC PDF ke email persetujuan: " . $e->getMessage());
-            }
-        }
-
-        return $attachments;
+        return [];
     }
 }
