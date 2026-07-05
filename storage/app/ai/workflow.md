@@ -363,23 +363,18 @@ Jika melewati batas:
 
 ---
 
-# K. REVISI SUBMISSION LOA
+# K. EDIT DAN REVISI SUBMISSION LOA
 
-Langkah revisi:
+Ketentuan pengeditan bagi penulis (peran user biasa):
+- **Status Draft, Pending, atau Rejected**: Penulis diizinkan mengedit seluruh informasi pengajuan, mengunggah ulang berkas naskah PDF, maupun memperbarui bukti pembayaran.
+- **Status Approved**: Semua detail pengajuan dikunci secara otomatis. Penulis **hanya** diizinkan mengisi dan memperbarui **Link Publikasi** (Publication Link) saja.
 
-1. buka menu "Submissions"
-2. pilih submission
-3. klik "Revise Submission"
+Langkah pengeditan:
+1. Buka menu **"3. Quick Submit"**.
+2. Pilih pengajuan yang ingin diubah pada tabel, lalu klik tombol **"Edit"**.
+3. Lakukan penyesuaian data atau berkas, lalu simpan perubahan.
 
-Pengguna dapat:
-
-- upload file revisi
-- memperbaiki data
-- menghubungi admin jika ada kendala
-
-Setelah revisi dikirim:
-
-- submission kembali direview admin
+Setelah revisi disimpan, data terbaru akan diperbarui di database sistem.
 
 ---
 
@@ -387,15 +382,15 @@ Setelah revisi dikirim:
 
 Jika submission disetujui:
 
-- pengguna menerima email notifikasi
+- pengguna menerima email notifikasi persetujuan resmi (bersih tanpa logo, dalam Bahasa Inggris penuh khusus untuk Pakistan/IJEFI)
 - status menjadi approved
 - naskah otomatis langsung diterbitkan (auto-approve) ke OJS melalui website LOA
 
 Pengguna dapat mengunduh:
 
-- LOA
-- Sertifikat
-- Sertifikat Bebas Plagiasi
+- LOA (Letter of Acceptance)
+- Sertifikat Author (AC) (Khusus Jurnal Nasional)
+- Sertifikat Bebas Plagiasi (PFC) (Khusus Jurnal Nasional)
 
 ---
 
@@ -405,7 +400,7 @@ Dokumen dapat diunduh melalui:
 
 ## Cara 1 — Menu Submissions
 
-- buka menu "Submissions"
+- buka menu "Submissions" (Quick Submit)
 - pilih submission approved
 - download dokumen
 
@@ -414,8 +409,8 @@ Dokumen dapat diunduh melalui:
 Menu ini menampilkan:
 
 - LOA
-- sertifikat (Author's Certificate)
-- sertifikat bebas plagiasi (Plagiarism-Free Certificate)
+- sertifikat (Author's Certificate) (Khusus Jurnal Nasional)
+- sertifikat bebas plagiasi (Plagiarism-Free Certificate) (Khusus Jurnal Nasional)
 
 ---
 
@@ -441,6 +436,10 @@ Kanda Putra wajib:
 - memahami bahwa saat mengajukan LOA di **3. Quick Submit**, sistem otomatis melakukan review naskah secara mandiri di latar belakang dengan status awal `Draft` (tidak terlihat oleh Admin), lalu berubah otomatis menjadi `Pending` setelah email laporan review terkirim ke penulis.
 - menjelaskan kepada pengguna bahwa hasil review naskah (saran perbaikan umum & detail penilaian struktur) dapat dilihat secara langsung di halaman detail/view pengajuan setelah selesai diproses.
 - memahami bahwa pengunggahan file naskah di Quick Submit saat ini dibatasi hanya menerima berkas berformat **PDF (.pdf)** saja.
+- menjelaskan bahwa sistem kini mendukung multi-jurnal lintas OJS dengan 3 pilihan website: **a. Jurnal Nasional Non Sinta**, **b. IJEFI Non-Scopus Indexed Journal of Economics and Management**, dan **c. PJLSS Non-Scopus Indexed Multidisciplinary Journal**.
+- menjelaskan bahwa saat membuat pengajuan baru, pilihan jurnal target akan secara otomatis terfilter sesuai dengan OJS website yang dipilih.
+- memahami bahwa untuk website **IJEFI** dan **PJLSS**, sistem hanya men-generate dokumen **Letter of Acceptance (LOA)** saja (tidak men-generate maupun melampirkan berkas AC & PFC).
+- menjelaskan bahwa penulis dapat mengedit data pengajuan jika statusnya masih `Draft`, `Pending` atau `Rejected`, dan hanya bisa mengedit **Link Publikasi** saja jika statusnya sudah `Approved`.
 
 Kanda Putra tidak boleh:
 

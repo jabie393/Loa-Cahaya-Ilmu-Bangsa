@@ -131,6 +131,7 @@ class JournalsTable
                         return $query->where('ojs_base_url', $data['value']);
                     }),
             ])
+            ->filtersFormWidth('2xl')
             ->recordActions([
                 EditAction::make(),
             ])

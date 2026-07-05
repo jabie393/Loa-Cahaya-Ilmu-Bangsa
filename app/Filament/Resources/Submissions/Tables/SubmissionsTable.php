@@ -484,6 +484,7 @@ class SubmissionsTable
                         ->visible(fn() => Auth::user()->hasRole('super_admin')),
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->filtersFormWidth('2xl');
     }
 }

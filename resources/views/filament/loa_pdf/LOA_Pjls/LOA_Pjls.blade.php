@@ -155,7 +155,8 @@
                         Journal Name</td>
                     <td style="width: 20px; padding: 5px 0; text-align: center; vertical-align: top; color: #475569;">:
                     </td>
-                    <td style="padding: 5px 0; vertical-align: top; font-weight: 700; color: #0f172a; text-transform: uppercase;">
+                    <td
+                        style="padding: 5px 0; vertical-align: top; font-weight: 700; color: #0f172a; text-transform: uppercase;">
                         PAKISTAN JOURNAL OF LIFE AND SOCIAL SCIENCES
                     </td>
                 </tr>
@@ -187,15 +188,7 @@
                     </td>
                     <td style="padding: 5px 0; text-align: center; vertical-align: top; color: #475569;">:</td>
                     <td style="padding: 5px 0; vertical-align: top; color: #2563eb; word-break: break-all;">
-                        {{ $record->publication_link ?: 'https://pjlse.com/index.php/pjls/article/view/' . $record->ojs_submission_id }}
-                    </td>
-                </tr>
-                <tr class="border-b border-slate-100">
-                    <td style="padding: 5px 0; font-weight: 700; vertical-align: top; color: #475569;">DOI
-                    </td>
-                    <td style="padding: 5px 0; text-align: center; vertical-align: top; color: #475569;">:</td>
-                    <td style="padding: 5px 0; vertical-align: top; font-weight: 700; color: #0f172a;">
-                        10.5281/zenodo.{{ $record->ojs_submission_id ?: '20672641' }}
+                        {{ $record->publication_link ?: 'https://pjlsedu.com/index.php/pjls/article/view/' . $record->ojs_submission_id }}
                     </td>
                 </tr>
             </table>
