@@ -107,6 +107,7 @@ Penulis melakukan pengajuan LOA sekaligus memicu proses review naskah secara oto
 - **3. Quick Submit**
 
 Tujuan:
+
 - Mengajukan LOA (Letter of Acceptance) untuk naskah naskah.
 - Mendapatkan review naskah (revisi akademis) dari Tim Reviewer.
 - Sinkronisasi otomatis ke OJS jurnal target setelah pengajuan disetujui (Approved) oleh Admin.
@@ -286,10 +287,12 @@ Kanda Putra wajib memahami bahwa submission LOA kini terintegrasi langsung denga
 ## Tahap Awal Submission LOA
 
 Pengguna:
+
 - login ke sistem
 - masuk ke menu **"3. Quick Submit"**
 
 Untuk membuat pengajuan baru:
+
 - klik tombol **"Create"** atau **"New Submission"** pada tabel.
 
 ---
@@ -303,6 +306,7 @@ Pembuatan submission menggunakan sistem Wizard 2 langkah:
 ## Langkah 1 — Form LOA
 
 Pengguna melengkapi data pengajuan dan berkas secara berurutan dalam satu kolom layout lurus ke bawah:
+
 1. **Jurnal Target**: Memilih jurnal yang dituju.
 2. **File Naskah PDF yang telah disesuaikan Template**: Mengunggah berkas naskah (.pdf, maksimal 20 MB).
 3. **Bukti Pembayaran & QRIS**: Mengunggah bukti pembayaran LOA dan melihat QRIS pembayaran.
@@ -315,6 +319,7 @@ Seluruh metadata naskah lainnya (Nama Penulis, Judul, Abstrak, Kata Kunci, Refer
 ## Langkah 2 — Konfirmasi
 
 Pengguna meninjau ringkasan data sebelum dikirim.
+
 - Kolom ringkasan Nama Penulis, Judul, Keywords, Abstract, dan Referensi akan menampilkan placeholder miring: `(Akan diekstrak setelah submit)`.
 - Centang kotak persetujuan (agreement) lalu klik tombol **"Submit"**.
 
@@ -325,24 +330,24 @@ Pengguna meninjau ringkasan data sebelum dikirim.
 Setelah tombol "Submit" ditekan, alur sistematis berjalan di latar belakang:
 
 1. **Status Draf Awal (`Draft`)**:
-   * Status pengajuan diset secara default menjadi `'Draft'`.
-   * Pada tahap ini, pengajuan **tidak akan terlihat di dashboard Admin** (kecuali draf tersebut dibuat oleh Admin itu sendiri) untuk menjaga kebersihan antrean admin dari pengajuan yang belum siap.
+    - Status pengajuan diset secara default menjadi `'Draft'`.
+    - Pada tahap ini, pengajuan **tidak akan terlihat di dashboard Admin** (kecuali draf tersebut dibuat oleh Admin itu sendiri) untuk menjaga kebersihan antrean admin dari pengajuan yang belum siap.
 
 2. **Proses Ekstraksi & Review Otomatis (1 Call)**:
-   * Sistem otomatis memicu proses di latar belakang.
-   * **Jurnal Internal**: Sistem mengekstrak metadata (Penulis, Judul, Abstrak, Keywords, Referensi) dari PDF sekaligus memberikan umpan balik review naskah (IMRaD). Status review diset `'reviewed'`.
-   * **Jurnal Eksternal** (seperti `pjlsedu.com`, `ijefijournal.com`): Sistem hanya melakukan ekstraksi metadata saja demi hemat token. Analisis review dilewati, dan status review diset `'N/A'`.
-   * **Aturan Overwrite:** Sistem hanya akan mengisi kolom metadata di database jika kolom tersebut kosong atau bernilai default. Jika sebelumnya diisi manual oleh penulis (Toggle aktif), sistem tidak akan menimpanya.
-   * **Fallback:** Jika sistem gagal mengekstrak email/penulis, sistem secara otomatis akan menggunakan nama dan email akun login sebagai cadangan terakhir.
+    - Sistem otomatis memicu proses di latar belakang.
+    - **Jurnal Internal**: Sistem mengekstrak metadata (Penulis, Judul, Abstrak, Keywords, Referensi) dari PDF sekaligus memberikan umpan balik review naskah (IMRaD). Status review diset `'reviewed'`.
+    - **Jurnal Eksternal** (seperti `pjlsedu.com`, `ijefijournal.com`): Sistem hanya melakukan ekstraksi metadata saja demi hemat token. Analisis review dilewati, dan status review diset `'N/A'`.
+    - **Aturan Overwrite:** Sistem hanya akan mengisi kolom metadata di database jika kolom tersebut kosong atau bernilai default. Jika sebelumnya diisi manual oleh penulis (Toggle aktif), sistem tidak akan menimpanya.
+    - **Fallback:** Jika sistem gagal mengekstrak email/penulis, sistem secara otomatis akan menggunakan nama dan email akun login sebagai cadangan terakhir.
 
 3. **Transisi Status (`Pending`)**:
-   * Begitu proses sukses selesai, status LOA otomatis berubah menjadi `'Pending'`.
-   * Untuk Jurnal Internal, email laporan review dikirim otomatis ke penulis. Jurnal Eksternal tidak mengirim email review.
-   * Pengajuan kini muncul di antrean Super Admin agar bukti pembayaran ditinjau dan disetujui (`Approved`).
-   * Jika review gagal, status review akan diubah menjadi `failed`, dan admin/penulis dapat menekan tombol **"Minta Review Lagi"** untuk memicu proses ulang.
+    - Begitu proses sukses selesai, status LOA otomatis berubah menjadi `'Pending'`.
+    - Untuk Jurnal Internal, email laporan review dikirim otomatis ke penulis. Jurnal Eksternal tidak mengirim email review.
+    - Pengajuan kini muncul di antrean Super Admin agar bukti pembayaran ditinjau dan disetujui (`Approved`).
+    - Jika review gagal, status review akan diubah menjadi `failed`, dan admin/penulis dapat menekan tombol **"Minta Review Lagi"** untuk memicu proses ulang.
 
 4. **Persetujuan & Sinkronisasi OJS (`Approved`)**:
-   * Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal di background. Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
+    - Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal di background. Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
 
 ---
 
@@ -368,10 +373,12 @@ Jika melewati batas:
 # K. EDIT DAN REVISI SUBMISSION LOA
 
 Ketentuan pengeditan bagi penulis (peran user biasa):
+
 - **Status Draft, Pending, atau Rejected**: Penulis diizinkan mengedit seluruh informasi pengajuan, mengunggah ulang berkas naskah PDF, maupun memperbarui bukti pembayaran.
 - **Status Approved**: Semua detail pengajuan dikunci secara otomatis. Penulis **hanya** diizinkan mengisi dan memperbarui **Link Publikasi** (Publication Link) saja.
 
 Langkah pengeditan:
+
 1. Buka menu **"3. Quick Submit"**.
 2. Pilih pengajuan yang ingin diubah pada tabel, lalu klik tombol **"Edit"**.
 3. Lakukan penyesuaian data atau berkas, lalu simpan perubahan.
@@ -383,13 +390,14 @@ Setelah revisi disimpan, data terbaru akan diperbarui di database sistem.
 # L. SUBMISSION DISETUJUI
 
 Jika submission disetujui:
+
 - Status LOA menjadi `Approved` dan status OJS masuk antrean sinkronisasi background.
 - **Pengiriman Email LOA Ditunda (Delayed Email):** Email LOA (Internal/Eksternal) **tidak lagi dikirim saat Admin mengklik Approve**. Email baru dikirim setelah sistem berhasil mempublikasikan artikel di OJS (status OJS berubah menjadi `'submitted'`).
 - Hal ini menjamin bahwa informasi **Volume, Nomor, Tahun,** dan **Tautan (Link) Publikasi** yang diperoleh dari OJS sudah terisi lengkap di dalam email LOA yang diterima penulis.
 - Pengguna dapat mengunduh:
-  * LOA (Letter of Acceptance)
-  * Sertifikat Author (AC) (Khusus Jurnal Nasional)
-  * Sertifikat Bebas Plagiasi (PFC) (Khusus Jurnal Nasional)
+    - LOA (Letter of Acceptance)
+    - Sertifikat Author (AC) (Khusus Jurnal Nasional)
+    - Sertifikat Bebas Plagiasi (PFC) (Khusus Jurnal Nasional)
 
 ---
 
