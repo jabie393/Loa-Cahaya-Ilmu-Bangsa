@@ -36,51 +36,6 @@ class SubmissionsTable
                     ->label('ID')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('author_name')
-                    ->label('Detail Artikel')
-                    ->html()
-                    ->state(fn(Submission $record) => $record)
-                    ->searchable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $search) {
-                        return $query->where('author_name', 'like', "%{$search}%")
-                            ->orWhere('title', 'like', "%{$search}%")
-                            ->orWhereHas('journal', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                            ->orWhere('volume', 'like', "%{$search}%");
-                    })
-                    ->formatStateUsing(function ($record) {
-                        $authorNames = $record->author_name;
-                        if (is_array($authorNames)) {
-                            $authors = implode(', ', $authorNames);
-                        } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
-                            $authors = $authorNames->implode(', ');
-                        } else {
-                            $authors = (string) $authorNames;
-                        }
-
-                        $title = $record->title ?? 'Untitled';
-                        $journalName = $record->journal?->name ?? 'N/A';
-                        $volume = $record->volume ? " — {$record->volume}" : '';
-
-                        return new \Illuminate\Support\HtmlString("
-                            <div class='flex flex-col gap-0.5 py-1' style='max-width: 450px;'>
-                                <div class='font-bold text-sm text-gray-900 dark:text-white break-words'>
-                                    {$authors}
-                                </div>
-                                <div class='text-xs text-gray-500 dark:text-gray-400 break-words' style='display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;'>
-                                    {$title}
-                                </div>
-                                <div class='text-[10px] text-primary-600 dark:text-primary-400 font-semibold break-words'>
-                                    {$journalName}{$volume}
-                                </div>
-                            </div>
-                        ");
-                    }),
-                TextColumn::make('proof_of_payment')
-                    ->label('Bukti Pembayaran')
-                    ->badge()
-                    ->state(fn(Submission $record): string => ($record->proof_of_payment || $record->status === 'Approved') ? 'Paid' : 'Unpaid')
-                    ->color(fn(string $state): string => $state === 'Paid' ? 'success' : 'danger')
-                    ->icon(fn(string $state): string => $state === 'Paid' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
-                    ->searchable(),
                 TextColumn::make('status')
                     ->label('Status & OJS')
                     ->html()
@@ -159,8 +114,53 @@ class SubmissionsTable
                     })
                     ->sortable(
                         query: fn(\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder =>
-                        $query->orderBy('sort_priority', $direction)->orderBy('created_at', 'desc')
+                        $query->orderBy('status', $direction)->orderBy('created_at', 'desc')
                     ),
+                TextColumn::make('author_name')
+                    ->label('Detail Artikel')
+                    ->html()
+                    ->state(fn(Submission $record) => $record)
+                    ->searchable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $search) {
+                        return $query->where('author_name', 'like', "%{$search}%")
+                            ->orWhere('title', 'like', "%{$search}%")
+                            ->orWhereHas('journal', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhere('volume', 'like', "%{$search}%");
+                    })
+                    ->formatStateUsing(function ($record) {
+                        $authorNames = $record->author_name;
+                        if (is_array($authorNames)) {
+                            $authors = implode(', ', $authorNames);
+                        } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
+                            $authors = $authorNames->implode(', ');
+                        } else {
+                            $authors = (string) $authorNames;
+                        }
+
+                        $title = $record->title ?? 'Untitled';
+                        $journalName = $record->journal?->name ?? 'N/A';
+                        $volume = $record->volume ? " — {$record->volume}" : '';
+
+                        return new \Illuminate\Support\HtmlString("
+                            <div class='flex flex-col gap-0.5 py-1' style='max-width: 450px;'>
+                                <div class='font-bold text-sm text-gray-900 dark:text-white break-words'>
+                                    {$authors}
+                                </div>
+                                <div class='text-xs text-gray-500 dark:text-gray-400 break-words' style='display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;'>
+                                    {$title}
+                                </div>
+                                <div class='text-[10px] text-primary-600 dark:text-primary-400 font-semibold break-words'>
+                                    {$journalName}{$volume}
+                                </div>
+                            </div>
+                        ");
+                    }),
+                TextColumn::make('proof_of_payment')
+                    ->label('Bukti Pembayaran')
+                    ->badge()
+                    ->state(fn(Submission $record): string => ($record->proof_of_payment || $record->status === 'Approved') ? 'Paid' : 'Unpaid')
+                    ->color(fn(string $state): string => $state === 'Paid' ? 'success' : 'danger')
+                    ->icon(fn(string $state): string => $state === 'Paid' ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle')
+                    ->searchable(),
                 IconColumn::make('manuscript_file')
                     ->label('File PDF')
                     ->icon(fn($state) => $state ? 'heroicon-o-arrow-down-tray' : null)
@@ -203,10 +203,10 @@ class SubmissionsTable
                             ->distinct()
                             ->pluck('ojs_base_url')
                             ->toArray();
-                        
+
                         $urls = [];
                         $urls['default_env'] = 'a. Jurnal Nasional Non Sinta';
-                        
+
                         foreach ($dbUrls as $url) {
                             $host = parse_url($url, PHP_URL_HOST);
                             if (empty($host)) {
@@ -221,7 +221,7 @@ class SubmissionsTable
                                 $urls[$url] = $host ?: $url;
                             }
                         }
-                        
+
                         return $urls;
                     })
                     ->query(function ($query, array $data) {
@@ -232,7 +232,7 @@ class SubmissionsTable
                         if ($data['value'] === 'default_env') {
                             return $query->whereHas('journal', function ($q) {
                                 $q->whereNull('ojs_base_url')
-                                  ->orWhere('ojs_base_url', '');
+                                    ->orWhere('ojs_base_url', '');
                             });
                         }
 
@@ -257,8 +257,8 @@ class SubmissionsTable
                         if ($value === 'N/A') {
                             return $query->where(function ($q) {
                                 $q->where('review_status', 'N/A')
-                                  ->orWhere('status', 'Approved')
-                                  ->orWhere(fn($sub) => $sub->whereNotNull('ojs_status')->where('ojs_status', '!=', ''));
+                                    ->orWhere('status', 'Approved')
+                                    ->orWhere(fn($sub) => $sub->whereNotNull('ojs_status')->where('ojs_status', '!=', ''));
                             });
                         }
 
@@ -288,7 +288,7 @@ class SubmissionsTable
                         if ($value === 'not_sent') {
                             return $query->where(function ($q) {
                                 $q->whereNull('ojs_status')
-                                  ->orWhere('ojs_status', '');
+                                    ->orWhere('ojs_status', '');
                             });
                         }
 
@@ -377,7 +377,12 @@ class SubmissionsTable
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->color('primary')
                         ->url(fn(Submission $record) => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $record->id)
-                        ->openUrlInNewTab(),
+                        ->openUrlInNewTab()
+                        ->requiresConfirmation()
+                        ->modalHeading('Konfirmasi LOA ke Admin')
+                        ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
+                        ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
+                        ->modalCancelActionLabel('Periksa Kembali'),
                     Action::make('download')
                         ->label('Download LOA')
                         ->icon('heroicon-o-arrow-down-tray')

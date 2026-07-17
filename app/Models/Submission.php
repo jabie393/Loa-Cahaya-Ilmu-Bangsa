@@ -246,15 +246,9 @@ class Submission extends Model
                 }
             }
 
-            // Check if the current email is the default logged-in user email
-            $isDefaultEmail = ($this->email === ($this->user?->email ?? ''));
-
             // Fallback metadata updates (only if currently empty or default, to prioritize manual input)
             if ((empty($this->authors) || $isDefaultAuthor) && !empty($results['detected_authors']) && is_array($results['detected_authors'])) {
                 $updates['authors'] = $results['detected_authors'];
-            }
-            if ((empty($this->email) || $isDefaultEmail) && !empty($results['detected_email'])) {
-                $updates['email'] = $results['detected_email'];
             }
 
             // Fallback to user details if both automated and manual input are empty

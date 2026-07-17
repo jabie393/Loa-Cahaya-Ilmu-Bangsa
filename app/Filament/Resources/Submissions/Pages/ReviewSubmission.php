@@ -182,7 +182,12 @@ class ReviewSubmission extends Page
                     ->icon('heroicon-m-chat-bubble-left-right')
                     ->color('success')
                     ->url(fn() => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
-                    ->openUrlInNewTab(),
+                    ->openUrlInNewTab()
+                    ->requiresConfirmation()
+                    ->modalHeading('Konfirmasi LOA ke Admin')
+                    ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
+                    ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
+                    ->modalCancelActionLabel('Periksa Kembali'),
             ])
                 ->label('Actions')
                 ->icon('heroicon-m-ellipsis-vertical')

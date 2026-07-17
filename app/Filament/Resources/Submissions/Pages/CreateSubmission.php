@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\View;
+use Filament\Notifications\Notification;
 
 use Livewire\Attributes\Url;
 
@@ -213,5 +214,23 @@ class CreateSubmission extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function getCreatedNotification(): ?Notification
+    {
+        $isManual = (bool) ($this->data['manual_metadata'] ?? false);
+
+        if (! $isManual) {
+            return Notification::make()
+                ->warning()
+                ->title('Pengajuan Berhasil Dikirim!')
+                ->body('Naskah Anda sedang diproses oleh sistem untuk ekstraksi otomatis. Harap tinjau kembali data Anda (Judul, Abstrak, Penulis) di tabel sebelum melakukan Konfirmasi LOA ke Admin!')
+                ->persistent();
+        }
+
+        return Notification::make()
+            ->success()
+            ->title('Pengajuan Berhasil Dikirim!')
+            ->body('Data pengajuan Anda telah berhasil disimpan.');
     }
 }
