@@ -371,7 +371,8 @@ class SubmissionsTable
                         ->color('primary')
                         ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record])),
                     EditAction::make()
-                        ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission'),
+                        ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
+                        ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
                     Action::make('Konfirmasi LOA ke Admin')
                         ->label('Konfirmasi LOA ke Admin')
                         ->icon('heroicon-o-chat-bubble-left-right')
