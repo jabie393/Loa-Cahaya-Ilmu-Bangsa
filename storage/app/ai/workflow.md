@@ -302,21 +302,20 @@ Pembuatan submission menggunakan sistem Wizard 2 langkah:
 
 ## Langkah 1 — Form LOA
 
-Pengguna melengkapi data pengajuan dan berkas dalam satu langkah gabungan:
-- **Jurnal Target**: Memilih jurnal yang dituju (kolom ini diletakkan paling atas).
-- **Isi Metadata Secara Manual (Toggle)**: Secara default dinonaktifkan.
-  * Jika dinonaktifkan: Kolom Penulis, Judul, Abstrak, Keywords, dan Referensi disembunyikan. AI Gemini akan mengekstrak data tersebut secara otomatis dari PDF setelah disubmit.
-  * Jika diaktifkan: Penulis dapat mengisi daftar penulis, judul, abstrak, kata kunci, dan referensi secara manual.
-- **Email**: Email korespondensi utama (selalu tampil dan wajib diisi).
-- **File Naskah**: Mengunggah berkas naskah (hanya diperbolehkan format **.pdf**, maksimal 20 MB).
-- **Pembayaran**: Mengunggah bukti pembayaran LOA.
+Pengguna melengkapi data pengajuan dan berkas secara berurutan dalam satu kolom layout lurus ke bawah:
+1. **Jurnal Target**: Memilih jurnal yang dituju.
+2. **File Naskah PDF yang telah disesuaikan Template**: Mengunggah berkas naskah (.pdf, maksimal 20 MB).
+3. **Bukti Pembayaran & QRIS**: Mengunggah bukti pembayaran LOA dan melihat QRIS pembayaran.
+4. **Email Korespondensi (Penerima LOA)**: Email korespondensi utama yang wajib diisi.
+
+Seluruh metadata naskah lainnya (Nama Penulis, Judul, Abstrak, Kata Kunci, Referensi) tidak diisi manual di form, melainkan otomatis akan diekstrak secara mandiri oleh sistem dari berkas PDF setelah disubmit.
 
 ---
 
 ## Langkah 2 — Konfirmasi
 
 Pengguna meninjau ringkasan data sebelum dikirim.
-- Jika pengguna memilih menyembunyikan metadata (menggunakan deteksi AI otomatis), kolom ringkasan Nama Penulis, Judul, Keywords, Abstract, dan Referensi akan menampilkan placeholder miring: `(Akan diekstrak setelah submit)`.
+- Kolom ringkasan Nama Penulis, Judul, Keywords, Abstract, dan Referensi akan menampilkan placeholder miring: `(Akan diekstrak setelah submit)`.
 - Centang kotak persetujuan (agreement) lalu klik tombol **"Submit"**.
 
 ---

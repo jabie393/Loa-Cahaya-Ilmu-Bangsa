@@ -39,6 +39,7 @@ class ReviewSubmission extends Page
                 ->outlined(fn() => $this->record->status === 'Rejected')
                 ->icon(fn() => $this->record->status === 'Rejected' ? 'heroicon-m-arrow-uturn-left' : 'heroicon-m-check-circle')
                 ->size('sm')
+                ->disabled(fn() => $this->record->review_status === 'processing' || empty($this->record->title))
                 ->modalSubmitAction(
                     fn(Action $action) => $action
                         ->color($this->record->status === 'Rejected' ? 'warning' : 'success')
@@ -161,7 +162,7 @@ class ReviewSubmission extends Page
                 EditAction::make()
                     ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square')
-                    ->visible(fn() => $this->record->review_status !== 'processing'),
+                    ->disabled(fn() => $this->record->review_status === 'processing'),
                 Action::make('request_review_again')
                     ->label('Minta Review Lagi')
                     ->icon('heroicon-m-arrow-path')

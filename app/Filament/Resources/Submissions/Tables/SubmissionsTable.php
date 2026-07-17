@@ -317,6 +317,7 @@ class SubmissionsTable
                         ->color('success')
                         ->requiresConfirmation()
                         ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
+                        ->disabled(fn(Submission $record) => $record->review_status === 'processing' || empty($record->title))
                         ->action(function (Submission $record) {
                             if ($record->proof_of_payment) {
                                 Storage::disk('public')->delete($record->proof_of_payment);
@@ -372,7 +373,7 @@ class SubmissionsTable
                         ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record])),
                     EditAction::make()
                         ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
-                        ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
+                        ->disabled(fn(Submission $record) => $record->review_status === 'processing'),
                     Action::make('Konfirmasi LOA ke Admin')
                         ->label('Konfirmasi LOA ke Admin')
                         ->icon('heroicon-o-chat-bubble-left-right')
@@ -450,8 +451,13 @@ class SubmissionsTable
                         ->requiresConfirmation(false)
                         ->action(function (Collection $records) {
                             $count = 0;
-                            $records->each(function (Submission $record) use (&$count) {
+                            $skipped = 0;
+                            $records->each(function (Submission $record) use (&$count, &$skipped) {
                                 if ($record->status !== 'Approved') {
+                                    if ($record->review_status === 'processing' || empty($record->title)) {
+                                        $skipped++;
+                                        return;
+                                    }
                                     if ($record->proof_of_payment) {
                                         Storage::disk('public')->delete($record->proof_of_payment);
                                     }
@@ -481,6 +487,14 @@ class SubmissionsTable
                                 Notification::make()
                                     ->title($count . ' submissions approved successfully')
                                     ->success()
+                                    ->send();
+                            }
+
+                            if ($skipped > 0) {
+                                Notification::make()
+                                    ->title($skipped . ' submissions skipped')
+                                    ->body('Beberapa naskah dilewati karena masih dalam proses ekstraksi atau judul naskah kosong.')
+                                    ->warning()
                                     ->send();
                             }
                         })
