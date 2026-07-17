@@ -38,7 +38,8 @@ class GeminiReviewService implements AiReviewContract
             throw new Exception("API Key Gemini belum diatur.");
         }
 
-        $prompt = $this->buildPrompt($text);
+        $isExternal = method_exists($record, 'isExternal') && $record->isExternal();
+        $prompt = $this->buildPrompt($text, $isExternal);
 
         $payload = [
             'contents' => [
@@ -119,13 +120,50 @@ class GeminiReviewService implements AiReviewContract
     /**
      * Build the structured prompt for Gemini.
      */
-    protected function buildPrompt(string $text): string
+    protected function buildPrompt(string $text, bool $isExternal = false): string
     {
         // Limit text length to avoid token limits (approx 75k chars is ~12k words, more than enough for standard journal paper)
         $text = mb_substr($text, 0, 75000, 'UTF-8');
 
+        if ($isExternal) {
+            return 'Anda adalah asisten AI dari \'Cahaya Ilmu Bangsa\'.
+            Tugas Anda adalah mengekstrak metadata dari naskah jurnal ilmiah yang diunggah berikut secara akurat.
+            Gunakan Bahasa Indonesia yang formal dan profesional.
+
+            PENTING: Anda harus mengembalikan hasil dalam format JSON murni dengan struktur kunci berikut:
+            {
+                "structure_review": null,
+                "abstract_review": null,
+                "introduction_review": null,
+                "method_review": null,
+                "results_review": null,
+                "conclusion_review": null,
+                "bibliography_review": null,
+                "general_suggestions": null,
+                "detected_title": "... (Judul artikel ilmiah lengkap, biasanya di baris atas)",
+                "detected_abstract": "... (Teks abstrak lengkap)",
+                "detected_keywords": "... (Kata kunci, pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
+                "detected_references": "... (Daftar pustaka/referensi yang ditemukan, pisahkan per baris)",
+                "detected_authors": [
+                    { "name": "... (Nama Lengkap Penulis 1, sesuaikan EYD, hilangkan gelar akademik)", "institution": "... (Afiliasi/Instansi Penulis 1, jangan disingkat)" }
+                ],
+                "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)"
+            }
+
+            ATURAN SINTAKS JSON:
+            1. Jangan menyertakan tanda petik ganda (") di dalam nilai teks JSON kecuali telah di-escape dengan backslash (\").
+            2. Jangan menyertakan karakter kontrol seperti baris baru langsung. Gunakan \n untuk baris baru.
+            3. Pastikan format JSON benar-benar valid secara sintaksis dan lengkap (tidak terpotong).
+            4. Kolom-kolom review (structure_review, abstract_review, dll) HARUS diisi null.
+
+            Isi jurnal untuk diekstrak:
+            ---
+            ' . $text . '
+            ---';
+        }
+
         return 'Anda adalah seorang reviewer jurnal profesional senior dari \'Cahaya Ilmu Bangsa\'. 
-        Tugas Anda adalah memberikan review \'Pra-OJS\' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi.
+        Tugas Anda adalah memberikan review \'Pra-OJS\' (tahap awal sebelum masuk sistem OJS) yang ramah namun berstandar tinggi, sekaligus mengekstrak metadata artikel.
         Berikan review singkat dan poin-poin yang jelas untuk setiap bagian berikut.
         Gunakan Bahasa Indonesia yang formal dan profesional.
         
@@ -139,10 +177,14 @@ class GeminiReviewService implements AiReviewContract
             "conclusion_review": "...",
             "bibliography_review": "...",
             "general_suggestions": "...",
-            "detected_title": "...",
-            "detected_abstract": "...",
-            "detected_keywords": "... (pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
-            "detected_references": "... (tuliskan daftar pustaka/referensi yang ditemukan, pisahkan per baris)"
+            "detected_title": "... (Judul artikel ilmiah lengkap, biasanya di baris atas)",
+            "detected_abstract": "... (Teks abstrak lengkap)",
+            "detected_keywords": "... (Kata kunci, pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
+            "detected_references": "... (Daftar pustaka/referensi yang ditemukan, pisahkan per baris)",
+            "detected_authors": [
+                { "name": "... (Nama Lengkap Penulis 1, sesuaikan EYD, hilangkan gelar akademik)", "institution": "... (Afiliasi/Instansi Penulis 1, jangan disingkat)" }
+            ],
+            "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)"
         }
 
         ATURAN SINTAKS JSON:
@@ -150,7 +192,7 @@ class GeminiReviewService implements AiReviewContract
         2. Jangan menyertakan karakter kontrol seperti baris baru langsung di dalam string JSON. Gunakan \n untuk baris baru.
         3. Pastikan format JSON benar-benar valid secara sintaksis dan lengkap (tidak terpotong).
 
-        Isi jurnal untuk di-review:
+        Isi jurnal untuk di-review & diekstrak:
         ---
         ' . $text . '
         ---';

@@ -143,35 +143,31 @@ class SubmissionForm
                             ->columnSpanFull()
                             ->label('Judul (Diisi Huruf Besar)')
                             ->placeholder('Judul Artikel Lengkap')
-                            ->required()
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         TagsInput::make('keywords')
                             ->label('Keywords')
                             ->separator(',')
-                            ->required()
                             ->placeholder('Tambah kata kunci')
                             ->helperText('Tekan enter untuk memisahkan')
                             ->columnSpanFull()
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         Textarea::make('abstract')
                             ->label('Abstract')
                             ->placeholder('Masukkan Abstrak')
-                            ->required()
                             ->columnSpanFull()
                             ->autosize()
                             ->maxLength(5000)
                             ->rules(['string'])
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                         Textarea::make('references')
                             ->label('Referensi / Daftar Pustaka')
                             ->placeholder('Masukkan daftar pustaka')
-                            ->required()
                             ->columnSpanFull()
                             ->rows(6)
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && in_array($record?->status, ['Approved', 'Pending'])),
 
                          TextInput::make('publication_link')
                             ->label('Link Publikasi')

@@ -19,6 +19,12 @@ class Submission extends Model
             if (empty($submission->date_of_loa)) {
                 $submission->date_of_loa = now();
             }
+            if (empty($submission->author_name)) {
+                $submission->author_name = \Illuminate\Support\Facades\Auth::user()?->name ?? ($submission->user?->name ?? 'Author');
+            }
+            if (empty($submission->email)) {
+                $submission->email = \Illuminate\Support\Facades\Auth::user()?->email ?? ($submission->user?->email ?? '');
+            }
         });
 
         static::saving(function ($submission) {
@@ -190,14 +196,6 @@ class Submission extends Model
         $journal = $this->journal;
         $defaultUrl = config('ojs.base_url');
 
-        if ($journal && !empty($journal->ojs_base_url) && rtrim($journal->ojs_base_url, '/') !== rtrim($defaultUrl, '/')) {
-            $this->update([
-                'review_status' => 'skipped',
-                'status' => 'Pending',
-            ]);
-            return;
-        }
-
         $this->update(['review_status' => 'processing', 'review_error_message' => null]);
 
         try {
@@ -207,8 +205,11 @@ class Submission extends Model
             // Perform Review
             $results = $aiService->review($this);
 
+            $isExternal = $this->isExternal();
+            $reviewStatus = $isExternal ? 'N/A' : 'reviewed';
+
             // Update Record
-            $this->update([
+            $updates = [
                 'structure_review' => $results['structure_review'] ?? null,
                 'abstract_review' => $results['abstract_review'] ?? null,
                 'introduction_review' => $results['introduction_review'] ?? null,
@@ -217,26 +218,74 @@ class Submission extends Model
                 'conclusion_review' => $results['conclusion_review'] ?? null,
                 'bibliography_review' => $results['bibliography_review'] ?? null,
                 'general_suggestions' => $results['general_suggestions'] ?? null,
-                'review_status' => 'reviewed',
+                'review_status' => $reviewStatus,
                 'status' => 'Pending',
-            ]);
+            ];
 
-            // Send Email
-            \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\PreSubmissionReviewMail($this));
+            // Metadata updates from automated extraction (only if currently empty, to prioritize manual input)
+            if (empty($this->title) && !empty($results['detected_title'])) {
+                $updates['title'] = $results['detected_title'];
+            }
+            if (empty($this->abstract) && !empty($results['detected_abstract'])) {
+                $updates['abstract'] = $results['detected_abstract'];
+            }
+            if (empty($this->keywords) && !empty($results['detected_keywords'])) {
+                $updates['keywords'] = is_array($results['detected_keywords']) ? implode(', ', $results['detected_keywords']) : $results['detected_keywords'];
+            }
+            if (empty($this->references) && !empty($results['detected_references'])) {
+                $updates['references'] = $results['detected_references'];
+            }
 
-            $this->update(['review_email_sent_at' => now()]);
+            // Check if the current authors list is the default one (1 author, matching user name or empty, with empty institution)
+            $isDefaultAuthor = false;
+            if (is_array($this->authors) && count($this->authors) === 1) {
+                $firstAuthor = $this->authors[0];
+                $defaultName = $this->user?->name ?? '';
+                if (($firstAuthor['name'] === $defaultName || empty($firstAuthor['name'])) && empty($firstAuthor['institution'])) {
+                    $isDefaultAuthor = true;
+                }
+            }
+
+            // Check if the current email is the default logged-in user email
+            $isDefaultEmail = ($this->email === ($this->user?->email ?? ''));
+
+            // Fallback metadata updates (only if currently empty or default, to prioritize manual input)
+            if ((empty($this->authors) || $isDefaultAuthor) && !empty($results['detected_authors']) && is_array($results['detected_authors'])) {
+                $updates['authors'] = $results['detected_authors'];
+            }
+            if ((empty($this->email) || $isDefaultEmail) && !empty($results['detected_email'])) {
+                $updates['email'] = $results['detected_email'];
+            }
+
+            // Fallback to user details if both automated and manual input are empty
+            if (empty($this->authors) && empty($updates['authors'])) {
+                $updates['authors'] = [
+                    ['name' => $this->user?->name ?? 'Author', 'institution' => '']
+                ];
+            }
+            if (empty($this->email) && empty($updates['email'])) {
+                $updates['email'] = $this->user?->email;
+            }
+
+            $this->update($updates);
+
+            // Consume Quota
+            app(\App\Services\QuotaService::class)->consumeQuota($this->user);
+
+            // Send Pre-Submission Review Email (Only for internal journals)
+            if (!$isExternal) {
+                \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\PreSubmissionReviewMail($this));
+                $this->update(['review_email_sent_at' => now()]);
+            }
 
             if (!app()->runningInConsole()) {
                 \Filament\Notifications\Notification::make()
-                    ->title('Request Review Berhasil Terkirim')
-                    ->body('Review sedang berjalan di latar belakang.')
+                    ->title($isExternal ? 'Ekstraksi Metadata Berhasil' : 'Request Review Berhasil Terkirim')
                     ->success()
                     ->send();
             }
 
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('AI Review Error: ' . $e->getMessage());
-
+        } catch (\Exception $e) {
             $this->update([
                 'review_status' => 'failed',
                 'review_error_message' => $e->getMessage(),
@@ -256,19 +305,13 @@ class Submission extends Model
         }
     }
 
+    /**
+     * Trigger submission review process in the background.
+     *
+     * @return void
+     */
     public function processReviewInBackground(): void
     {
-        $journal = $this->journal;
-        $defaultUrl = config('ojs.base_url');
-
-        if ($journal && !empty($journal->ojs_base_url) && rtrim($journal->ojs_base_url, '/') !== rtrim($defaultUrl, '/')) {
-            $this->update([
-                'review_status' => 'skipped',
-                'status' => 'Pending',
-            ]);
-            return;
-        }
-
         $this->update([
             'review_status' => 'processing',
             'review_error_message' => null,
@@ -286,21 +329,24 @@ class Submission extends Model
         }
     }
 
-    public function sendApprovalEmail(): void
+    public function isExternal(): bool
     {
         $ojsUrl = $this->journal?->ojs_base_url;
-        $isExternal = false;
-        if (!empty($ojsUrl)) {
-            $host = parse_url($ojsUrl, PHP_URL_HOST);
-            if (empty($host)) {
-                $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
-            }
-            if (in_array($host, ['pjlsedu.com', 'ijefijournal.com'])) {
-                $isExternal = true;
-            }
+        if (empty($ojsUrl)) {
+            return false;
         }
 
-        if ($isExternal) {
+        $host = parse_url($ojsUrl, PHP_URL_HOST);
+        if (empty($host)) {
+            $host = str_replace(['https://', 'http://', '/'], '', $ojsUrl);
+        }
+
+        return in_array($host, ['pjlsedu.com', 'ijefijournal.com']);
+    }
+
+    public function sendApprovalEmail(): void
+    {
+        if ($this->isExternal()) {
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\ExternalSubmissionApproved($this));
         } else {
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\SubmissionApproved($this));

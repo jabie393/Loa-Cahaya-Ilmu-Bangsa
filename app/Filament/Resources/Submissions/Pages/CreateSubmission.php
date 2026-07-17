@@ -14,6 +14,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Components\Section;
@@ -54,34 +56,6 @@ class CreateSubmission extends CreateRecord
                                     Hidden::make('user_id')
                                         ->default(Auth::user()->id),
 
-                                    Repeater::make('authors')
-                                        ->label('Daftar Penulis & Instansi')
-                                        ->schema([
-                                            TextInput::make('name')
-                                                ->label('Nama Penulis (Sesuai EYD)')
-                                                ->required()
-                                                ->placeholder('Nama Lengkap'),
-                                            TextInput::make('institution')
-                                                ->label('Instansi (Jangan Disingkat)')
-                                                ->required()
-                                                ->placeholder('Nama Instansi / Kampus'),
-                                        ])
-                                        ->createItemButtonLabel('Tambah Penulis')
-                                        ->minItems(1)
-                                        ->columns(2)
-                                        ->columnSpanFull()
-                                        ->default([
-                                            ['name' => Auth::user()?->name ?? '', 'institution' => '']
-                                        ]),
-
-                                    TextInput::make('email')
-                                        ->label('Email (Digunakan untuk pengiriman LOA & laporan review)')
-                                        ->email()
-                                        ->required()
-                                        ->default(fn() => Auth::user()?->email)
-                                        ->placeholder('email@example.com')
-                                        ->columnSpanFull(),
-
                                     Select::make('journal_id')
                                         ->label('Jurnal Target')
                                         ->relationship(
@@ -107,36 +81,74 @@ class CreateSubmission extends CreateRecord
                                         ->columnSpanFull()
                                         ->required(),
 
+                                    Toggle::make('manual_metadata')
+                                        ->label('Isi Metadata Secara Manual')
+                                        ->helperText('Aktifkan jika Anda ingin mengisi Judul, Abstrak, Penulis, Kata Kunci, Referensi, dan Email secara manual. Jika dinonaktifkan, sistem akan mendeteksi dan mengisinya secara otomatis dari berkas PDF.')
+                                        ->default(false)
+                                        ->live()
+                                        ->columnSpanFull(),
+
+                                    Repeater::make('authors')
+                                        ->label('Daftar Penulis & Instansi')
+                                        ->schema([
+                                            TextInput::make('name')
+                                                ->label('Nama Penulis (Sesuai EYD)')
+                                                ->required(fn(Get $get) => (bool) $get('../../manual_metadata'))
+                                                ->placeholder('Nama Lengkap'),
+                                            TextInput::make('institution')
+                                                ->label('Instansi (Jangan Disingkat)')
+                                                ->required(fn(Get $get) => (bool) $get('../../manual_metadata'))
+                                                ->placeholder('Nama Instansi / Kampus'),
+                                        ])
+                                        ->createItemButtonLabel('Tambah Penulis')
+                                        ->minItems(1)
+                                        ->columns(2)
+                                        ->columnSpanFull()
+                                        ->default([
+                                            ['name' => Auth::user()?->name ?? '', 'institution' => '']
+                                        ])
+                                        ->visible(fn(Get $get) => (bool) $get('manual_metadata')),
+
+                                    TextInput::make('email')
+                                        ->label('Email (Digunakan untuk pengiriman LOA & laporan review)')
+                                        ->email()
+                                        ->required()
+                                        ->default(fn() => Auth::user()?->email)
+                                        ->placeholder('email@example.com')
+                                        ->columnSpanFull(),
+
                                     TextInput::make('title')
                                         ->columnSpanFull()
                                         ->label('Judul (Diisi Huruf Besar)')
                                         ->placeholder('Judul Artikel Lengkap')
-                                        ->required(),
+                                        ->required(fn(Get $get) => (bool) $get('manual_metadata'))
+                                        ->visible(fn(Get $get) => (bool) $get('manual_metadata')),
 
                                     TagsInput::make('keywords')
                                         ->label('Keywords')
                                         ->separator(',')
-                                        ->required()
                                         ->placeholder('Tambah kata kunci')
                                         ->helperText('Tekan enter untuk memisahkan')
-                                        ->columnSpanFull(),
+                                        ->columnSpanFull()
+                                        ->visible(fn(Get $get) => (bool) $get('manual_metadata')),
 
                                     Textarea::make('abstract')
                                         ->label('Abstract')
                                         ->placeholder('Masukkan Abstrak')
-                                        ->required()
                                         ->columnSpanFull()
                                         ->autosize()
                                         ->maxLength(5000)
-                                        ->rules(['string']),
+                                        ->rules(['string'])
+                                        ->required(fn(Get $get) => (bool) $get('manual_metadata'))
+                                        ->visible(fn(Get $get) => (bool) $get('manual_metadata')),
 
                                     Textarea::make('references')
                                         ->label('Referensi / Daftar Pustaka')
                                         ->placeholder('Masukkan daftar pustaka')
-                                        ->required()
                                         ->columnSpanFull()
-                                        ->rows(6),
-                                ])->columns(2),
+                                        ->rows(6)
+                                        ->visible(fn(Get $get) => (bool) $get('manual_metadata')),
+                                 ])->columns(2),
 
                             Group::make([
                                 Section::make('File Naskah')

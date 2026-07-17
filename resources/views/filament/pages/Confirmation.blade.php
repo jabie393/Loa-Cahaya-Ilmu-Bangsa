@@ -20,33 +20,39 @@
                 <div class="flex flex-col">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Nama
                         Penulis</span>
-                    @php
-                        $authors = $get('authors');
-                        $authorNamesString = '';
-                        if (is_array($authors) && !empty($authors)) {
-                            $names = [];
-                            foreach ($authors as $auth) {
-                                $name = $auth['name'] ?? '';
-                                $inst = $auth['institution'] ?? '';
-                                if (!empty($name)) {
-                                    $names[] = $name . (!empty($inst) ? " ({$inst})" : "");
+                    @if (!$get('manual_metadata'))
+                        <span class="text-xs italic font-normal text-gray-400 dark:text-gray-500">
+                            (Akan diekstrak setelah submit)
+                        </span>
+                    @else
+                        @php
+                            $authors = $get('authors');
+                            $authorNamesString = '';
+                            if (is_array($authors) && !empty($authors)) {
+                                $names = [];
+                                foreach ($authors as $auth) {
+                                    $name = $auth['name'] ?? '';
+                                    $inst = $auth['institution'] ?? '';
+                                    if (!empty($name)) {
+                                        $names[] = $name . (!empty($inst) ? " ({$inst})" : "");
+                                    }
+                                }
+                                $authorNamesString = implode(', ', $names);
+                            } else {
+                                $authorNames = $get('author_name');
+                                if (is_array($authorNames)) {
+                                    $authorNamesString = implode(', ', $authorNames);
+                                } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
+                                    $authorNamesString = $authorNames->implode(', ');
+                                } else {
+                                    $authorNamesString = (string) $authorNames;
                                 }
                             }
-                            $authorNamesString = implode(', ', $names);
-                        } else {
-                            $authorNames = $get('author_name');
-                            if (is_array($authorNames)) {
-                                $authorNamesString = implode(', ', $authorNames);
-                            } elseif ($authorNames instanceof \Illuminate\Support\Collection) {
-                                $authorNamesString = $authorNames->implode(', ');
-                            } else {
-                                $authorNamesString = (string) $authorNames;
-                            }
-                        }
-                    @endphp
-                    <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
-                        {{ $authorNamesString }}
-                    </span>
+                        @endphp
+                        <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
+                            {{ $authorNamesString }}
+                        </span>
+                    @endif
                 </div>
                 <div class="flex flex-col">
                     <span
@@ -57,8 +63,15 @@
                 <div class="flex flex-col">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Judul
                         Artikel</span>
-                    <span
-                        class="text-sm font-semibold text-gray-900 break-words dark:text-white">{{ $get('title') }}</span>
+                    @if (empty($get('title')) && !$get('manual_metadata'))
+                        <span class="text-xs italic font-normal text-gray-400 dark:text-gray-500">
+                            (Akan diekstrak setelah submit)
+                        </span>
+                    @else
+                        <span class="text-sm font-semibold text-gray-900 break-words dark:text-white">
+                            {{ $get('title') }}
+                        </span>
+                    @endif
                 </div>
                 <div class="flex flex-col">
                     <span
@@ -70,32 +83,54 @@
                 <div class="flex flex-col">
                     <span
                         class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Keywords</span>
-                    <span class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1">
-                        @php
-                            $keywords = $get('keywords');
-                            if (is_array($keywords)) {
-                                $keywords = implode(', ', $keywords);
-                            } elseif ($keywords instanceof \Illuminate\Support\Collection) {
-                                $keywords = $keywords->implode(', ');
-                            } else {
-                                $keywords = (string) $keywords;
-                            }
-                        @endphp
-                        {{ $keywords ?: '-' }}
-                    </span>
+                    @php
+                        $keywords = $get('keywords');
+                        if (is_array($keywords)) {
+                            $keywords = implode(', ', $keywords);
+                        } elseif ($keywords instanceof \Illuminate\Support\Collection) {
+                            $keywords = $keywords->implode(', ');
+                        } else {
+                            $keywords = (string) $keywords;
+                        }
+                    @endphp
+                    @if (empty($keywords) && !$get('manual_metadata'))
+                        <span class="text-xs italic font-normal text-gray-400 dark:text-gray-500 mt-1">
+                            (Akan diekstrak setelah submit)
+                        </span>
+                    @else
+                        <span class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1">
+                            {{ $keywords ?: '-' }}
+                        </span>
+                    @endif
                 </div>
                 <div class="flex flex-col">
                     <span
                         class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Abstract</span>
-                    <span
-                        class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $get('abstract') ?? '-' }}</span>
+                    @if (empty($get('abstract')) && !$get('manual_metadata'))
+                        <span class="text-xs italic font-normal text-gray-400 dark:text-gray-500 mt-1">
+                            (Akan diekstrak setelah submit)
+                        </span>
+                    @else
+                        <span
+                            class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1 whitespace-pre-line leading-relaxed">
+                            {{ $get('abstract') ?: '-' }}
+                        </span>
+                    @endif
                 </div>
                 <div class="flex flex-col">
                     <span
                         class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Referensi
                         / Daftar Pustaka</span>
-                    <span
-                        class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1 whitespace-pre-line leading-relaxed">{{ $get('references') ?? '-' }}</span>
+                    @if (empty($get('references')) && !$get('manual_metadata'))
+                        <span class="text-xs italic font-normal text-gray-400 dark:text-gray-500 mt-1">
+                            (Akan diekstrak setelah submit)
+                        </span>
+                    @else
+                        <span
+                            class="text-sm font-semibold text-gray-900 break-words dark:text-white mt-1 whitespace-pre-line leading-relaxed">
+                            {{ $get('references') ?: '-' }}
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -227,7 +262,7 @@
             <div class="rounded-lg border-l-4 border-amber-400 bg-amber-50 p-4 dark:bg-amber-900/20">
                 <p class="text-[11px] font-medium leading-relaxed text-amber-800 dark:text-amber-300">
                     <span class="mb-1 block font-bold italic underline">Pernyataan:</span>
-                    Dengan menekan tombol <strong>Create</strong>, saya menyatakan bahwa seluruh data di atas adalah
+                    Dengan menekan tombol <strong>Submit</strong>, saya menyatakan bahwa seluruh data di atas adalah
                     benar dan bukti pembayaran yang saya lampirkan adalah valid.
                 </p>
             </div>

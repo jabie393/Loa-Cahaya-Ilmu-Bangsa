@@ -303,10 +303,11 @@ Pembuatan submission menggunakan sistem Wizard 2 langkah:
 ## Langkah 1 — Form LOA
 
 Pengguna melengkapi data pengajuan dan berkas dalam satu langkah gabungan:
-- **Daftar Penulis & Instansi**: Mengisi nama penulis dan asal instansinya (dapat menambahkan beberapa penulis).
-- **Email**: Email untuk pengiriman LOA dan laporan review.
-- **Jurnal Target**: Memilih jurnal yang dituju.
-- **Judul, Keywords, Abstract, Referensi**: Melengkapi metadata artikel secara manual sesuai naskah.
+- **Jurnal Target**: Memilih jurnal yang dituju (kolom ini diletakkan paling atas).
+- **Isi Metadata Secara Manual (Toggle)**: Secara default dinonaktifkan.
+  * Jika dinonaktifkan: Kolom Penulis, Judul, Abstrak, Keywords, dan Referensi disembunyikan. AI Gemini akan mengekstrak data tersebut secara otomatis dari PDF setelah disubmit.
+  * Jika diaktifkan: Penulis dapat mengisi daftar penulis, judul, abstrak, kata kunci, dan referensi secara manual.
+- **Email**: Email korespondensi utama (selalu tampil dan wajib diisi).
 - **File Naskah**: Mengunggah berkas naskah (hanya diperbolehkan format **.pdf**, maksimal 20 MB).
 - **Pembayaran**: Mengunggah bukti pembayaran LOA.
 
@@ -314,33 +315,35 @@ Pengguna melengkapi data pengajuan dan berkas dalam satu langkah gabungan:
 
 ## Langkah 2 — Konfirmasi
 
-Pengguna:
-- Membaca syarat & ketentuan (agreement).
-- Centang kotak persetujuan untuk menyatakan keaslian naskah dan validitas pembayaran.
-- Menekan tombol **"Create"** untuk mengirim pengajuan.
+Pengguna meninjau ringkasan data sebelum dikirim.
+- Jika pengguna memilih menyembunyikan metadata (menggunakan deteksi AI otomatis), kolom ringkasan Nama Penulis, Judul, Keywords, Abstract, dan Referensi akan menampilkan placeholder miring: `(Akan diekstrak setelah submit)`.
+- Centang kotak persetujuan (agreement) lalu klik tombol **"Submit"**.
 
 ---
 
 # I. PROSES SETELAH SUBMISSION LOA DIBUAT
 
-Setelah tombol "Create" ditekan, alur sistematis berjalan di latar belakang:
+Setelah tombol "Submit" ditekan, alur sistematis berjalan di latar belakang:
 
 1. **Status Draf Awal (`Draft`)**:
    * Status pengajuan diset secara default menjadi `'Draft'`.
    * Pada tahap ini, pengajuan **tidak akan terlihat di dashboard Admin** (kecuali draf tersebut dibuat oleh Admin itu sendiri) untuk menjaga kebersihan antrean admin dari pengajuan yang belum siap.
 
-2. **Proses Review**:
-   * Sistem otomatis memicu proses review naskah oleh Tim Reviewer di latar belakang.
-   * Tim Reviewer menganalisis struktur, abstrak, pendahuluan, metode, hasil, kesimpulan, dan daftar pustaka naskah.
+2. **Proses Ekstraksi & Review Otomatis (1 Call)**:
+   * Sistem otomatis memicu proses di latar belakang.
+   * **Jurnal Internal**: Sistem mengekstrak metadata (Penulis, Judul, Abstrak, Keywords, Referensi) dari PDF sekaligus memberikan umpan balik review naskah (IMRaD). Status review diset `'reviewed'`.
+   * **Jurnal Eksternal** (seperti `pjlsedu.com`, `ijefijournal.com`): Sistem hanya melakukan ekstraksi metadata saja demi hemat token. Analisis review dilewati, dan status review diset `'N/A'`.
+   * **Aturan Overwrite:** Sistem hanya akan mengisi kolom metadata di database jika kolom tersebut kosong atau bernilai default. Jika sebelumnya diisi manual oleh penulis (Toggle aktif), sistem tidak akan menimpanya.
+   * **Fallback:** Jika sistem gagal mengekstrak email/penulis, sistem secara otomatis akan menggunakan nama dan email akun login sebagai cadangan terakhir.
 
-3. **Pengiriman Laporan & Transisi Status (`Pending`)**:
-   * Begitu review sukses selesai dan email laporan review terkirim ke penulis, sistem otomatis mengubah status pengajuan menjadi `'Pending'`.
-   * Setelah berstatus `'Pending'`, pengajuan akan otomatis muncul di antrean Super Admin agar Admin dapat meninjau bukti pembayaran dan menyetujuinya (`Approved`).
+3. **Transisi Status (`Pending`)**:
+   * Begitu proses sukses selesai, status LOA otomatis berubah menjadi `'Pending'`.
+   * Untuk Jurnal Internal, email laporan review dikirim otomatis ke penulis. Jurnal Eksternal tidak mengirim email review.
+   * Pengajuan kini muncul di antrean Super Admin agar bukti pembayaran ditinjau dan disetujui (`Approved`).
    * Jika review gagal, status review akan diubah menjadi `failed`, dan admin/penulis dapat menekan tombol **"Minta Review Lagi"** untuk memicu proses ulang.
 
 4. **Persetujuan & Sinkronisasi OJS (`Approved`)**:
-   * Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal.
-   * Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
+   * Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal di background. Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
 
 ---
 
@@ -381,16 +384,13 @@ Setelah revisi disimpan, data terbaru akan diperbarui di database sistem.
 # L. SUBMISSION DISETUJUI
 
 Jika submission disetujui:
-
-- pengguna menerima email notifikasi persetujuan resmi (bersih tanpa logo, dalam Bahasa Inggris penuh khusus untuk Pakistan/IJEFI)
-- status menjadi approved
-- naskah otomatis langsung diterbitkan (auto-approve) ke OJS melalui website LOA
-
-Pengguna dapat mengunduh:
-
-- LOA (Letter of Acceptance)
-- Sertifikat Author (AC) (Khusus Jurnal Nasional)
-- Sertifikat Bebas Plagiasi (PFC) (Khusus Jurnal Nasional)
+- Status LOA menjadi `Approved` dan status OJS masuk antrean sinkronisasi background.
+- **Pengiriman Email LOA Ditunda (Delayed Email):** Email LOA (Internal/Eksternal) **tidak lagi dikirim saat Admin mengklik Approve**. Email baru dikirim setelah sistem berhasil mempublikasikan artikel di OJS (status OJS berubah menjadi `'submitted'`).
+- Hal ini menjamin bahwa informasi **Volume, Nomor, Tahun,** dan **Tautan (Link) Publikasi** yang diperoleh dari OJS sudah terisi lengkap di dalam email LOA yang diterima penulis.
+- Pengguna dapat mengunduh:
+  * LOA (Letter of Acceptance)
+  * Sertifikat Author (AC) (Khusus Jurnal Nasional)
+  * Sertifikat Bebas Plagiasi (PFC) (Khusus Jurnal Nasional)
 
 ---
 
@@ -484,5 +484,5 @@ Sistem navigasi sidebar dirancang secara terstruktur dengan urutan bernomor untu
 _Menu ini dikelompokkan dalam kategori **Settings** di bagian bawah sidebar:_
 
 1. **Journal List** (Urutan `1`): Manajemen data jurnal-jurnal yang terbit di bawah naungan CIB Institute.
-2. **Chatbot Faqs** (Urutan `2`): Pengaturan data pertanyaan dan jawaban (FAQ) untuk asisten chatbot AI.
+2. **Chatbot Faqs** (Urutan `2`): Pengaturan data pertanyaan dan jawaban (FAQ) untuk asisten chatbot.
 3. **Users** (Urutan `3`): Manajemen akun pengguna, hak akses (roles), serta kuota cek plagiat harian.

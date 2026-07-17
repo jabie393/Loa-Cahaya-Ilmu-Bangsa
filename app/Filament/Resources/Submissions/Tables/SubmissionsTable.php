@@ -339,8 +339,6 @@ class SubmissionsTable
                             }
                             $record->update($updateData);
 
-                            $record->sendApprovalEmail();
-
                             Notification::make()
                                 ->title('Submission approved successfully')
                                 ->success()
@@ -469,7 +467,6 @@ class SubmissionsTable
                                     }
                                     $record->update($updateData);
 
-                                    $record->sendApprovalEmail();
                                     $count++;
                                 }
                             });

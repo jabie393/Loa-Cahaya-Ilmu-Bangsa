@@ -166,6 +166,13 @@ class OjsSubmissionService
                 'ojs_password' => $ojsPassword,
             ]);
 
+            // Trigger Email sending now that it's successfully pushed/published on OJS
+            try {
+                $submission->sendApprovalEmail();
+            } catch (\Throwable $mailError) {
+                Log::error("Failed to send approval email after OJS sync for submission ID: {$submission->id}. Error: {$mailError->getMessage()}");
+            }
+
             Log::info("OJS integration succeeded for submission ID: {$submission->id}. OJS Submission ID: {$ojsSubmissionId}");
 
             return [
