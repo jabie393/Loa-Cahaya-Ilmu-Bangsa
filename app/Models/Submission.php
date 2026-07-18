@@ -263,8 +263,7 @@ class Submission extends Model
 
             $this->update($updates);
 
-            // Consume Quota
-            app(\App\Services\QuotaService::class)->consumeQuota($this->user);
+
 
             // Send Pre-Submission Review Email (Only for internal journals)
             if (!$isExternal) {
