@@ -122,8 +122,8 @@ class GeminiReviewService implements AiReviewContract
      */
     protected function buildPrompt(string $text, bool $isExternal = false): string
     {
-        // Limit text length to avoid token limits (approx 75k chars is ~12k words, more than enough for standard journal paper)
-        $text = mb_substr($text, 0, 75000, 'UTF-8');
+        // Limit text length to avoid token limits (approx 150k chars is more than enough for a full 20-30 page journal paper, ensuring the references section at the end is not truncated)
+        $text = mb_substr($text, 0, 150000, 'UTF-8');
 
         if ($isExternal) {
             return 'Anda adalah asisten AI dari \'Cahaya Ilmu Bangsa\'.
@@ -143,11 +143,11 @@ class GeminiReviewService implements AiReviewContract
                 "detected_title": "... (Judul artikel ilmiah lengkap, biasanya di baris atas)",
                 "detected_abstract": "... (Teks abstrak lengkap)",
                 "detected_keywords": "... (Kata kunci, pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
-                "detected_references": "... (Daftar pustaka/referensi yang ditemukan, pisahkan per baris)",
+                "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)",
                 "detected_authors": [
                     { "name": "... (Nama Lengkap Penulis 1, sesuaikan EYD, hilangkan gelar akademik)", "institution": "... (Afiliasi/Instansi Penulis 1, jangan disingkat)" }
                 ],
-                "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)"
+                "detected_references": "... (Daftar pustaka/referensi formal yang tercantum di bagian akhir naskah/daftar pustaka, ambil maksimal 20 entri pertama saja untuk mencegah kegagalan pemrosesan akibat batas panjang karakter, pisahkan per baris. PENTING: JANGAN mengekstrak kutipan di dalam paragraf seperti \'Kotler (2022)\' atau \'Putri et al. (2025)\')"
             }
 
             ATURAN SINTAKS JSON:
@@ -180,11 +180,11 @@ class GeminiReviewService implements AiReviewContract
             "detected_title": "... (Judul artikel ilmiah lengkap, biasanya di baris atas)",
             "detected_abstract": "... (Teks abstrak lengkap)",
             "detected_keywords": "... (Kata kunci, pisahkan dengan koma, contoh: pendidikan, teknologi, pembelajaran)",
-            "detected_references": "... (Daftar pustaka/referensi yang ditemukan, pisahkan per baris)",
+            "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)",
             "detected_authors": [
                 { "name": "... (Nama Lengkap Penulis 1, sesuaikan EYD, hilangkan gelar akademik)", "institution": "... (Afiliasi/Instansi Penulis 1, jangan disingkat)" }
             ],
-            "detected_email": "... (Email korespondensi utama yang ditemukan di naskah)"
+            "detected_references": "... (Daftar pustaka/referensi formal yang tercantum di bagian akhir naskah/daftar pustaka, ambil maksimal 20 entri pertama saja untuk mencegah kegagalan pemrosesan akibat batas panjang karakter, pisahkan per baris. PENTING: JANGAN mengekstrak kutipan di dalam paragraf seperti \'Kotler (2022)\' atau \'Putri et al. (2025)\')"
         }
 
         ATURAN SINTAKS JSON:
