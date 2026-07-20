@@ -41,6 +41,52 @@ class GeminiReviewService implements AiReviewContract
         $isExternal = method_exists($record, 'isExternal') && $record->isExternal();
         $prompt = $this->buildPrompt($text, $isExternal);
 
+        $schema = [
+            'type' => 'OBJECT',
+            'properties' => [
+                'structure_review' => ['type' => 'STRING', 'nullable' => true],
+                'abstract_review' => ['type' => 'STRING', 'nullable' => true],
+                'introduction_review' => ['type' => 'STRING', 'nullable' => true],
+                'method_review' => ['type' => 'STRING', 'nullable' => true],
+                'results_review' => ['type' => 'STRING', 'nullable' => true],
+                'conclusion_review' => ['type' => 'STRING', 'nullable' => true],
+                'bibliography_review' => ['type' => 'STRING', 'nullable' => true],
+                'general_suggestions' => ['type' => 'STRING', 'nullable' => true],
+                'detected_title' => ['type' => 'STRING', 'nullable' => true],
+                'detected_abstract' => ['type' => 'STRING', 'nullable' => true],
+                'detected_keywords' => ['type' => 'STRING', 'nullable' => true],
+                'detected_email' => ['type' => 'STRING', 'nullable' => true],
+                'detected_authors' => [
+                    'type' => 'ARRAY',
+                    'items' => [
+                        'type' => 'OBJECT',
+                        'properties' => [
+                            'name' => ['type' => 'STRING'],
+                            'institution' => ['type' => 'STRING'],
+                        ],
+                        'required' => ['name', 'institution'],
+                    ]
+                ],
+                'detected_references' => ['type' => 'STRING', 'nullable' => true],
+            ],
+            'required' => [
+                'structure_review',
+                'abstract_review',
+                'introduction_review',
+                'method_review',
+                'results_review',
+                'conclusion_review',
+                'bibliography_review',
+                'general_suggestions',
+                'detected_title',
+                'detected_abstract',
+                'detected_keywords',
+                'detected_email',
+                'detected_authors',
+                'detected_references',
+            ],
+        ];
+
         $payload = [
             'contents' => [
                 [
@@ -51,6 +97,7 @@ class GeminiReviewService implements AiReviewContract
             ],
             'generationConfig' => [
                 'responseMimeType' => 'application/json',
+                'responseSchema' => $schema,
                 'maxOutputTokens' => 8192,
             ]
         ];
