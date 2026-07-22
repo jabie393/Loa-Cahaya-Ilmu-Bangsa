@@ -54,6 +54,13 @@ class AppServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             'panels::body.end',
             fn () => view('components.welcome-modal'),
+            \App\Filament\Pages\Journal::class
+        );
+
+        FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn () => view('components.template-warning-modal'),
+            \App\Filament\Resources\Submissions\Pages\CreateSubmission::class
         );
 
         if ($this->app->environment('production')) {

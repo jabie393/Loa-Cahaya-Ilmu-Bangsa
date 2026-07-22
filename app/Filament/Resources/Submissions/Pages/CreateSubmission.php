@@ -22,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\View;
+use Closure;
 use Filament\Notifications\Notification;
 
 use Livewire\Attributes\Url;
@@ -91,7 +92,88 @@ class CreateSubmission extends CreateRecord
                             ->disk('public')
                             ->directory('manuscripts')
                             ->downloadable()
-                            ->preserveFilenames(),
+                            ->preserveFilenames()
+                            ->rules([
+                                function ($get) {
+                                    return function (string $attribute, $value, Closure $fail) use ($get) {
+                                        $journalId = $get('journal_id');
+                                        if (!$journalId) {
+                                            return;
+                                        }
+
+                                        $journal = \App\Models\Journal::find($journalId);
+                                        if (!$journal) {
+                                            return;
+                                        }
+
+                                        $filePath = null;
+                                        if (is_object($value) && method_exists($value, 'getRealPath')) {
+                                            $filePath = $value->getRealPath();
+                                        } elseif (is_string($value)) {
+                                            $filePath = storage_path('app/public/' . $value);
+                                            if (!file_exists($filePath)) {
+                                                $filePath = \Illuminate\Support\Facades\Storage::path($value);
+                                            }
+                                        }
+
+                                        if (!$filePath || !file_exists($filePath)) {
+                                            $fail('Berkas naskah tidak ditemukan.');
+                                            return;
+                                        }
+
+                                        try {
+                                            $parser = new \Smalot\PdfParser\Parser();
+                                            $pdf = $parser->parseFile($filePath);
+                                            $pages = $pdf->getPages();
+                                            if (empty($pages)) {
+                                                $fail('Berkas PDF kosong atau rusak.');
+                                                return;
+                                            }
+
+                                            $firstPageText = $pages[0]->getText();
+                                            if (empty($firstPageText)) {
+                                                $fail('Teks naskah tidak dapat terbaca. Pastikan Anda mengunggah naskah digital (bukan hasil scan/foto) yang disalin ke template.');
+                                                return;
+                                            }
+
+                                            $text = strtolower($firstPageText);
+                                            $slug = strtolower($journal->slug);
+                                            $name = strtolower($journal->name);
+
+                                            $nameParts = explode(':', $journal->name);
+                                            $firstWord = strtolower(trim($nameParts[0]));
+
+                                            // 1. Pengecekan berbasis database identifier (Semua keyword harus ada / AND Logic)
+                                            if (!empty($journal->identifier)) {
+                                                $dbKeywords = array_map('trim', explode(',', $journal->identifier));
+                                                $missingKeywords = [];
+                                                
+                                                foreach ($dbKeywords as $kw) {
+                                                    if (!empty($kw) && !str_contains($text, strtolower($kw))) {
+                                                        $missingKeywords[] = $kw;
+                                                    }
+                                                }
+                                                
+                                                if (!empty($missingKeywords)) {
+                                                    $fail("Pastikan naskah artikel disesuaikan dengan template {$journal->name} yang sudah disediakan");
+                                                }
+                                            } else {
+                                                // 2. Fallback jika identifier di database kosong (Cukup salah satu / OR Logic)
+                                                $found = false;
+                                                if (str_contains($text, $slug)) $found = true;
+                                                if (str_contains($text, $name)) $found = true;
+                                                if (str_contains($text, $firstWord)) $found = true;
+                                                
+                                                if (!$found) {
+                                                    $fail("Pastikan naskah artikel disesuaikan dengan template {$journal->name} yang sudah disediakan");
+                                                }
+                                            }
+                                        } catch (\Exception $e) {
+                                            $fail('Gagal memeriksa format template naskah: ' . $e->getMessage());
+                                        }
+                                    };
+                                }
+                            ]),
 
                         FileUpload::make('proof_of_payment')
                             ->label('Upload Bukti Pembayaran')

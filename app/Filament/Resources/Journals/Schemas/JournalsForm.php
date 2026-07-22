@@ -18,6 +18,10 @@ class JournalsForm
                 TextInput::make('slug')
                     ->label('Slug')
                     ->required(),
+                TextInput::make('identifier')
+                    ->label('Template Identifier')
+                    ->helperText('Masukkan kata/frasa kunci untuk memvalidasi naskah (misal: Argopuro). Jika menggunakan koma, seluruh kata kunci tersebut wajib ada di dalam naskah.')
+                    ->placeholder('Argopuro, Jurnal Multi Disiplin Ilmu Bahasa'),
                 TextInput::make('image')
                     ->label('Image')
                     ->required(),

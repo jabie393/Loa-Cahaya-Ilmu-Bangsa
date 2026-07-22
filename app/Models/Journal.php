@@ -13,6 +13,7 @@ class Journal extends Model
     protected $fillable = [
         'name',
         'slug',
+        'identifier',
         'image',
         'link',
         'template_link',

@@ -114,6 +114,12 @@ Tujuan:
 
 Hasil review naskah dikirim otomatis ke email pengguna setelah proses selesai, dan dapat dilihat pada halaman detail/view pengajuan.
 
+### Ketentuan Unggah File Naskah (Verifikasi Template):
+Saat melakukan pengajuan, penulis **wajib** mengunggah file naskah artikel yang format dan isinya telah disesuaikan sepenuhnya dengan template resmi jurnal target yang dipilih.
+* **Deteksi Otomatis:** Sistem secara otomatis memverifikasi kesesuaian berkas dengan template jurnal.
+* **Pencegahan File Salah/Scan:** Sistem akan menolak pengunggahan file yang tidak sesuai dengan template jurnal target atau file hasil scan/foto (harus berupa PDF digital asli).
+* **Pesan Peringatan:** Jika berkas ditolak, penulis akan diminta untuk menyesuaikan kembali artikel dengan template jurnal target sebelum diperbolehkan melakukan submit.
+
 ---
 
 # C. PEMILIHAN PAKET PUBLIKASI
