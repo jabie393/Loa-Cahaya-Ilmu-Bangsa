@@ -227,7 +227,7 @@ class SubmissionForm
                                  ->required(fn($record) => $record === null || $record->status === 'Pending'),
                              Placeholder::make('qris_image')
                                  ->label('QRIS Pembayaran')
-                                 ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '" alt="QRIS" class="w-full max-w-xs rounded-lg shadow-sm" style="max-height: 250px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Scan QRIS di atas untuk melakukan pembayaran</span></div>')),
+                                 ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '?v=' . (file_exists(public_path('assets/qris.jpg')) ? filemtime(public_path('assets/qris.jpg')) : time()) . '" alt="QRIS" class="w-full max-w-xs rounded-lg shadow-sm" style="max-height: 250px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Scan QRIS di atas untuk melakukan pembayaran</span></div>')),
                          ]),
                     Section::make('Status Pengajuan')
                         ->description('Status pemrosesan artikel Anda')
