@@ -9,6 +9,6 @@ class LogoutResponse implements LogoutResponseContract
 {
     public function toResponse($request): Response
     {
-        return redirect()->to('/');
+        return redirect()->to('/sso/logout?redirect=' . urlencode(url('/')));
     }
 }

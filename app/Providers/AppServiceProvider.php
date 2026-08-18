@@ -79,5 +79,10 @@ class AppServiceProvider extends ServiceProvider
             \Filament\Auth\Http\Responses\Contracts\LogoutResponse::class,
             \App\Http\Responses\LogoutResponse::class
         );
+
+        FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn () => view('components.sso-admin-check')
+        );
     }
 }

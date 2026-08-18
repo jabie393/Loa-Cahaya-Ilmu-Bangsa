@@ -175,6 +175,13 @@ class OjsSubmissionService
 
             Log::info("OJS integration succeeded for submission ID: {$submission->id}. OJS Submission ID: {$ojsSubmissionId}");
 
+            // Sync to Repository
+            try {
+                self::publishToRepository($submission);
+            } catch (\Throwable $repoError) {
+                Log::error("Failed to publish to Repository for submission ID: {$submission->id}. Error: {$repoError->getMessage()}");
+            }
+
             return [
                 'success' => true,
                 'message' => 'OJS submission created successfully',
@@ -193,6 +200,60 @@ class OjsSubmissionService
 
             throw $e;
         }
+    }
+
+    /**
+     * Publish article to Repository database via API.
+     *
+     * @param Submission $submission
+     * @return void
+     */
+    public static function publishToRepository(Submission $submission): void
+    {
+        $repoUrl = env('REPO_URL', 'http://localhost:8080');
+        $apiToken = env('REPO_API_TOKEN', 'cib_repo_api_token_2026');
+
+        $authorNames = [];
+        if (is_array($submission->authors)) {
+            foreach ($submission->authors as $author) {
+                if (!empty($author['name'])) {
+                    $authorNames[] = $author['name'];
+                }
+            }
+        }
+        if (empty($authorNames)) {
+            $authorNames = array_map('trim', explode(',', $submission->author_name ?: ''));
+        }
+        $authorNames = array_values(array_filter($authorNames));
+        if (empty($authorNames)) {
+            $authorNames = ['Author'];
+        }
+
+        $payload = [
+            'title' => $submission->title,
+            'abstract' => $submission->abstract ?: '',
+            'authors' => $authorNames,
+            'keywords' => $submission->keywords ?: '',
+            'journal_id' => (int) $submission->journal_id,
+            'doi' => $submission->doi,
+            'volume' => $submission->volume,
+            'issue' => $submission->issue ?? '',
+            'pages' => $submission->pages ?? '',
+            'published_date' => $submission->approved_date ? $submission->approved_date->format('Y-m-d') : now()->format('Y-m-d'),
+            'pdf_path' => $submission->manuscript_file,
+            'ojs_url' => $submission->publication_link,
+            'category' => $submission->journal?->name ?: 'Pendidikan',
+        ];
+
+        $response = \Illuminate\Support\Facades\Http::withToken($apiToken)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->post($repoUrl . '/api/v1/articles/publish', $payload);
+
+        if ($response->failed()) {
+            throw new \Exception("Repo API failed: " . $response->status() . " - " . $response->body());
+        }
+
+        \Illuminate\Support\Facades\Log::info("Successfully published submission ID: {$submission->id} to Repository.");
     }
 
     /**

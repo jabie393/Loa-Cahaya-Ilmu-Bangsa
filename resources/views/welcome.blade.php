@@ -94,12 +94,16 @@
             <div class="flex items-center gap-4">
                 @if (Route::has('login'))
                     <div class="flex items-center gap-4">
-                        @auth
+                        <!-- Auth Container -->
+                        <div id="sso-auth-container" style="display: {{ Auth::check() ? 'block' : 'none' }};">
                             <a href="/journal"
                                 class="bg-primary text-on-primary shadow-primary/20 font-headline scale-95 rounded-xl px-6 py-2.5 text-sm font-semibold shadow-lg transition-transform active:scale-90">
                                 Dashboard
                             </a>
-                        @else
+                        </div>
+
+                        <!-- Guest Container -->
+                        <div id="sso-guest-container" class="flex items-center gap-4" style="display: {{ Auth::check() ? 'none' : 'flex' }};">
                             <a href="/login"
                                 class="font-headline hover:text-primary text-sm font-bold text-slate-600 dark:text-slate-400">
                                 Log in
@@ -111,7 +115,7 @@
                                     Register
                                 </a>
                             @endif
-                        @endauth
+                        </div>
                     </div>
                 @endif
             </div>
@@ -332,4 +336,70 @@
     }
 </script>
 
+
+    <!-- SSO Iframe Check & Dynamic Auth Synchronization -->
+    <iframe id="sso-iframe" src="{{ env('REPO_URL', 'http://127.0.0.1:8001') }}/sso/iframe-check?origin={{ urlencode(url('/')) }}" style="display:none;"></iframe>
+
+    <script>
+        (function() {
+            let localUserLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            const repoUrl = "{{ env('REPO_URL', 'http://127.0.0.1:8001') }}";
+
+            window.addEventListener('message', function(event) {
+                if (!event.origin.startsWith(repoUrl)) return;
+
+                if (event.data && event.data.type === 'cib_sso_status') {
+                    const sso = event.data.data;
+
+                    const authContainer = document.getElementById('sso-auth-container');
+                    const guestContainer = document.getElementById('sso-guest-container');
+
+                    if (sso.logged_in && !localUserLoggedIn) {
+                        localUserLoggedIn = true;
+                        
+                        // Dynamically update UI immediately
+                        if (authContainer) authContainer.style.display = 'block';
+                        if (guestContainer) guestContainer.style.display = 'none';
+
+                        // Silent Auto-Login via AJAX
+                        fetch('/sso/callback-ajax', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify(sso)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                localUserLoggedIn = false;
+                                if (authContainer) authContainer.style.display = 'none';
+                                if (guestContainer) guestContainer.style.display = 'flex';
+                            }
+                        })
+                        .catch(() => {
+                            localUserLoggedIn = false;
+                            if (authContainer) authContainer.style.display = 'none';
+                            if (guestContainer) guestContainer.style.display = 'flex';
+                        });
+                    } 
+                }
+            });
+
+            // Helper to reload iframe check
+            function checkSso() {
+                const iframe = document.getElementById('sso-iframe');
+                if (iframe) {
+                    iframe.src = iframe.src;
+                }
+            }
+
+            // Check on tab focus/switch
+            window.addEventListener('focus', checkSso);
+
+            // Check periodically in background every 15 seconds
+            setInterval(checkSso, 15000);
+        })();
+    </script>
 </html>
