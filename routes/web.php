@@ -186,7 +186,7 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
             window.parent.postMessage({
                 type: 'cib_sso_status',
                 data: {$jsonData}
-            }, '{$origin}');
+            }, '*');
         </script>
         </body>
         </html>
