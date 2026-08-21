@@ -172,7 +172,13 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
 
     $jsonData = json_encode($data);
 
-    return response("
+    $targetUrl = env('REPO_URL', 'http://127.0.0.1:8001');
+    $targetHost = parse_url($targetUrl, PHP_URL_HOST);
+    $targetPort = parse_url($targetUrl, PHP_URL_PORT);
+    $portSuffix = $targetPort ? ':' . $targetPort : '';
+    $allowedOrigins = "http://" . $targetHost . $portSuffix . " https://" . $targetHost . $portSuffix;
+
+    return response($jsonData ? "
         <!DOCTYPE html>
         <html>
         <body>
@@ -180,13 +186,13 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
             window.parent.postMessage({
                 type: 'cib_sso_status',
                 data: {$jsonData}
-            }, '{$origin}');
+            }, '*');
         </script>
         </body>
         </html>
-    ")
+    " : "")
     ->header('Content-Type', 'text/html')
-    ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001")
+    ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001 " . $allowedOrigins)
     ->header('X-Frame-Options', 'ALLOWALL');
 })->name('sso.iframe-check');
 
@@ -247,3 +253,11 @@ Route::get('/sso/logout', function (\Illuminate\Http\Request $request) {
     $repoUrl = env('REPO_URL', 'http://127.0.0.1:8001');
     return redirect($repoUrl . '/sso/logout?sso=true&redirect=' . urlencode($redirect ?: 'http://127.0.0.1:8000'));
 })->name('sso.logout');
+
+
+// SSO Local Session Check Route
+Route::post('/sso/local-check', function () {
+    return response()->json([
+        'logged_in' => \Illuminate\Support\Facades\Auth::check()
+    ]);
+})->name('sso.local-check');
