@@ -196,7 +196,7 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
     ->header('X-Frame-Options', 'ALLOWALL');
 })->name('sso.iframe-check');
 
-
+ 
 // SSO AJAX Synchronization Routes (from Repository)
 Route::post('/sso/callback-ajax', function (\Illuminate\Http\Request $request) {
     $userId = $request->input('user_id');
