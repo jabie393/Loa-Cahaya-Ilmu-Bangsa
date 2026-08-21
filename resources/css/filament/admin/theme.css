@@ -22,15 +22,205 @@
 .fi-sidebar-item[data-subtitle] .fi-sidebar-item-label::after {
     content: "(Tidak Wajib)";
     display: block;
-    font-size: 0.6875rem; /* ~11px */
+    font-size: 0.6875rem;
+    /* ~11px */
     font-weight: 500;
-    color: #94a3b8; /* slate-400 */
+    color: #94a3b8;
+    /* slate-400 */
     margin-top: 0.0625rem;
 }
 
 /* Light mode overrides */
 :root:not(.dark) .fi-sidebar-item[data-subtitle] .fi-sidebar-item-label::after {
-    color: #64748b; /* slate-500 */
+    color: #64748b;
+    /* slate-500 */
 }
 
+/* Auth UI Enhancer - Dynamic Light & Dark Theme Variables */
+:root {
+    --auth-bg-page: #f1f5f9;
+    --auth-bg-card: #ffffff;
+    --auth-bg-input: #f8fafc;
+    --auth-border-input: #cbd5e1;
+    --auth-text-main: #0f172a;
+    --auth-text-sub: #64748b;
+    --auth-text-label: #334155;
+    --auth-input-placeholder: #94a3b8;
+    --auth-accent: #2563eb;
+    --auth-card-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    --auth-hero-gradient: linear-gradient(to right, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.15) 45%, rgba(255, 255, 255, 0.1) 70%, rgba(255, 255, 255, 0.5) 86%, rgba(255, 255, 255, 0.9) 96%, #ffffff 100%);
+}
 
+.dark,
+:root.dark,
+html.dark {
+    --auth-bg-page: #121318;
+    --auth-bg-card: #1e2028;
+    --auth-bg-input: #282b36;
+    --auth-border-input: rgba(255, 255, 255, 0.08);
+    --auth-text-main: #ffffff;
+    --auth-text-sub: #94a3b8;
+    --auth-text-label: #cbd5e1;
+    --auth-input-placeholder: #64748b;
+    --auth-accent: #3b82f6;
+    --auth-card-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --auth-hero-gradient: linear-gradient(to right, rgba(0, 0, 0, 0.3) 0%, rgba(30, 32, 40, 0.6) 60%, #1e2028 100%);
+}
+
+/* Page Outer Background Override */
+html:has(.custom-auth-wrapper),
+body:has(.custom-auth-wrapper),
+body:has(.custom-auth-wrapper) .fi-body,
+body:has(.custom-auth-wrapper) .fi-layout,
+body:has(.custom-auth-wrapper) main {
+    background-color: var(--auth-bg-page) !important;
+    background: var(--auth-bg-page) !important;
+    max-height: 100vh;
+}
+
+/* Floating Card Container */
+.custom-auth-wrapper {
+    background-color: var(--auth-bg-card) !important;
+    box-shadow: var(--auth-card-shadow) !important;
+    overflow: hidden !important;
+    margin: auto;
+}
+
+/* Form Panel */
+.custom-auth-form-panel {
+    background-color: var(--auth-bg-card) !important;
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.custom-auth-form-wrapper {
+    max-width: 400px !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Custom styling for Auth Card Container */
+.custom-auth-form-panel .fi-simple-main-ctn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Hide Top Brand Header ("LOA") above the Sign In Form */
+.custom-auth-form-panel .fi-simple-header > a,
+.custom-auth-form-panel .fi-simple-header .fi-logo {
+    display: none !important;
+}
+
+/* Form Headings, Subheadings & Labels */
+.custom-auth-form-panel .fi-simple-header-heading {
+    color: var(--auth-text-main) !important;
+    font-weight: 800 !important;
+    font-size: 2.1rem !important;
+    letter-spacing: -0.02em !important;
+}
+
+.custom-auth-form-panel .fi-simple-header-heading::after {
+    content: ".";
+    color: var(--auth-accent);
+}
+
+.custom-auth-form-panel .fi-simple-header-subheading {
+    color: var(--auth-text-sub) !important;
+}
+
+.custom-auth-form-panel label,
+.custom-auth-form-panel .fi-fo-field-wrp-label span {
+    color: var(--auth-text-label) !important;
+}
+
+/* Form Inputs Styling */
+.custom-auth-form-panel input:not([type="checkbox"]):not([type="radio"]),
+.custom-auth-form-panel .fi-input-wrp {
+    background-color: var(--auth-bg-input) !important;
+    border: 1px solid var(--auth-border-input) !important;
+    border-radius: 0.85rem !important;
+    color: var(--auth-text-main) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-auth-form-panel input::placeholder {
+    color: var(--auth-input-placeholder) !important;
+}
+
+.custom-auth-form-panel .fi-input-wrp:focus-within,
+.custom-auth-form-panel input:not([type="checkbox"]):focus {
+    border-color: var(--auth-accent) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Checkbox Tick Styling (Light & Dark Mode) */
+.custom-auth-form-panel input[type="checkbox"],
+.custom-auth-form-panel .fi-checkbox-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-color: var(--auth-bg-input) !important;
+    border: 1px solid var(--auth-border-input) !important;
+    border-radius: 0.35rem !important;
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.custom-auth-form-panel input[type="checkbox"]:checked,
+.custom-auth-form-panel .fi-checkbox-input:checked {
+    background-color: var(--auth-accent) !important;
+    border-color: var(--auth-accent) !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.custom-auth-form-panel input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Primary Action Buttons */
+.custom-auth-form-panel .fi-btn-primary,
+.custom-auth-form-panel button[type="submit"] {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-radius: 9999px !important;
+    padding: 0.75rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.custom-auth-form-panel .fi-btn-primary:hover,
+.custom-auth-form-panel button[type="submit"]:hover {
+    background-color: #1d4ed8 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px -5px rgba(37, 99, 235, 0.5) !important;
+}
+
+/* Links */
+.custom-auth-form-panel .fi-link,
+.custom-auth-form-panel a {
+    color: var(--auth-accent) !important;
+}
+
+/* Empty Panel / Hero */
+.custom-auth-empty-panel {
+    background-color: var(--auth-bg-card) !important;
+    overflow: hidden;
+    position: relative;
+}
+
+.auth-hero-gradient {
+    background: var(--auth-hero-gradient);
+}
