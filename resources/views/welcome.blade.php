@@ -400,6 +400,31 @@
 
             // Check periodically in background every 15 seconds
             setInterval(checkSso, 15000);
+
+            // Poll local session status to detect logout dynamically
+            function checkLocalSession() {
+                fetch('/sso/local-check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.logged_in && localUserLoggedIn) {
+                        localUserLoggedIn = false;
+                        const authContainer = document.getElementById('sso-auth-container');
+                        const guestContainer = document.getElementById('sso-guest-container');
+                        if (authContainer) authContainer.style.display = 'none';
+                        if (guestContainer) guestContainer.style.display = 'flex';
+                    }
+                })
+                .catch(() => {});
+            }
+
+            window.addEventListener('focus', checkLocalSession);
+            setInterval(checkLocalSession, 10000); // Check local session every 10 seconds
         })();
     </script>
 </html>

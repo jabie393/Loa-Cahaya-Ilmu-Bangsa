@@ -253,3 +253,11 @@ Route::get('/sso/logout', function (\Illuminate\Http\Request $request) {
     $repoUrl = env('REPO_URL', 'http://127.0.0.1:8001');
     return redirect($repoUrl . '/sso/logout?sso=true&redirect=' . urlencode($redirect ?: 'http://127.0.0.1:8000'));
 })->name('sso.logout');
+
+
+// SSO Local Session Check Route
+Route::post('/sso/local-check', function () {
+    return response()->json([
+        'logged_in' => \Illuminate\Support\Facades\Auth::check()
+    ]);
+})->name('sso.local-check');
