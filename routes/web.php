@@ -172,7 +172,13 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
 
     $jsonData = json_encode($data);
 
-    return response("
+    $targetUrl = env('REPO_URL', 'http://127.0.0.1:8001');
+    $targetHost = parse_url($targetUrl, PHP_URL_HOST);
+    $targetScheme = parse_url($targetUrl, PHP_URL_SCHEME) ?: 'http';
+    $targetPort = parse_url($targetUrl, PHP_URL_PORT);
+    $targetOrigin = $targetScheme . '://' . $targetHost . ($targetPort ? ':' . $targetPort : '');
+
+    return response($jsonData ? "
         <!DOCTYPE html>
         <html>
         <body>
@@ -184,9 +190,9 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
         </script>
         </body>
         </html>
-    ")
+    " : "")
     ->header('Content-Type', 'text/html')
-    ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001")
+    ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001 " . $targetOrigin)
     ->header('X-Frame-Options', 'ALLOWALL');
 })->name('sso.iframe-check');
 
