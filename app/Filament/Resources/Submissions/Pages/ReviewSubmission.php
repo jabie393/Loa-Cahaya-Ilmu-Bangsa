@@ -189,6 +189,31 @@ class ReviewSubmission extends Page
                 })
                 ->disabled(fn() => $this->record->ojs_status === 'pending')
                 ->visible(fn() => $this->record->status === 'Approved' && !in_array($this->record->ojs_status, ['submitted', 'published']) && Auth::user()?->hasRole('super_admin')),
+
+            Action::make('sync_ojs')
+                ->label('Sinkronkan OJS')
+                ->color('info')
+                ->icon('heroicon-m-arrow-path')
+                ->size('sm')
+                ->requiresConfirmation()
+                ->modalHeading('Sinkronisasi Ulang ke OJS')
+                ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
+                ->action(function () {
+                    try {
+                        \App\Services\OjsSubmissionService::submitInBackground($this->record);
+                        Notification::make()
+                            ->title('Sinkronisasi ulang dikirim ke antrean latar belakang')
+                            ->info()
+                            ->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()
+                            ->title('Gagal mengirim sinkronisasi')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
+                })
+                ->visible(fn() => $this->record->status === 'Approved' && $this->record->ojs_status === 'submitted' && Auth::user()?->hasRole('super_admin')),
             Action::make('reject')
                 ->label('Reject')
                 ->color('danger')

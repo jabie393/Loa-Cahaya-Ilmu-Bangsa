@@ -452,6 +452,30 @@ class SubmissionsTable
                                     ->send();
                             }
                         }),
+
+                    Action::make('sync_ojs')
+                        ->label('Sinkronkan OJS')
+                        ->icon('heroicon-o-arrow-path')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Sinkronisasi Ulang ke OJS')
+                        ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
+                        ->visible(fn(Submission $record) => $record->status === 'Approved' && $record->ojs_status === 'submitted' && Auth::user()->hasRole('super_admin'))
+                        ->action(function (Submission $record) {
+                            try {
+                                \App\Services\OjsSubmissionService::submitInBackground($record);
+                                Notification::make()
+                                    ->title('Sinkronisasi ulang dikirim ke antrean latar belakang')
+                                    ->info()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('Gagal mengirim sinkronisasi')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')

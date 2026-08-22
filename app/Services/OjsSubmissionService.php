@@ -132,6 +132,7 @@ class OjsSubmissionService
                 'authors' => $submission->authors,
                 'doi' => $submission->repository_redirect_url ?? null,
                 'repository_identifier' => $submission->repository_identifier ?? null,
+                'ojs_submission_id' => $submission->ojs_submission_id ?? null,
             ];
 
             $payload = $this->sanitizeUtf8($payload);
