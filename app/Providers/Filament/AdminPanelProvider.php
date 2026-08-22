@@ -35,7 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->spa()
             ->registration()
             ->globalSearch(false)
@@ -55,8 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
-            ->navigationItems([
-            ])
+            ->navigationItems([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -78,11 +77,14 @@ class AdminPanelProvider extends PanelProvider
                     ->navigationSort(4),
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('right')
-                    ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg')
+                    ->formPanelWidth('50%')
+                    ->showEmptyPanelOnMobile(false)
+                    ->emptyPanelView('filament.auth.hero')
+                    ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg'),
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn (): string => Blade::render('
+                fn(): string => Blade::render('
                     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
                     <link rel="stylesheet" href="' . asset('css/mascot.css') . '">
                     <x-mascot />
