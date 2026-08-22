@@ -255,6 +255,113 @@
             <p class="font-space font-bold text-black">Director</p>
         </div>
     </div>
+              @if(!empty($record->repository_identifier))
+<div class="flex flex-col items-center text-center">
+            <h1 class="font-space text-[20pt] font-[1000] leading-none text-black">
+                LETTER OF ACCEPTANCE
+            </h1>
+            <p class="text-secondary font-space text-[12pt] tracking-[0.3em]">
+                NO: {{ $record->created_at->format('Y') }}/CIB{{ sprintf('%03d', $record->journal->id) }}/LOA{{ sprintf('%03d', $record->id) }}
+            </p>
+        </div>
+
+        <div class="py-5 text-center">
+            <p class="text-primary font-bold italic">Assalamualaikum Wr. Wb.</p>
+            <p class="text-secondary font-space text-[10pt]">
+                Bersama surat ini, kami menerangkan bahwa artikel dengan
+                keterangan naskah berikut
+            </p>
+        </div>
+
+        <!-- Content -->
+        <table class="w-full border-collapse text-[10pt]">
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    Judul
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    {{ $record->title }}
+                </td>
+            </tr>
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    Author
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    {{ $record->formatted_authors }}
+                </td>
+            </tr>
+
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    Korespondensi
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    <a href="mailto:{{ $record->email }}"
+                       class="hover:text-primary transition-colors">
+                        {{ $record->email }}
+                    </a>
+                </td>
+            </tr>
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    Jurnal
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    {{ $record->journal->name }}
+                </td>
+            </tr>
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    Volume
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    {{ $record->volume }}
+                </td>
+            </tr>
+            <tr class="">
+                <td class="font-space text-secondary w-[91.9pt] px-[5.4pt] py-4 text-right align-top font-semibold uppercase">
+                    DOI
+                </td>
+                <td class="font-space px-[5.4pt] py-4 align-top">
+                    <a href="{{ $record->repository_redirect_url }}"
+                       class="hover:text-primary transition-colors">
+                        {{ $record->repository_redirect_url }}
+                    </a>
+                </td>
+            </tr>
+        </table>
+        <div class="py-5">
+            <p class="font-space text-justify text-[10pt] font-normal leading-relaxed text-black/80">
+                Berstatus ACCEPTED untuk dipublish. Keputusan ini dibuat sebagai
+                tanda bahwa naskah yang bersangkutan telah lolos plagiarism
+                checker. Dan LoA ini dibuat sebagai bukti bahwa author telah
+                menyelesaikan APC yang telah ditetapkan oleh pengelola jurnal.
+                LOA Berlaku jika dilengkapi link dan pdf publish. Hubungi kami
+                di
+                <a href="mailto:admin_jurnal@cahayailmubangsa.institute"
+                   class="text-primary font-semibold">
+                    admin_jurnal@cahayailmubangsa.institute
+                </a>
+                jika ada pertanyaan lebih lanjut, terima kasih.
+            </p>
+        </div>
+        <div class="ml-auto mt-5 w-fit text-left">
+            <p class="font-space mb-4 text-[10pt] font-bold text-black">
+                Malang, {{ $record->approved_date?->format('d F Y') }}
+            </p>
+            <div class="mb-4">
+                <img alt="Signature"
+                     src="{{ asset('assets/qrcode.png') }}"
+                     class="h-[73.33px] w-[73.33px] object-contain" />
+            </div>
+            <p class="font-space text-[11pt] font-bold leading-tight text-black">
+                Dr. Imam Syafi'i, M.Pd
+            </p>
+            <p class="font-space font-bold text-black">Director</p>
+        </div>
+    </div>
+              @endif
 </body>
 
 </html>

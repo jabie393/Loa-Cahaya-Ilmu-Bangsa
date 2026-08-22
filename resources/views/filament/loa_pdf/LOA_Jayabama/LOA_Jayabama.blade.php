@@ -300,6 +300,29 @@
                         </p>
                     </td>
                 </tr>
+          @if(!empty($record->repository_identifier))
+<tr class="my-4 flex flex-col">
+                    <td class="w-full border-0 align-top"
+                        colspan="2"
+                        rowspan="1">
+                        <p class="py-0 text-left leading-none">
+                            <span class="font-noto text-[11pt] font-bold uppercase text-blue-900">
+                                DOI :
+                            </span>
+                        </p>
+                    </td>
+                    <td class="w-full border-0 align-top"
+                        colspan="1"
+                        rowspan="1">
+                        <p class="py-0 text-left leading-none">
+                            <a href="{{ $record->repository_redirect_url }}"
+                               class="font-noto text-[11pt] font-normal text-black">
+                                {{ $record->repository_redirect_url }}
+                            </a>
+                        </p>
+                    </td>
+                </tr>
+          @endif
             </table>
             <div class="pb-5 pt-5">
                 <p class="pb-[8pt] pt-0 text-left text-justify leading-[1.079]">

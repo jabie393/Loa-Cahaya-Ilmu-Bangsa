@@ -269,6 +269,25 @@
                 </p>
             </div>
         </div>
+              @if(!empty($record->repository_identifier))
+<div class="border-primary col-span-2 flex flex-col border-2 border-t-0 p-2">
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="text-secondary font-montserrat text-[10pt] font-bold uppercase tracking-widest">
+                        DOI :
+                    </span>
+                </p>
+            </div>
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <a href="{{ $record->repository_redirect_url }}"
+                       class="font-lora text-[10pt] font-normal text-black">
+                        {{ $record->repository_redirect_url }}
+                    </a>
+                </p>
+            </div>
+        </div>
+              @endif
         <div class="border-primary col-span-2 mb-5 border-2 border-t-0 p-2">
             <div class="w-[91.9pt] align-top">
                 <p class="text-left">

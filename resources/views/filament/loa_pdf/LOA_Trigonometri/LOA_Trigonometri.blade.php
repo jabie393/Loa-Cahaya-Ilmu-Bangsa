@@ -222,6 +222,19 @@
                 </a>
             </td>
         </tr>
+          @if(!empty($record->repository_identifier))
+<tr class="h-[37.5pt] border border-black">
+            <td class="font-inter w-[91.9pt] bg-gray-200 px-[5.4pt] py-2 align-top font-semibold text-black">
+                DOI
+            </td>
+            <td class="font-inter border border-black px-[5.4pt] py-2 align-top">
+                <a href="{{ $record->repository_redirect_url }}"
+                   class="hover:text-primary transition-colors">
+                    {{ $record->repository_redirect_url }}
+                </a>
+            </td>
+        </tr>
+          @endif
     </table>
     <div class="py-6">
         <p class="font-inter text-justify text-[10pt] font-normal italic leading-relaxed text-black/80">

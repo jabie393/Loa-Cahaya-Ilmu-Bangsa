@@ -192,6 +192,16 @@
                         {{ $record->publication_link ?: 'https://ijefijournal.com/index.php/ijefi/article/view/' . $record->ojs_submission_id }}
                     </td>
                 </tr>
+          @if(!empty($record->repository_identifier))
+<tr class="border-b border-slate-100">
+                    <td style="padding: 5px 0; font-weight: 700; vertical-align: top; color: #475569;">DOI
+                    </td>
+                    <td style="padding: 5px 0; text-align: center; vertical-align: top; color: #475569;">:</td>
+                    <td style="padding: 5px 0; vertical-align: top; color: #2563eb; word-break: break-all;">
+                        {{ $record->repository_redirect_url ?: 'https://ijefijournal.com/index.php/ijefi/article/view/' . $record->ojs_submission_id }}
+                    </td>
+                </tr>
+          @endif
             </table>
 
             <p>This acceptance is based on the recommendation of the reviewers and the editorial board.</p>

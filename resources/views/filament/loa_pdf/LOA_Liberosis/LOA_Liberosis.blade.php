@@ -273,6 +273,20 @@
                                 </a>
                             </div>
                         </div>
+              @if(!empty($record->repository_identifier))
+<div class="bg-surface-container-lowest architectural-shadow border-primary flex h-full flex-col border-l-4">
+                        <div class="p-2 pt-1">
+                            <span class="text-primary/50 block py-2 text-[7pt] font-bold uppercase tracking-[0.2em]">
+                                DOI
+                            </span>
+                            <div class="text-primary break-all font-medium">
+                                <a href="{{ $record->repository_redirect_url }}"
+                                   class="text-[9pt] lowercase italic hover:underline">
+                                    {{ $record->repository_redirect_url }}
+                                </a>
+                            </div>
+                        </div>
+              @endif
                     </div>
                 </div>
             </div>
