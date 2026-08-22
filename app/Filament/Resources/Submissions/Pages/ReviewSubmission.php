@@ -128,7 +128,7 @@ class ReviewSubmission extends Page
                 ->modalDescription('Apakah Anda yakin ingin membuat DOI/Repository Identifier untuk artikel ini? Tindakan ini akan memperbarui data di OJS dan katalog Repository.')
                 ->modalIcon('heroicon-o-exclamation-triangle')
                 ->modalIconColor('primary')
-                ->modalSubmitActionColor('primary')
+                ->modalSubmitAction(fn ($action) => $action->color('primary'))
                 ->action(function () {
                     $this->record->update([
                         'has_doi' => true,
