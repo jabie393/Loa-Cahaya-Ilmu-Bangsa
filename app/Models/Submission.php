@@ -101,6 +101,13 @@ class Submission extends Model
         'general_suggestions',
         'review_error_message',
         'review_email_sent_at',
+        'want_doi',
+        'has_doi',
+        'repository_identifier',
+        'repository_landing_page',
+        'repository_redirect_url',
+        'repository_identifier_status',
+        'repository_identifier_generated_at',
     ];
 
     protected function casts(): array
@@ -115,6 +122,9 @@ class Submission extends Model
             'ojs_synced_at' => 'datetime',
             'review_email_sent_at' => 'datetime',
             'authors' => 'array',
+            'want_doi' => 'boolean',
+            'has_doi' => 'boolean',
+            'repository_identifier_generated_at' => 'datetime',
         ];
     }
 

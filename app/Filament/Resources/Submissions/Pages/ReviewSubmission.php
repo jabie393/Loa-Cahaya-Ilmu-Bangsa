@@ -35,14 +35,14 @@ class ReviewSubmission extends Page
         return [
             Action::make('approve')
                 ->label(fn() => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve')
-                ->color(fn() => $this->record->status === 'Rejected' ? 'warning' : 'success')
+                ->color(fn() => $this->record->status === 'Rejected' ? 'warning' : 'primary')
                 ->outlined(fn() => $this->record->status === 'Rejected')
                 ->icon(fn() => $this->record->status === 'Rejected' ? 'heroicon-m-arrow-uturn-left' : 'heroicon-m-check-circle')
                 ->size('sm')
                 ->disabled(fn() => $this->record->review_status === 'processing' || empty($this->record->title))
                 ->modalSubmitAction(
                     fn(Action $action) => $action
-                        ->color($this->record->status === 'Rejected' ? 'warning' : 'success')
+                        ->color($this->record->status === 'Rejected' ? 'warning' : 'primary')
                         ->label($this->record->status === 'Rejected' ? 'Yes, Cancel Rejection' : 'Yes, Approve')
                 )
                 ->modalCancelAction(
@@ -50,6 +50,21 @@ class ReviewSubmission extends Page
                         ->color('gray')
                         ->label('Cancel')
                 )
+                ->form(function () {
+                    if ($this->record->status === 'Rejected') {
+                        return [];
+                    }
+                    return [
+                        \Filament\Forms\Components\Radio::make('has_doi')
+                            ->label('Pilihan DOI')
+                            ->options([
+                                1 => 'Berikan DOI',
+                                0 => 'Tanpa DOI',
+                            ])
+                            ->default(fn() => $this->record->want_doi ? 1 : 0)
+                            ->required(),
+                    ];
+                })
                 ->requiresConfirmation()
                 ->modalHeading(fn() => $this->record->status === 'Rejected' ? 'Cancel Rejection' : 'Approve Submission')
                 ->modalDescription(
@@ -57,7 +72,7 @@ class ReviewSubmission extends Page
                     ? 'Are you sure you want to cancel this rejection?'
                     : 'Are you sure you want to approve this submission?'
                 )
-                ->action(function () {
+                ->action(function (array $data) {
                     if ($this->record->status === 'Rejected') {
                         $this->record->update([
                             'status' => 'Pending',
@@ -74,22 +89,25 @@ class ReviewSubmission extends Page
                             Storage::disk('public')->delete($this->record->proof_of_payment);
                         }
 
+                        $hasDoi = isset($data['has_doi']) ? (bool)$data['has_doi'] : false;
+
+                        $updateData = [
+                            'status' => 'Approved',
+                            'approved_date' => now(),
+                            'proof_of_payment' => null,
+                            'has_doi' => $hasDoi,
+                        ];
+                        if ($this->record->review_status === 'failed') {
+                            $updateData['review_status'] = 'N/A';
+                        }
+                        $this->record->update($updateData);
+
                         // Run OJS Submission in background
                         try {
                             \App\Services\OjsSubmissionService::submitInBackground($this->record);
                         } catch (\Throwable $e) {
                             \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$this->record->id}. Error: {$e->getMessage()}");
                         }
-
-                        $updateData = [
-                            'status' => 'Approved',
-                            'approved_date' => now(),
-                            'proof_of_payment' => null,
-                        ];
-                        if ($this->record->review_status === 'failed') {
-                            $updateData['review_status'] = 'N/A';
-                        }
-                        $this->record->update($updateData);
 
                         Notification::make()
                             ->title('Submission Approved')
@@ -100,6 +118,52 @@ class ReviewSubmission extends Page
                     $this->redirect($this->getResource()::getUrl('index'));
                 })
                 ->visible(fn() => $this->record->status !== 'Approved' && Auth::user()?->hasRole('super_admin')),
+            Action::make('generate_doi')
+                ->label('Buat DOI')
+                ->icon('heroicon-m-plus-circle')
+                ->color('primary')
+                ->size('sm')
+                ->requiresConfirmation()
+                ->modalHeading('Generate Repository Identifier (DOI Custom)')
+                ->modalDescription('Apakah Anda yakin ingin membuat DOI/Repository Identifier untuk artikel ini? Tindakan ini akan memperbarui data di OJS dan katalog Repository.')
+                ->modalIcon('heroicon-o-exclamation-triangle')
+                ->modalIconColor('primary')
+                ->modalSubmitActionColor('primary')
+                ->action(function () {
+                    $this->record->update([
+                        'has_doi' => true,
+                    ]);
+
+                    // Generate DOI immediately
+                    $identifierService = new \App\Services\RepositoryIdentifierService();
+                    $identifier = $identifierService->generate($this->record);
+                    
+                    $repoUrl = rtrim(env('REPO_URL', 'http://127.0.0.1:8001'), '/');
+                    $redirectUrl = $repoUrl . '/' . $identifier;
+                    $landingPage = "/article/submission-{$this->record->id}";
+                    
+                    $this->record->update([
+                        'repository_identifier' => $identifier,
+                        'repository_landing_page' => $landingPage,
+                        'repository_redirect_url' => $redirectUrl,
+                        'repository_identifier_status' => 'active',
+                        'repository_identifier_generated_at' => now(),
+                    ]);
+
+                    // Run OJS Submission in background
+                    try {
+                        \App\Services\OjsSubmissionService::submitInBackground($this->record);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$this->record->id}. Error: {$e->getMessage()}");
+                    }
+
+                    Notification::make()
+                        ->title('DOI berhasil dibuat dan disinkronkan')
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn() => Auth::user()?->hasRole('super_admin') && $this->record->status === 'Approved' && !$this->record->has_doi),
+
             Action::make('resubmit_ojs')
                 ->label('Resubmit to OJS')
                 ->color('info')
@@ -124,7 +188,7 @@ class ReviewSubmission extends Page
                     }
                 })
                 ->disabled(fn() => $this->record->ojs_status === 'pending')
-                ->visible(fn() => $this->record->status === 'Approved' && $this->record->ojs_status !== 'submitted' && Auth::user()?->hasRole('super_admin')),
+                ->visible(fn() => $this->record->status === 'Approved' && !in_array($this->record->ojs_status, ['submitted', 'published']) && Auth::user()?->hasRole('super_admin')),
             Action::make('reject')
                 ->label('Reject')
                 ->color('danger')

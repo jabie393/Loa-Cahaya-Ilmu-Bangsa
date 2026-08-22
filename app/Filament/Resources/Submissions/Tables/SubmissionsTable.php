@@ -116,6 +116,7 @@ class SubmissionsTable
                         query: fn(\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder =>
                         $query->orderBy('status', $direction)->orderBy('created_at', 'desc')
                     ),
+
                 TextColumn::make('author_name')
                     ->label('Detail Artikel')
                     ->html()
@@ -140,6 +141,29 @@ class SubmissionsTable
                         $journalName = $record->journal?->name ?? 'N/A';
                         $volume = $record->volume ? " — {$record->volume}" : '';
 
+                        $doiStatus = 'Tanpa DOI';
+                        $doiClass = 'text-gray-500 dark:text-gray-400';
+                        if ($record->has_doi === null) {
+                            if ($record->want_doi) {
+                                $doiStatus = 'Pending';
+                                $doiClass = 'text-amber-600 dark:text-amber-400 font-semibold';
+                            } else {
+                                $doiStatus = 'Tanpa DOI';
+                                $doiClass = 'text-gray-500 dark:text-gray-400';
+                            }
+                        } elseif ($record->has_doi) {
+                            if (!empty($record->repository_identifier)) {
+                                $doiStatus = $record->repository_identifier;
+                                $doiClass = 'text-emerald-600 dark:text-emerald-400 font-mono font-bold';
+                            } else {
+                                $doiStatus = 'Pending';
+                                $doiClass = 'text-amber-600 dark:text-amber-400 font-semibold';
+                            }
+                        } else {
+                            $doiStatus = 'Tanpa DOI';
+                            $doiClass = 'text-gray-500 dark:text-gray-400';
+                        }
+
                         return new \Illuminate\Support\HtmlString("
                             <div class='flex flex-col gap-0.5 py-1' style='max-width: 450px;'>
                                 <div class='font-bold text-sm text-gray-900 dark:text-white break-words'>
@@ -150,6 +174,9 @@ class SubmissionsTable
                                 </div>
                                 <div class='text-[10px] text-primary-600 dark:text-primary-400 font-semibold break-words'>
                                     {$journalName}{$volume}
+                                </div>
+                                <div class='text-[10px] text-gray-500 dark:text-gray-400 mt-0.5'>
+                                    <span>DOI: </span><span class='{$doiClass}'>{$doiStatus}</span>
                                 </div>
                             </div>
                         ");
@@ -314,14 +341,38 @@ class SubmissionsTable
                     Action::make('approve')
                         ->label('Approve LOA')
                         ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->requiresConfirmation()
+                        ->color('primary')
+                        ->modalHeading('Konfirmasi Approval')
+                        ->modalDescription('Submission akan diproses. Silakan tentukan apakah artikel ini akan diberikan DOI.')
+                        ->form([
+                            \Filament\Forms\Components\Radio::make('has_doi')
+                                ->label('Pilihan DOI')
+                                ->options([
+                                    1 => 'Berikan DOI',
+                                    0 => 'Tanpa DOI',
+                                ])
+                                ->default(fn(Submission $record) => $record->want_doi ? 1 : 0)
+                                ->required(),
+                        ])
                         ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
                         ->disabled(fn(Submission $record) => $record->review_status === 'processing' || empty($record->title))
-                        ->action(function (Submission $record) {
+                        ->action(function (Submission $record, array $data) {
                             if ($record->proof_of_payment) {
                                 Storage::disk('public')->delete($record->proof_of_payment);
                             }
+
+                            $hasDoi = (bool)$data['has_doi'];
+
+                            $updateData = [
+                                'status' => 'Approved',
+                                'approved_date' => now(),
+                                'proof_of_payment' => null,
+                                'has_doi' => $hasDoi,
+                            ];
+                            if ($record->review_status === 'failed') {
+                                $updateData['review_status'] = 'N/A';
+                            }
+                            $record->update($updateData);
 
                             // Run OJS Submission in background
                             try {
@@ -330,27 +381,62 @@ class SubmissionsTable
                                 \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
                             }
 
-                            $updateData = [
-                                'status' => 'Approved',
-                                'approved_date' => now(),
-                                'proof_of_payment' => null,
-                            ];
-                            if ($record->review_status === 'failed') {
-                                $updateData['review_status'] = 'N/A';
-                            }
-                            $record->update($updateData);
-
                             Notification::make()
                                 ->title('Submission approved successfully')
                                 ->success()
                                 ->send();
                         }),
+                    Action::make('generate_doi')
+                        ->label('Buat DOI')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('primary')
+                        ->requiresConfirmation()
+                        ->modalHeading('Generate Repository Identifier (DOI Custom)')
+                        ->modalDescription('Apakah Anda yakin ingin membuat DOI/Repository Identifier untuk artikel ini? Tindakan ini akan memperbarui data di OJS dan katalog Repository.')
+                        ->modalIcon('heroicon-o-exclamation-triangle')
+                        ->modalIconColor('primary')
+                        ->modalSubmitActionColor('primary')
+                        ->action(function (Submission $record) {
+                            $record->update([
+                                'has_doi' => true,
+                            ]);
+
+                            // Generate DOI immediately
+                            $identifierService = new \App\Services\RepositoryIdentifierService();
+                            $identifier = $identifierService->generate($record);
+                            
+                            $repoUrl = rtrim(env('REPO_URL', 'http://127.0.0.1:8001'), '/');
+                            $redirectUrl = $repoUrl . '/' . $identifier;
+                            $landingPage = "/article/submission-{$record->id}";
+                            
+                            $record->update([
+                                'repository_identifier' => $identifier,
+                                'repository_landing_page' => $landingPage,
+                                'repository_redirect_url' => $redirectUrl,
+                                'repository_identifier_status' => 'active',
+                                'repository_identifier_generated_at' => now(),
+                            ]);
+
+                            // Run OJS Submission in background
+                            try {
+                                \App\Services\OjsSubmissionService::submitInBackground($record);
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
+                            }
+
+                            Notification::make()
+                                ->title('DOI berhasil dibuat dan disinkronkan')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn(Submission $record) => Auth::user()?->hasRole('super_admin') && $record->status === 'Approved' && !$record->has_doi),
+
                     Action::make('resubmit_ojs')
                         ->label('Resubmit to OJS')
                         ->icon('heroicon-o-arrow-path')
                         ->color('info')
                         ->requiresConfirmation()
-                        ->visible(fn(Submission $record) => $record->status === 'Approved' && $record->ojs_status === 'failed' && Auth::user()->hasRole('super_admin'))
+                        ->visible(fn(Submission $record) => $record->status === 'Approved' && !in_array($record->ojs_status, ['submitted', 'published']) && Auth::user()->hasRole('super_admin'))
                         ->action(function (Submission $record) {
                             try {
                                 \App\Services\OjsSubmissionService::submitInBackground($record);

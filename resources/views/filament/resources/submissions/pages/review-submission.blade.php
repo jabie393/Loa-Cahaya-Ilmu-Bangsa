@@ -288,6 +288,29 @@
                            target="_blank"
                            class="text-primary-600 dark:text-primary-400 truncate text-xs font-medium">{{ $record->publication_link ?? 'Belum diisi' }}</a>
                     </div>
+                    <div class="wrap-break-word flex flex-col">
+                        <span class="text-[12px] font-bold uppercase text-gray-400 dark:text-gray-500">DOI / Repository Identifier</span>
+                        <span class="text-md font-semibold mt-1">
+                            @if ($record->has_doi === null)
+                                @if ($record->want_doi)
+                                    <span class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-50 ring-1 ring-inset ring-yellow-600/20 dark:text-yellow-400 dark:bg-yellow-950/30">Request DOI (Pending)</span>
+                                @else
+                                    <span class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-800 bg-gray-50 ring-1 ring-inset ring-gray-600/20 dark:text-gray-400 dark:bg-gray-800/30">Tanpa DOI</span>
+                                @endif
+                            @elseif ($record->has_doi)
+                                @if (!empty($record->repository_identifier))
+                                    <span class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 bg-emerald-50 ring-1 ring-inset ring-emerald-600/20 dark:text-emerald-400 dark:bg-emerald-950/30 font-mono">{{ $record->repository_identifier }}</span>
+                                    <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 break-all">
+                                        Redirect URL: <a href="{{ $record->repository_redirect_url }}" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">{{ $record->repository_redirect_url }}</a>
+                                    </div>
+                                @else
+                                    <span class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-medium text-yellow-800 bg-yellow-50 ring-1 ring-inset ring-yellow-600/20 dark:text-yellow-400 dark:bg-yellow-950/30">DOI Approved (Pending Generation)</span>
+                                @endif
+                            @else
+                                <span class="inline-flex items-center gap-x-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-800 bg-gray-50 ring-1 ring-inset ring-gray-600/20 dark:text-gray-400 dark:bg-gray-800/30">Tanpa DOI (Approved without DOI)</span>
+                            @endif
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Metadata Artikel -->

@@ -139,6 +139,26 @@ class SubmissionForm
                             ->required()
                             ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
 
+                        Select::make('want_doi')
+                            ->label('Request DOI')
+                            ->placeholder('Pilih Opsi DOI')
+                            ->options(function ($record) {
+                                if ($record !== null && !empty($record->repository_identifier)) {
+                                    return [
+                                        ($record->want_doi ? 1 : 0) => $record->repository_identifier,
+                                    ];
+                                }
+                                return [
+                                    1 => 'Dengan DOI (Rp 80.000)',
+                                    0 => 'Tanpa DOI (Rp 60.000)',
+                                ];
+                            })
+                            ->default(fn($record) => $record !== null ? ($record->want_doi ? 1 : 0) : null)
+                            ->helperText('Pilihan ini hanya sebagai permintaan dari author. Keputusan akhir mengenai pemberian DOI ditentukan oleh Admin pada saat proses approval.')
+                            ->disabled(fn($record) => ($record !== null && !empty($record->repository_identifier)) || ($record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'))
+                            ->required()
+                            ->columnSpanFull(),
+
                         TextInput::make('title')
                             ->columnSpanFull()
                             ->label('Judul (Diisi Huruf Besar)')
@@ -227,7 +247,7 @@ class SubmissionForm
                                  ->required(fn($record) => $record === null || $record->status === 'Pending'),
                              Placeholder::make('qris_image')
                                  ->label('QRIS Pembayaran')
-                                 ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '?v=' . (file_exists(public_path('assets/qris.jpg')) ? filemtime(public_path('assets/qris.jpg')) : time()) . '" alt="QRIS" class="w-full max-w-xs rounded-lg shadow-sm" style="max-height: 250px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 mt-2">Scan QRIS di atas untuk melakukan pembayaran</span></div>')),
+                                 ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '?v=' . (file_exists(public_path('assets/qris.jpg')) ? filemtime(public_path('assets/qris.jpg')) : time()) . '" alt="QRIS" class="w-full max-w-md rounded-lg shadow-sm mb-3" style="max-height: 400px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 block">Scan QRIS di atas untuk melakukan pembayaran</span><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-3">Nominal Transfer:</div><div class="text-xs text-gray-600 dark:text-gray-400 text-left mt-1 inline-block">• Tanpa DOI: <strong class="text-gray-900 dark:text-white">Rp 60.000</strong><br>• Dengan DOI: <strong class="text-emerald-600 dark:text-emerald-400 font-bold">Rp 80.000</strong></div></div>')),
                          ]),
                     Section::make('Status Pengajuan')
                         ->description('Status pemrosesan artikel Anda')

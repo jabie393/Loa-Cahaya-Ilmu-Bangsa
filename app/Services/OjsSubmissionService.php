@@ -26,6 +26,25 @@ class OjsSubmissionService
         }
 
         try {
+            // If has_doi is true and repository_identifier is empty, generate it!
+            if ($submission->has_doi && empty($submission->repository_identifier)) {
+                $identifierService = new \App\Services\RepositoryIdentifierService();
+                $identifier = $identifierService->generate($submission);
+                
+                $repoUrl = rtrim(env('REPO_URL', 'http://127.0.0.1:8001'), '/');
+                $redirectUrl = $repoUrl . '/' . $identifier;
+                $landingPage = "/article/submission-{$submission->id}";
+                
+                $submission->update([
+                    'repository_identifier' => $identifier,
+                    'repository_landing_page' => $landingPage,
+                    'repository_redirect_url' => $redirectUrl,
+                    'repository_identifier_status' => 'active',
+                    'repository_identifier_generated_at' => now(),
+                ]);
+                $submission->refresh();
+            }
+
             // Update tracking to pending
             $submission->update([
                 'ojs_status' => 'pending',
@@ -111,6 +130,8 @@ class OjsSubmissionService
                 'year' => $year,
                 'references' => $submission->references,
                 'authors' => $submission->authors,
+                'doi' => $submission->repository_redirect_url ?? null,
+                'repository_identifier' => $submission->repository_identifier ?? null,
             ];
 
             $payload = $this->sanitizeUtf8($payload);
@@ -235,7 +256,7 @@ class OjsSubmissionService
             'authors' => $authorNames,
             'keywords' => $submission->keywords ?: '',
             'journal_id' => (int) $submission->journal_id,
-            'doi' => $submission->doi,
+            'doi' => $submission->repository_redirect_url,
             'volume' => $submission->volume,
             'issue' => $submission->issue ?? '',
             'pages' => $submission->pages ?? '',
