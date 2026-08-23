@@ -429,14 +429,38 @@ class SubmissionsTable
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn(Submission $record) => Auth::user()?->hasRole('super_admin') && $record->status === 'Approved' && !$record->has_doi),
+                        ->visible(function (Submission $record) {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->has_doi) {
+                                return false;
+                            }
+                            if (!empty($record->publication_link)) {
+                                $linkHost = parse_url($record->publication_link, PHP_URL_HOST);
+                                $targetHost = parse_url($record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                                if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }),
 
                     Action::make('resubmit_ojs')
                         ->label('Resubmit to OJS')
                         ->icon('heroicon-o-arrow-path')
                         ->color('info')
                         ->requiresConfirmation()
-                        ->visible(fn(Submission $record) => $record->status === 'Approved' && !in_array($record->ojs_status, ['submitted', 'published']) && Auth::user()->hasRole('super_admin'))
+                        ->visible(function (Submission $record) {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published'])) {
+                                return false;
+                            }
+                            if (!empty($record->publication_link)) {
+                                $linkHost = parse_url($record->publication_link, PHP_URL_HOST);
+                                $targetHost = parse_url($record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                                if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
                         ->action(function (Submission $record) {
                             try {
                                 \App\Services\OjsSubmissionService::submitInBackground($record);
@@ -460,7 +484,19 @@ class SubmissionsTable
                         ->requiresConfirmation()
                         ->modalHeading('Sinkronisasi Ulang ke OJS')
                         ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
-                        ->visible(fn(Submission $record) => $record->status === 'Approved' && $record->ojs_status === 'submitted' && Auth::user()->hasRole('super_admin'))
+                        ->visible(function (Submission $record) {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->ojs_status !== 'submitted') {
+                                return false;
+                            }
+                            if (!empty($record->publication_link)) {
+                                $linkHost = parse_url($record->publication_link, PHP_URL_HOST);
+                                $targetHost = parse_url($record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                                if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        })
                         ->action(function (Submission $record) {
                             try {
                                 \App\Services\OjsSubmissionService::submitInBackground($record);

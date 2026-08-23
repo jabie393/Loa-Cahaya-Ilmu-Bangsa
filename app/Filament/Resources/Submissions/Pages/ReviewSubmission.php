@@ -162,7 +162,19 @@ class ReviewSubmission extends Page
                         ->success()
                         ->send();
                 })
-                ->visible(fn() => Auth::user()?->hasRole('super_admin') && $this->record->status === 'Approved' && !$this->record->has_doi),
+                ->visible(function () {
+                    if (!Auth::user()?->hasRole('super_admin') || $this->record->status !== 'Approved' || $this->record->has_doi) {
+                        return false;
+                    }
+                    if (!empty($this->record->publication_link)) {
+                        $linkHost = parse_url($this->record->publication_link, PHP_URL_HOST);
+                        $targetHost = parse_url($this->record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                        if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }),
 
             Action::make('resubmit_ojs')
                 ->label('Resubmit to OJS')
@@ -188,7 +200,19 @@ class ReviewSubmission extends Page
                     }
                 })
                 ->disabled(fn() => $this->record->ojs_status === 'pending')
-                ->visible(fn() => $this->record->status === 'Approved' && !in_array($this->record->ojs_status, ['submitted', 'published']) && Auth::user()?->hasRole('super_admin')),
+                ->visible(function () {
+                    if (!Auth::user()?->hasRole('super_admin') || $this->record->status !== 'Approved' || in_array($this->record->ojs_status, ['submitted', 'published'])) {
+                        return false;
+                    }
+                    if (!empty($this->record->publication_link)) {
+                        $linkHost = parse_url($this->record->publication_link, PHP_URL_HOST);
+                        $targetHost = parse_url($this->record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                        if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }),
 
             Action::make('sync_ojs')
                 ->label('Sinkronkan OJS')
@@ -213,7 +237,19 @@ class ReviewSubmission extends Page
                             ->send();
                     }
                 })
-                ->visible(fn() => $this->record->status === 'Approved' && $this->record->ojs_status === 'submitted' && Auth::user()?->hasRole('super_admin')),
+                ->visible(function () {
+                    if (!Auth::user()?->hasRole('super_admin') || $this->record->status !== 'Approved' || $this->record->ojs_status !== 'submitted') {
+                        return false;
+                    }
+                    if (!empty($this->record->publication_link)) {
+                        $linkHost = parse_url($this->record->publication_link, PHP_URL_HOST);
+                        $targetHost = parse_url($this->record->journal?->ojs_base_url ?: config('ojs.base_url'), PHP_URL_HOST);
+                        if ($linkHost && $targetHost && strtolower($linkHost) !== strtolower($targetHost)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }),
             Action::make('reject')
                 ->label('Reject')
                 ->color('danger')
