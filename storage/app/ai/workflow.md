@@ -25,7 +25,7 @@ Setelah berhasil login, pengguna diarahkan ke dashboard utama sistem.
 
 ---
 
-# # B. TAHAP PUBLIKASI ARTIKEL
+# B. TAHAP PUBLIKASI ARTIKEL
 
 ## STEP 1 — Unduh Template & Penyesuaian
 
@@ -46,7 +46,7 @@ Penulis melakukan pengecekan plagiasi dan optimasi kemiripan naskah secara opsio
 
 - **2. Cek Plagiasi & Parafrase**
 
-Hasil pengecekan ini bersifat **tidak wajib (opsional)** dan hanya digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk ke OJS.
+Hasil pengecekan ini bersifat **tidak wajib (opsional)** dan hanya digunakan untuk memastikan artikel memenuhi standar jurnal tujuan sebelum masuk to OJS.
 
 ### 1. Proses Pengecekan Plagiasi
 
@@ -96,7 +96,7 @@ Setelah cek plagiasi sukses (`completed`), jika naskah memiliki kalimat-kalimat 
     - **Similarity Group Column (Daftar Tabel)**:
         - **Kolom Awal**: Skor dan badge kemiripan Turnitin sebelum diparafrase.
         - **Kolom Δ**: Selisih persentase penurunan kemiripan (`Awal` - `Estimasi`) yang menampilkan nilai penurunan dan ikon panah bawah (`↓`) hijau murni secara dinamis.
-        - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu- B: _"Belum parafrase"_.
+        - **Kolom Estimasi**: Skor estimasi baru pasca-parafrase lengkap dengan badgenya. Jika belum diparafrase, kolom ini menampilkan placeholder miring berwarna abu-abu: _"Belum parafrase"_.
 
 ---
 
@@ -108,7 +108,7 @@ Penulis melakukan pengajuan LOA sekaligus memicu proses review naskah secara oto
 
 Tujuan:
 
-- Mengajukan LOA (Letter of Acceptance) untuk naskah naskah.
+- Mengajukan LOA (Letter of Acceptance) untuk naskah.
 - Mendapatkan review naskah (revisi akademis) dari Tim Reviewer.
 - Sinkronisasi otomatis ke OJS jurnal target setelah pengajuan disetujui (Approved) oleh Admin.
 
@@ -353,7 +353,10 @@ Setelah tombol "Submit" ditekan, alur sistematis berjalan di latar belakang:
     - Jika review gagal, status review akan diubah menjadi `failed`, dan admin/penulis dapat menekan tombol **"Minta Review Lagi"** untuk memicu proses ulang.
 
 4. **Persetujuan & Sinkronisasi OJS (`Approved`)**:
-    - Begitu Admin menyetujui (`Approved`), naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal di background. Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
+    - Begitu Admin menyetujui (`Approved`), admin dapat menentukan pilihan **DOI**:
+        - **Berikan DOI**: Naskah diterbitkan dengan nomor DOI resmi dari Cahaya Ilmu Bangsa (CIB) yang terhubung langsung ke OJS.
+        - **Tanpa DOI**: Naskah diterbitkan tanpa nomor DOI (kolom DOI akan dikosongkan di OJS).
+    - Setelah pilihan disetujui, naskah secara otomatis dikirim dan disinkronkan ke Open Journal System (OJS) target jurnal di background. Penulis menerima email LOA dan dapat mengunduh dokumen LOA, Sertifikat Author (AC), serta Sertifikat Bebas Plagiasi (PFC) di sistem.
 
 ---
 
@@ -398,6 +401,7 @@ Setelah revisi disimpan, data terbaru akan diperbarui di database sistem.
 Jika submission disetujui:
 
 - Status LOA menjadi `Approved` dan status OJS masuk antrean sinkronisasi background.
+- **Pilihan DOI:** Jika admin memilih opsi "Berikan DOI", maka naskah akan mendapatkan nomor DOI yang terdaftar di website Repository. Jika memilih "Tanpa DOI", naskah diterbitkan tanpa DOI dan info DOI akan disembunyikan pada dokumen LOA.
 - **Pengiriman Email LOA Ditunda (Delayed Email):** Email LOA (Internal/Eksternal) **tidak lagi dikirim saat Admin mengklik Approve**. Email baru dikirim setelah sistem berhasil mempublikasikan artikel di OJS (status OJS berubah menjadi `'submitted'`).
 - Hal ini menjamin bahwa informasi **Volume, Nomor, Tahun,** dan **Tautan (Link) Publikasi** yang diperoleh dari OJS sudah terisi lengkap di dalam email LOA yang diterima penulis.
 - Pengguna dapat mengunduh:
@@ -453,6 +457,12 @@ Kanda Putra wajib:
 - menjelaskan bahwa saat membuat pengajuan baru, pilihan jurnal target akan secara otomatis terfilter sesuai dengan OJS website yang dipilih.
 - memahami bahwa untuk website **IJEFI** dan **PJLSS**, sistem hanya men-generate dokumen **Letter of Acceptance (LOA)** saja (tidak men-generate maupun melampirkan berkas AC & PFC).
 - menjelaskan bahwa penulis dapat mengedit data pengajuan jika statusnya masih `Draft`, `Pending` atau `Rejected`, dan hanya bisa mengedit **Link Publikasi** saja jika statusnya sudah `Approved`.
+- memahami bahwa saat admin menyetujui (approve) naskah, admin dapat memilih opsi "Berikan DOI" atau "Tanpa DOI".
+- menjelaskan bahwa jika memilih "Berikan DOI", naskah akan mendapatkan nomor DOI resmi dari CIB, sedangkan jika "Tanpa DOI", naskah diterbitkan tanpa DOI (kolom DOI dikosongkan).
+- menjelaskan kepada penulis bahwa mereka dapat memantau status naskah yang telah terbit melalui portal publik Repository pada halaman "/articles-repo".
+- memahami bahwa dashboard penulis di Repository menampilkan daftar artikel terpopuler milik mereka sendiri.
+- memahami bahwa tombol ikon mata di website Repository digunakan untuk membuka langsung halaman detail naskah di website Repository.
+- memahami bahwa penulis yang login atau mendaftar di website Repository akan otomatis diarahkan kembali ke website Repository setelah masuk lewat LOA.
 
 Kanda Putra tidak boleh:
 
@@ -471,6 +481,9 @@ https://loa.jurnalcib.com/
 
 Website Jurnal / OJS Mandiri:
 https://journal.cib.institute/
+
+Website Repository CIB:
+https://doi.cibangsa.org/
 
 Institusi:
 Cahaya Ilmu Bangsa Institute
@@ -499,3 +512,15 @@ _Menu ini dikelompokkan dalam kategori **Settings** di bagian bawah sidebar:_
 1. **Journal List** (Urutan `1`): Manajemen data jurnal-jurnal yang terbit di bawah naungan CIB Institute.
 2. **Chatbot Faqs** (Urutan `2`): Pengaturan data pertanyaan dan jawaban (FAQ) untuk asisten chatbot.
 3. **Users** (Urutan `3`): Manajemen akun pengguna, hak akses (roles), serta kuota cek plagiat harian.
+
+---
+
+# Q. INTEGRASI WEBSITE REPOSITORY DAN SISTEM LOGIN BERSAMA
+
+Sistem LOA CIB telah terintegrasi secara penuh dengan portal Repository.
+
+- **Portal Publik Repository (`https://doi.cibangsa.org/`):** Berfungsi memamerkan seluruh artikel publikasi CIB yang telah berstatus LOA disetujui.
+- **Sistem Login Bersama (SSO):** Akun penulis di LOA dan Repository adalah sama. Ketika penulis login atau mendaftar di website Repository, penulis otomatis diarahkan kembali ke halaman Repository setelah masuk lewat LOA.
+- **Halaman Artikel Penulis:** Penulis dapat melihat daftar artikel mereka langsung di halaman "/articles-repo".
+- **Statistik Artikel Terpopuler:** Halaman dashboard menampilkan daftar artikel yang paling banyak dilihat (terpopuler), baik untuk admin secara keseluruhan maupun penulis secara pribadi.
+- **Tombol Lihat Detail:** Klik ikon mata pada daftar naskah untuk melihat detail artikel langsung di website Repository.
