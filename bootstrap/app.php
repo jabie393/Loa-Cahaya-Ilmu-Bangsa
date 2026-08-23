@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
         $middleware->append(\App\Http\Middleware\TrustProxies::class);
+        
+        $middleware->web(append: [
+            \App\Http\Middleware\SsoRedirectMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
