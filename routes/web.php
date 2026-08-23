@@ -76,6 +76,7 @@ Route::post('/chatbot/message', [\App\Http\Controllers\ChatbotController::class,
 // SSO Server login route
 Route::get('/sso/login', function (\Illuminate\Http\Request $request) {
     $redirect = $request->query('redirect');
+    $register = $request->query('register');
 
     if (empty($redirect)) {
         return abort(400, 'Redirect parameter is required.');
@@ -83,6 +84,9 @@ Route::get('/sso/login', function (\Illuminate\Http\Request $request) {
 
     if (!\Illuminate\Support\Facades\Auth::check()) {
         session(['sso_redirect' => $redirect]);
+        if ($register) {
+            return redirect('/register?sso=1');
+        }
         return redirect('/login?sso=1');
     }
 

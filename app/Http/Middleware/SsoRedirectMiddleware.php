@@ -11,7 +11,7 @@ class SsoRedirectMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Clear session residue if visiting login page directly without SSO request
-        if (($request->is('login') || $request->is('admin/login')) && !$request->has('sso')) {
+        if (($request->is('login') || $request->is('admin/login') || $request->is('register') || $request->is('admin/register')) && !$request->has('sso')) {
             session()->forget('sso_redirect');
         }
 
