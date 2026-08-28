@@ -171,7 +171,7 @@
                     Diberikan kepada
                 </p>
                 <p class="recipient-name font-serif text-2xl text-black">
-                    {{ $record->author_name }}
+                    {{ $record->formatted_authors }}
                 </p>
             </div>
             <div class="my-5 w-full max-w-xl">

@@ -138,9 +138,19 @@ class Submission extends Model
         return $this->belongsTo(Journal::class);
     }
 
+    public function getLoaNumberAttribute(): string
+    {
+        $year = $this->created_at ? $this->created_at->format('Y') : now()->format('Y');
+        $journalId = $this->journal_id ?? 0;
+        return $year . '/CIB' . sprintf('%03d', $journalId) . '/LOA' . sprintf('%03d', $this->id);
+    }
+
     public function getFormattedAuthorsAttribute(): string
     {
         if (!empty($this->authors) && is_array($this->authors)) {
+            if (count($this->authors) > 5) {
+                return 'Terlampir';
+            }
             $names = [];
             foreach ($this->authors as $author) {
                 $name = $author['name'] ?? '';

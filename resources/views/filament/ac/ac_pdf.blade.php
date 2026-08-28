@@ -240,7 +240,7 @@
                 <!-- Recipient Name -->
                 <div class="mb-8">
                     <h3 class="text-cert-navy font-serif text-4xl leading-tight">
-                        {{ $record->author_name }}
+                        {{ $record->formatted_authors }}
                     </h3>
                 </div>
                 <!-- Achievement Description -->
