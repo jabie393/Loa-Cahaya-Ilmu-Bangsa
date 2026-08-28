@@ -135,7 +135,7 @@
                     </p>
                 </div>
             </div>
-            <div class="pt-5">
+            <div class="pt-0">
                 <p class="leading-[1.079]">
                     <span class="text-primary font-manrope text-[18pt] font-bold">
                         LETTER OF ACCEPTANCE
@@ -152,7 +152,7 @@
         <div class="text-center">
             <img src="{{ asset('assets/cover/Panorama.jpg') }}"
                  alt=""
-                 class="w-[180px]" />
+                 class="w-[110px]" />
             <p class="text-primary font-manrope mb-[-4pt] text-[18pt] font-bold">
                 Panorama
             </p>
@@ -178,8 +178,9 @@
 
     <!-- Content -->
     <div class="m-auto flex flex-col rounded-3xl border bg-gray-100 px-5 py-2 tracking-widest">
+        <!-- Judul -->
         <div class="my-4 flex flex-col">
-            <div class="w-[91.9pt] align-top">
+            <div class="w-full align-top">
                 <p class="text-left">
                     <span class="text-primary font-manrope text-[10pt] font-bold uppercase">
                         Judul :
@@ -194,39 +195,41 @@
                 </p>
             </div>
         </div>
-        <div class="mb-5 flex">
-            <div class="flex w-full flex-col">
-                <div class="w-full align-top">
-                    <p class="text-left">
-                        <span class="text-primary font-manrope text-[10pt] font-bold uppercase tracking-widest">
-                            Author :
-                        </span>
-                    </p>
-                </div>
-                <div class="w-full align-top">
-                    <p class="text-left">
-                        <span class="font-manrope text-[10pt] font-normal text-black">
-                            {{ $record->formatted_authors }}
-                        </span>
-                    </p>
-                </div>
+
+        <!-- Korespondensi -->
+        <div class="mb-5 flex flex-col">
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="text-primary font-manrope text-[10pt] font-bold uppercase">
+                        Korespondensi :
+                    </span>
+                </p>
             </div>
-            <div class="flex w-full flex-col">
-                <div class="w-full align-top">
-                    <p class="text-left">
-                        <span class="text-primary font-manrope text-[10pt] font-bold uppercase">
-                            Korespondensi :
-                        </span>
-                    </p>
-                </div>
-                <div class="w-full align-top">
-                    <p class="text-left">
-                        <a href="mailto:{{ $record->email }}"
-                           class="font-manrope text-[10pt] font-normal text-black">
-                            {{ $record->email }}
-                        </a>
-                    </p>
-                </div>
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <a href="mailto:{{ $record->email }}"
+                       class="font-manrope text-[10pt] font-normal text-black">
+                        {{ $record->email }}
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Author -->
+        <div class="mb-5 flex flex-col">
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="text-primary font-manrope text-[10pt] font-bold uppercase tracking-widest">
+                        Author :
+                    </span>
+                </p>
+            </div>
+            <div class="w-full align-top">
+                <p class="text-left">
+                    <span class="font-manrope text-[10pt] font-normal text-black">
+                        {{ $record->formatted_authors }}
+                    </span>
+                </p>
             </div>
         </div>
 
