@@ -31,7 +31,7 @@ class OjsSubmissionService
                 $identifierService = new \App\Services\RepositoryIdentifierService();
                 $identifier = $identifierService->generate($submission);
                 
-                $repoUrl = rtrim(env('REPO_URL', 'http://127.0.0.1:8001'), '/');
+                $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
                 $redirectUrl = $repoUrl . '/' . $identifier;
                 $landingPage = "/article/submission-{$submission->id}";
                 
@@ -232,7 +232,7 @@ class OjsSubmissionService
      */
     public static function publishToRepository(Submission $submission): void
     {
-        $repoUrl = env('REPO_URL', 'http://localhost:8080');
+        $repoUrl = config('services.repo_url', 'http://localhost:8080');
         $apiToken = env('REPO_API_TOKEN', 'cib_repo_api_token_2026');
 
         $authorNames = [];

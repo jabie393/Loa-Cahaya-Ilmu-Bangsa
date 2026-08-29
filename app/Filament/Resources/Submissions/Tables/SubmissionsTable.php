@@ -405,7 +405,7 @@ class SubmissionsTable
                             $identifierService = new \App\Services\RepositoryIdentifierService();
                             $identifier = $identifierService->generate($record);
                             
-                            $repoUrl = rtrim(env('REPO_URL', 'http://127.0.0.1:8001'), '/');
+                            $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
                             $redirectUrl = $repoUrl . '/' . $identifier;
                             $landingPage = "/article/submission-{$record->id}";
                             

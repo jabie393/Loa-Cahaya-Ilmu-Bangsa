@@ -39,6 +39,8 @@ return [
         'driver' => env('AI_REVIEW_DRIVER', 'gemini'),
     ],
 
+    'repo_url' => env('REPO_URL', 'http://127.0.0.1:8001'),
+
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),
         'review_key' => env('GEMINI_REVIEW_API_KEY', env('GEMINI_API_KEY')),
