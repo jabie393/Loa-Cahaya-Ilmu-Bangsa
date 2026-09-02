@@ -372,6 +372,11 @@ class SubmissionsTable
                         ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
                         ->disabled(fn(Submission $record) => $record->review_status === 'processing' || empty($record->title))
                         ->action(function (Submission $record, array $data) {
+                            $hasDoi = (bool) $data['has_doi'];
+
+                            // Record financial transaction for this submission
+                            \App\Models\FinanceTransaction::recordSubmissionPayment($record, $record->proof_of_payment);
+
                             if ($record->proof_of_payment) {
                                 Storage::disk('public')->delete($record->proof_of_payment);
                             }
@@ -417,6 +422,7 @@ class SubmissionsTable
                         ->modalIcon('heroicon-o-exclamation-triangle')
                         ->modalIconColor('primary')
                         ->modalSubmitAction(fn($action) => $action->color('primary'))
+                        ->modalSubmitAction(fn($action) => $action->color('primary'))
                         ->action(function (Submission $record) {
                             $record->update([
                                 'has_doi' => true,
@@ -426,9 +432,11 @@ class SubmissionsTable
                             $identifierService = new \App\Services\RepositoryIdentifierService();
                             $identifier = $identifierService->generate($record);
 
+
                             $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
                             $redirectUrl = $repoUrl . '/' . $identifier;
                             $landingPage = "/article/submission-{$record->id}";
+
 
                             $record->update([
                                 'repository_identifier' => $identifier,
@@ -642,6 +650,9 @@ class SubmissionsTable
                                     } catch (\Throwable $e) {
                                         \Illuminate\Support\Facades\Log::warning("OJS integration failed to dispatch background job for submission ID: {$record->id}. Error: {$e->getMessage()}");
                                     }
+
+                                    // Record financial transaction for this submission
+                                    \App\Models\FinanceTransaction::recordSubmissionPayment($record, $record->proof_of_payment);
 
                                     $updateData = [
                                         'status' => 'Approved',
