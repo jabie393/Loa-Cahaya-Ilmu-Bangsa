@@ -1,0 +1,439 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Payment;
+use App\Models\Submission;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+
+class MidtransQrisService
+{
+    protected SubmissionPricingService $pricingService;
+
+    public function __construct(SubmissionPricingService $pricingService)
+    {
+        $this->pricingService = $pricingService;
+    }
+
+    public function getServerKey(): string
+    {
+        return (string) config('services.midtrans.server_key', '');
+    }
+
+    public function isProduction(): bool
+    {
+        return (bool) config('services.midtrans.is_production', false);
+    }
+
+    public function getBaseUrl(): string
+    {
+        return $this->isProduction()
+            ? 'https://api.midtrans.com'
+            : 'https://api.sandbox.midtrans.com';
+    }
+
+    /**
+     * Get an existing active pending payment or create a new one.
+     */
+    public function getOrCreatePayment(Submission $submission): Payment
+    {
+        // 1. Check if submission already has a paid payment
+        $paidPayment = $submission->payments()->where('payment_status', 'paid')->first();
+        if ($paidPayment) {
+            return $paidPayment;
+        }
+
+        // 2. Check for latest pending payment
+        $latestPayment = $submission->payments()->latest()->first();
+
+        if ($latestPayment && $latestPayment->payment_status === 'pending') {
+            // Check if expired
+            if ($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) {
+                $latestPayment->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+            } else {
+                // Still active and valid QRIS
+                return $latestPayment;
+            }
+        }
+
+        // 3. Generate a new QRIS payment
+        return $this->chargeQris($submission);
+    }
+
+    /**
+     * Force generate a new QRIS transaction (e.g., when user clicks 'Buat QRIS Baru').
+     */
+    public function forceNewPayment(Submission $submission): Payment
+    {
+        // If already paid, do not generate new
+        $paidPayment = $submission->payments()->where('payment_status', 'paid')->first();
+        if ($paidPayment) {
+            return $paidPayment;
+        }
+
+        // Mark any lingering pending payments as expired
+        $submission->payments()
+            ->where('payment_status', 'pending')
+            ->update([
+                'payment_status' => 'expired',
+                'transaction_status' => 'expire',
+            ]);
+
+        return $this->chargeQris($submission);
+    }
+
+    /**
+     * Call Midtrans Core API /v2/charge with payment_type = 'qris'.
+     */
+    public function chargeQris(Submission $submission): Payment
+    {
+        $pricing = $this->pricingService->calculate($submission);
+        $grossAmount = (int) round($pricing['gross_amount']);
+
+        // Generate unique order_id: SUB-{id}-{timestamp}-{random}
+        $orderId = 'SUB-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
+
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
+
+        $payload = [
+            'payment_type' => 'qris',
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'qris' => [
+                'acquirer' => 'gopay',
+            ],
+            'customer_details' => [
+                'first_name' => Str::limit($customerName, 45, ''),
+                'email' => $customerEmail,
+            ],
+            'item_details' => [
+                [
+                    'id' => 'SUBMISSION-' . $submission->id,
+                    'price' => $grossAmount,
+                    'quantity' => 1,
+                    'name' => Str::limit($pricing['tier_name'] . ' - ' . ($submission->journal?->name ?? 'Jurnal'), 50, ''),
+                ]
+            ],
+        ];
+
+        Log::info("Midtrans QRIS charge initiating for Submission #{$submission->id}", [
+            'order_id' => $orderId,
+            'gross_amount' => $grossAmount,
+        ]);
+
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => $authHeader,
+        ])->timeout(20)->post($this->getBaseUrl() . '/v2/charge', $payload);
+
+        $responseData = $response->json();
+
+        Log::info("Midtrans QRIS charge response for {$orderId}:", [
+            'status' => $response->status(),
+            'body' => $responseData,
+        ]);
+
+        if (!$response->successful() || empty($responseData)) {
+            $errorMsg = $responseData['status_message'] ?? 'Gagal menghubungi server Midtrans.';
+            throw new \Exception("Gagal membuat QRIS: " . $errorMsg);
+        }
+
+        // Extract QR URL from actions
+        $qrisUrl = null;
+        if (!empty($responseData['actions']) && is_array($responseData['actions'])) {
+            foreach ($responseData['actions'] as $action) {
+                if (($action['name'] ?? '') === 'generate-qr-code') {
+                    $qrisUrl = $action['url'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $qrString = $responseData['qr_string'] ?? null;
+
+        // Parse expiry time
+        $expiredAt = null;
+        if (!empty($responseData['expiry_time'])) {
+            try {
+                $expiredAt = Carbon::parse($responseData['expiry_time']);
+            } catch (\Exception $e) {
+                $expiredAt = now()->addMinutes(15);
+            }
+        } else {
+            $expiredAt = now()->addMinutes(15);
+        }
+
+        $payment = Payment::create([
+            'submission_id' => $submission->id,
+            'order_id' => $orderId,
+            'transaction_id' => $responseData['transaction_id'] ?? null,
+            'payment_method' => 'qris',
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
+            'transaction_status' => $responseData['transaction_status'] ?? 'pending',
+            'payment_status' => 'pending',
+            'qris_url' => $qrisUrl,
+            'qr_string' => $qrString,
+            'expired_at' => $expiredAt,
+            'raw_response' => $responseData,
+        ]);
+
+        // Keep submission in pending payment
+        $submission->update(['payment_status' => 'pending']);
+
+        return $payment;
+    }
+
+    /**
+     * Check transaction status directly from Midtrans API /v2/{order_id}/status.
+     */
+    public function checkStatusFromMidtrans(Payment $payment): Payment
+    {
+        if ($payment->isPaid()) {
+            return $payment;
+        }
+
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => $authHeader,
+            ])->timeout(10)->get($this->getBaseUrl() . '/v2/' . $payment->order_id . '/status');
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $transStatus = $data['transaction_status'] ?? null;
+
+                if (in_array($transStatus, ['capture', 'settlement'])) {
+                    $payment->update([
+                        'payment_status' => 'paid',
+                        'transaction_status' => $transStatus,
+                        'paid_at' => now(),
+                        'raw_response' => $data,
+                    ]);
+
+                    $submission = $payment->submission;
+                    if ($submission) {
+                        if ($payment->type === 'doi_addon') {
+                            $this->activateDoiForSubmission($submission);
+                        } else {
+                            $submission->update(['payment_status' => 'paid']);
+                            $submission->approveAndProcess();
+                        }
+                    }
+                } elseif ($transStatus === 'expire') {
+                    $payment->update([
+                        'payment_status' => 'expired',
+                        'transaction_status' => 'expire',
+                    ]);
+                } elseif (in_array($transStatus, ['deny', 'cancel'])) {
+                    $payment->update([
+                        'payment_status' => 'failed',
+                        'transaction_status' => $transStatus,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("Failed to check status from Midtrans for {$payment->order_id}: " . $e->getMessage());
+        }
+
+        return $payment->fresh();
+    }
+
+    /**
+     * Get or create pending payment specifically for DOI Addon.
+     */
+    public function getOrCreateDoiPayment(Submission $submission): Payment
+    {
+        // 1. Check if submission already has a paid DOI addon payment
+        $paidDoi = $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'paid')->first();
+        if ($paidDoi) {
+            return $paidDoi;
+        }
+
+        // 2. If submission already has active DOI (e.g. from initial package or admin), create/return a paid record
+        if ($submission->has_doi && !empty($submission->repository_identifier)) {
+            // Find any latest payment or create a mock paid payment record for display
+            $existing = $submission->payments()->where('type', 'doi_addon')->first();
+            if ($existing) {
+                $existing->update(['payment_status' => 'paid', 'transaction_status' => 'settlement']);
+                return $existing;
+            }
+            return Payment::create([
+                'submission_id' => $submission->id,
+                'order_id' => 'DOI-' . $submission->id . '-INITIAL',
+                'payment_method' => 'qris',
+                'type' => 'doi_addon',
+                'gross_amount' => 20000.00,
+                'journal_share' => 15000.00,
+                'developer_gross_share' => 5000.00,
+                'mdr_amount' => 140.00,
+                'developer_net_share' => 4860.00,
+                'transaction_status' => 'settlement',
+                'payment_status' => 'paid',
+                'paid_at' => now(),
+            ]);
+        }
+
+        // Check for latest pending DOI payment
+        $latestDoi = $submission->payments()->where('type', 'doi_addon')->latest()->first();
+
+        if ($latestDoi && $latestDoi->payment_status === 'pending') {
+            if ($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) {
+                $latestDoi->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+            } else {
+                return $latestDoi;
+            }
+        }
+
+        return $this->chargeDoiAddonQris($submission);
+    }
+
+    /**
+     * Charge QRIS for DOI Add-on (Rp 20,000).
+     */
+    public function chargeDoiAddonQris(Submission $submission): Payment
+    {
+        $pricing = $this->pricingService->calculateDoiAddon();
+        $grossAmount = (int) round($pricing['gross_amount']);
+
+        $orderId = 'DOI-' . $submission->id . '-' . time() . '-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(4));
+
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
+
+        $payload = [
+            'payment_type' => 'qris',
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'qris' => [
+                'acquirer' => 'gopay',
+            ],
+            'customer_details' => [
+                'first_name' => \Illuminate\Support\Str::limit($customerName, 45, ''),
+                'email' => $customerEmail,
+            ],
+            'item_details' => [
+                [
+                    'id' => 'DOI-' . $submission->id,
+                    'price' => $grossAmount,
+                    'quantity' => 1,
+                    'name' => 'Add-on DOI - ' . ($submission->journal?->name ?? 'Jurnal'),
+                ]
+            ],
+        ];
+
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => $authHeader,
+        ])->timeout(20)->post($this->getBaseUrl() . '/v2/charge', $payload);
+
+        $responseData = $response->json();
+
+        if (!$response->successful() || empty($responseData)) {
+            $errorMsg = $responseData['status_message'] ?? 'Gagal menghubungi server Midtrans.';
+            throw new \Exception("Gagal membuat QRIS DOI: " . $errorMsg);
+        }
+
+        $qrisUrl = null;
+        if (!empty($responseData['actions']) && is_array($responseData['actions'])) {
+            foreach ($responseData['actions'] as $action) {
+                if (($action['name'] ?? '') === 'generate-qr-code') {
+                    $qrisUrl = $action['url'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $qrString = $responseData['qr_string'] ?? null;
+        $expiredAt = now()->addMinutes(15);
+        if (!empty($responseData['expiry_time'])) {
+            try {
+                $expiredAt = \Carbon\Carbon::parse($responseData['expiry_time']);
+            } catch (\Exception $e) {}
+        }
+
+        return Payment::create([
+            'submission_id' => $submission->id,
+            'order_id' => $orderId,
+            'transaction_id' => $responseData['transaction_id'] ?? null,
+            'payment_method' => 'qris',
+            'type' => 'doi_addon',
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
+            'transaction_status' => $responseData['transaction_status'] ?? 'pending',
+            'payment_status' => 'pending',
+            'qris_url' => $qrisUrl,
+            'qr_string' => $qrString,
+            'expired_at' => $expiredAt,
+            'raw_response' => $responseData,
+        ]);
+    }
+
+    /**
+     * Activate DOI for submission upon successful payment.
+     */
+    public function activateDoiForSubmission(Submission $submission): void
+    {
+        $submission->update([
+            'want_doi' => true,
+            'has_doi' => true,
+        ]);
+
+        if (empty($submission->repository_identifier)) {
+            try {
+                $identifierService = new \App\Services\RepositoryIdentifierService();
+                $identifier = $identifierService->generate($submission);
+                $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
+                $redirectUrl = $repoUrl . '/' . $identifier;
+                $landingPage = "/article/submission-{$submission->id}";
+
+                $submission->update([
+                    'repository_identifier' => $identifier,
+                    'repository_landing_page' => $landingPage,
+                    'repository_redirect_url' => $redirectUrl,
+                    'repository_identifier_status' => 'active',
+                    'repository_identifier_generated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                Log::error("DOI generation failed for submission #{$submission->id}: " . $e->getMessage());
+            }
+        }
+
+        try {
+            \App\Services\OjsSubmissionService::submitInBackground($submission);
+        } catch (\Throwable $e) {
+            Log::warning("OJS sync failed for submission #{$submission->id}: " . $e->getMessage());
+        }
+    }
+}

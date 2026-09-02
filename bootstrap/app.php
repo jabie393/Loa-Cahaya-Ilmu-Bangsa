@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/webhook',
+            'api/midtrans/webhook',
+        ]);
+
         $middleware->append(\App\Http\Middleware\TrustProxies::class);
         
         $middleware->web(append: [

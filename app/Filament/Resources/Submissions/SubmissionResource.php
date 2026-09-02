@@ -89,6 +89,8 @@ class SubmissionResource extends Resource
             'preview' => Pages\PreviewLoa::route('/{record}/preview'),
             'preview_ac' => Pages\PreviewCertificate::route('/{record}/ac'),
             'preview_pfc' => Pages\PreviewPfc::route('/{record}/pfc'),
+            'payment' => Pages\PaymentSubmission::route('/{record}/payment'),
+            'payment.doi' => Pages\PaymentDoiSubmission::route('/{record}/payment-doi'),
         ];
     }
 }

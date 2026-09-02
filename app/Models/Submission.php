@@ -76,6 +76,7 @@ class Submission extends Model
         'date_of_loa',
         'proof_of_payment',
         'status',
+        'payment_status',
         'rejection_reason',
         'submission_date',
         'approved_date',
@@ -363,6 +364,77 @@ class Submission extends Model
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\ExternalSubmissionApproved($this));
         } else {
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\SubmissionApproved($this));
+        }
+    }
+
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function latestPayment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Approve submission and trigger automated tasks (DOI generation & OJS submission).
+     */
+    public function approveAndProcess(): void
+    {
+        $hasDoi = (bool) $this->want_doi;
+
+        $updateData = [
+            'status' => 'Approved',
+            'approved_date' => now(),
+            'has_doi' => $hasDoi,
+        ];
+
+        if ($this->review_status === 'failed') {
+            $updateData['review_status'] = 'N/A';
+        }
+
+        $this->update($updateData);
+
+        // If DOI is requested and not yet generated, generate immediately
+        if ($hasDoi && empty($this->repository_identifier)) {
+            try {
+                $identifierService = new \App\Services\RepositoryIdentifierService();
+                $identifier = $identifierService->generate($this);
+
+                $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
+                $redirectUrl = $repoUrl . '/' . $identifier;
+                $landingPage = "/article/submission-{$this->id}";
+
+                $this->update([
+                    'repository_identifier' => $identifier,
+                    'repository_landing_page' => $landingPage,
+                    'repository_redirect_url' => $redirectUrl,
+                    'repository_identifier_status' => 'active',
+                    'repository_identifier_generated_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Auto-approve: DOI generation failed for Submission #{$this->id}: " . $e->getMessage());
+            }
+        }
+
+        // Send approval email
+        try {
+            $this->sendApprovalEmail();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Auto-approve: Approval email failed for Submission #{$this->id}: " . $e->getMessage());
+        }
+
+        // Run OJS Submission in background
+        try {
+            \App\Services\OjsSubmissionService::submitInBackground($this);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Auto-approve: OJS integration dispatch failed for Submission #{$this->id}: " . $e->getMessage());
         }
     }
 }

@@ -639,3 +639,55 @@ Route::post('/sso/local-check', function () {
         'logged_in' => \Illuminate\Support\Facades\Auth::check()
     ]);
 })->name('sso.local-check');
+
+
+// =========================================================================
+// MIDTRANS PAYMENT & WEBHOOK ROUTES
+// =========================================================================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/submissions/{id}/payment', [\App\Http\Controllers\PaymentController::class, 'show'])->name('submissions.payment');
+    Route::get('/submissions/{id}/payment/check', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('submissions.payment.check');
+    Route::post('/submissions/{id}/payment/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerate'])->name('submissions.payment.regenerate');
+    Route::get('/submissions/{id}/payment-doi', [\App\Http\Controllers\PaymentController::class, 'showDoi'])->name('submissions.payment.doi');
+    Route::get('/submissions/{id}/payment-doi/check', [\App\Http\Controllers\PaymentController::class, 'checkDoiStatus'])->name('submissions.payment.doi.check');
+    Route::post('/submissions/{id}/payment-doi/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateDoi'])->name('submissions.payment.doi.regenerate');
+
+});
+
+Route::post('/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
+Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle']);
+
+
+Route::get('/invoice/preview/{record}', function (App\Models\Submission $record) {
+    // Get all paid payments for this submission
+    $paidPayments = $record->payments()->where('payment_status', 'paid')->get();
+
+    if ($paidPayments->isEmpty()) {
+        $payment = $record->latestPayment;
+        if (!$payment) {
+            abort(404, 'Data pembayaran belum ditemukan untuk naskah ini.');
+        }
+        $paidPayments = collect([$payment]);
+    }
+
+    $submissionPayment = $paidPayments->firstWhere('type', 'submission') 
+                         ?? $paidPayments->firstWhere('type', '!=', 'doi_addon') 
+                         ?? $paidPayments->first();
+    $doiPayment = $paidPayments->firstWhere('type', 'doi_addon');
+
+    $totalPaid = $paidPayments->sum('gross_amount');
+    $latestPaidAt = $paidPayments->max('paid_at') ?? $paidPayments->max('created_at');
+
+    $pricingService = app(App\Services\SubmissionPricingService::class);
+    $pricing = $pricingService->calculate($record);
+
+    return view('filament.invoice.invoice', [
+        'submission' => $record,
+        'paidPayments' => $paidPayments,
+        'submissionPayment' => $submissionPayment,
+        'doiPayment' => $doiPayment,
+        'totalPaid' => $totalPaid,
+        'latestPaidAt' => $latestPaidAt,
+        'pricing' => $pricing,
+    ]);
+})->name('public.invoice.preview');

@@ -92,8 +92,8 @@ class CreateSubmission extends CreateRecord
                                     ];
                                 }
                                 return [
-                                    1 => 'Dengan DOI (Rp 80.000)',
-                                    0 => 'Tanpa DOI (Rp 60.000)',
+                                    1 => 'Dengan DOI',
+                                    0 => 'Tanpa DOI',
                                 ];
                             })
                             ->default(fn($record) => $record !== null ? ($record->want_doi ? 1 : 0) : null)
@@ -194,17 +194,6 @@ class CreateSubmission extends CreateRecord
                                 }
                             ]),
 
-                        FileUpload::make('proof_of_payment')
-                            ->label('Upload Bukti Pembayaran')
-                            ->directory('proof-of-payment')
-                            ->disk('public')
-                            ->image()
-                            ->required(),
-
-                        Placeholder::make('qris_image')
-                            ->label('QRIS Pembayaran')
-                            ->content(new HtmlString('<div class="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800"><img src="' . asset('assets/qris.jpg') . '?v=' . (file_exists(public_path('assets/qris.jpg')) ? filemtime(public_path('assets/qris.jpg')) : time()) . '" alt="QRIS" class="w-full max-w-md rounded-lg shadow-sm mb-3" style="max-height: 400px; object-fit: contain;" /><span class="text-xs text-gray-500 dark:text-gray-400 block">Scan QRIS di atas untuk melakukan pembayaran</span><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mt-3">Nominal Transfer:</div><div class="text-xs text-gray-600 dark:text-gray-400 text-left mt-1 inline-block">• Tanpa DOI: <strong class="text-gray-900 dark:text-white">Rp 60.000</strong><br>• Dengan DOI: <strong class="text-emerald-600 dark:text-emerald-400 font-bold">Rp 80.000</strong></div></div>')),
-
                         TextInput::make('email')
                             ->label('Email Korespondensi (Penerima LOA)')
                             ->email()
@@ -253,7 +242,7 @@ class CreateSubmission extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return $this->getResource()::getUrl('index');
+        return static::$resource::getUrl('payment', ['record' => $this->record]);
     }
 
     protected function getCreatedNotification(): ?Notification
@@ -261,7 +250,7 @@ class CreateSubmission extends CreateRecord
         return Notification::make()
             ->warning()
             ->title('Pengajuan Berhasil Dikirim!')
-            ->body('Naskah Anda sedang diproses oleh sistem untuk ekstraksi otomatis. Harap tinjau kembali data Anda (Judul, Abstrak, Penulis) di tabel sebelum melakukan Konfirmasi LOA ke Admin!')
+            ->body('Naskah Anda berhasil dikirim. Silakan selesaikan pembayaran melalui QRIS Midtrans berikut.')
             ->persistent();
     }
 }

@@ -284,6 +284,12 @@ class ReviewSubmission extends Page
                 })
                 ->visible(fn() => $this->record->status === 'Pending' && Auth::user()?->hasRole('super_admin')),
             ActionGroup::make([
+                Action::make('bayar')
+                    ->label('Bayar QRIS')
+                    ->icon('heroicon-m-credit-card')
+                    ->color('success')
+                    ->url(fn(): string => static::$resource::getUrl('payment', ['record' => $this->record]))
+                    ->visible(fn(): bool => $this->record->payment_status !== 'paid'),
                 EditAction::make()
                     ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square')

@@ -81,6 +81,15 @@ class SubmissionsTable
                             default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50' // null / not sent
                         };
                         $ojsLabel = ucfirst($ojsStatus);
+                        // Payment Badge Info
+                        $payStatus = $record->payment_status ?? 'pending';
+                        $payClass = match ($payStatus) {
+                            'paid' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
+                            'expired' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            default => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
+                        };
+                        $payLabel = ucfirst($payStatus);
+
 
                         // 4. Date / Sync Time Info
                         $dateString = '';
@@ -325,6 +334,12 @@ class SubmissionsTable
             ->recordUrl(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ActionGroup::make([
+                    Action::make('bayar')
+                        ->label('Bayar QRIS')
+                        ->icon('heroicon-o-credit-card')
+                        ->color('primary')
+                        ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
+                        ->visible(fn(Submission $record) => $record->payment_status !== 'paid'),
                     Action::make('review')
                         ->label('Review')
                         ->icon('heroicon-o-eye')
@@ -361,7 +376,7 @@ class SubmissionsTable
                                 Storage::disk('public')->delete($record->proof_of_payment);
                             }
 
-                            $hasDoi = (bool)$data['has_doi'];
+                            $hasDoi = (bool) $data['has_doi'];
 
                             $updateData = [
                                 'status' => 'Approved',
@@ -386,6 +401,12 @@ class SubmissionsTable
                                 ->success()
                                 ->send();
                         }),
+                    Action::make('tambah_doi')
+                        ->label('Tambah DOI')
+                        ->icon('heroicon-o-plus-circle')
+                        ->color('primary')
+                        ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment.doi', ['record' => $record]))
+                        ->visible(fn(Submission $record) => $record->status === 'Approved' && !$record->has_doi),
                     Action::make('generate_doi')
                         ->label('Buat DOI')
                         ->icon('heroicon-o-qr-code')
@@ -395,7 +416,7 @@ class SubmissionsTable
                         ->modalDescription('Apakah Anda yakin ingin membuat DOI/Repository Identifier untuk artikel ini? Tindakan ini akan memperbarui data di OJS dan katalog Repository.')
                         ->modalIcon('heroicon-o-exclamation-triangle')
                         ->modalIconColor('primary')
-                        ->modalSubmitAction(fn ($action) => $action->color('primary'))
+                        ->modalSubmitAction(fn($action) => $action->color('primary'))
                         ->action(function (Submission $record) {
                             $record->update([
                                 'has_doi' => true,
@@ -404,11 +425,11 @@ class SubmissionsTable
                             // Generate DOI immediately
                             $identifierService = new \App\Services\RepositoryIdentifierService();
                             $identifier = $identifierService->generate($record);
-                            
+
                             $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
                             $redirectUrl = $repoUrl . '/' . $identifier;
                             $landingPage = "/article/submission-{$record->id}";
-                            
+
                             $record->update([
                                 'repository_identifier' => $identifier,
                                 'repository_landing_page' => $landingPage,
@@ -531,6 +552,13 @@ class SubmissionsTable
                         ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
                         ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
                         ->modalCancelActionLabel('Periksa Kembali'),
+                    Action::make('download_invoice')
+                        ->label('Download Invoice')
+                        ->icon('heroicon-o-document-currency-dollar')
+                        ->color('primary')
+                        ->url(fn(Submission $record) => route('public.invoice.preview', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->visible(fn(Submission $record) => $record->payment_status === 'paid'),
                     Action::make('download')
                         ->label('Download LOA')
                         ->icon('heroicon-o-arrow-down-tray')
