@@ -138,6 +138,50 @@ class Submission extends Model
         return $this->belongsTo(Journal::class);
     }
 
+    public function financeTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(FinanceTransaction::class);
+    }
+
+    public function serviceRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ServiceRequest::class);
+    }
+
+    /**
+     * Determine author count from array or string
+     */
+    public function getAuthorCountAttribute(): int
+    {
+        if (!empty($this->authors) && is_array($this->authors)) {
+            return count($this->authors);
+        }
+        if (!empty($this->author_name)) {
+            return count(array_filter(array_map('trim', explode(',', $this->author_name))));
+        }
+        return 1;
+    }
+
+    /**
+     * Resolve the corresponding pricing package for this submission
+     */
+    public function resolvePackage(): ?Package
+    {
+        $count = $this->author_count;
+        $wantDoi = (bool) ($this->want_doi || $this->has_doi);
+
+        // Check if journal is international (e.g. ijefi or pjls or flag)
+        $isInternational = false;
+        if ($this->journal) {
+            $url = $this->journal->ojs_base_url ?? '';
+            if (str_contains(strtolower($url), 'ijefi') || str_contains(strtolower($url), 'pjls')) {
+                $isInternational = true;
+            }
+        }
+
+        return Package::resolveForSubmission($count, $wantDoi, $isInternational);
+    }
+
     public function getLoaNumberAttribute(): string
     {
         $year = $this->created_at ? $this->created_at->format('Y') : now()->format('Y');
@@ -179,7 +223,7 @@ class Submission extends Model
 
         $folderName = $mapping[$slug] ?? \Illuminate\Support\Str::studly($slug);
         $view = "filament.loa_pdf.LOA_{$folderName}.LOA_{$folderName}";
-        
+
         return view()->exists($view) ? $view : 'filament.loa_pdf.LOA_Argopuro.LOA_Argopuro';
     }
 
@@ -192,7 +236,7 @@ class Submission extends Model
 
         $folderName = \Illuminate\Support\Str::studly($journal->slug);
         $customView = "filament.ac.AC_{$folderName}";
-        
+
         return view()->exists($customView) ? $customView : 'filament.ac.ac_pdf';
     }
 
@@ -205,7 +249,7 @@ class Submission extends Model
 
         $folderName = \Illuminate\Support\Str::studly($journal->slug);
         $customView = "filament.pfc.PFC_{$folderName}";
-        
+
         return view()->exists($customView) ? $customView : 'filament.pfc.pfc_pdf';
     }
 
@@ -297,7 +341,6 @@ class Submission extends Model
                     ->success()
                     ->send();
             }
-
         } catch (\Exception $e) {
             $this->update([
                 'review_status' => 'failed',
@@ -364,5 +407,47 @@ class Submission extends Model
         } else {
             \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\SubmissionApproved($this));
         }
+    }
+
+    public function getGrossPriceAttribute(): float
+    {
+        $authorCount = is_array($this->authors) && count($this->authors) > 0 ? count($this->authors) : 1;
+        $hasDoi = $this->has_doi || $this->want_doi;
+
+        if ($authorCount <= 5) {
+            return $hasDoi ? 80000 : 60000;
+        } elseif ($authorCount <= 10) {
+            return $hasDoi ? 120000 : 100000;
+        } elseif ($authorCount <= 15) {
+            return 150000;
+        } else {
+            return 200000;
+        }
+    }
+
+    public function getQrisFeeAttribute(): float
+    {
+        return round($this->gross_price * 0.007);
+    }
+
+    public function getDevCutAttribute(): float
+    {
+        $authorCount = is_array($this->authors) && count($this->authors) > 0 ? count($this->authors) : 1;
+        $hasDoi = $this->has_doi || $this->want_doi;
+
+        if ($authorCount <= 5) {
+            return $hasDoi ? 4440 : 4580;
+        } elseif ($authorCount <= 10) {
+            return $hasDoi ? 9160 : 9300;
+        } elseif ($authorCount <= 15) {
+            return 18950;
+        } else {
+            return 28600;
+        }
+    }
+
+    public function getAdminCutAttribute(): float
+    {
+        return $this->gross_price - $this->qris_fee - $this->dev_cut;
     }
 }
