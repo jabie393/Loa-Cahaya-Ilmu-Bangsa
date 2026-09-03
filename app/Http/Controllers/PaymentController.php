@@ -269,4 +269,83 @@ class PaymentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Check status for Bulk Payment transaction.
+     */
+    public function checkBulkStatus(int $paymentId): JsonResponse
+    {
+        $payment = \App\Models\Payment::findOrFail($paymentId);
+
+        if (!$payment->isPaid()) {
+            $payment = $this->qrisService->checkStatusFromMidtrans($payment);
+        }
+
+        $isPaid = $payment->isPaid() || $payment->payment_status === 'paid' || $payment->transaction_status === 'settlement';
+
+        return response()->json([
+            'status' => $isPaid ? 'paid' : $payment->payment_status,
+            'is_paid' => $isPaid,
+            'is_expired' => $payment->isExpired(),
+            'message' => $isPaid ? 'Pembayaran kolektif berhasil diverifikasi!' : ($payment->isExpired() ? 'QRIS Kedaluwarsa' : 'Menunggu pembayaran...'),
+        ]);
+    }
+
+
+    /**
+     * Regenerate expired Bulk QRIS payment for multiple submissions.
+     */
+    public function regenerateBulk(int $paymentId): JsonResponse
+    {
+        $oldPayment = \App\Models\Payment::findOrFail($paymentId);
+
+        if ($oldPayment->isPaid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran ini sudah lunas, tidak dapat di-generate ulang.',
+            ], 400);
+        }
+
+        $submissionIds = $oldPayment->submission_ids;
+        if (empty($submissionIds)) {
+            $submissionIds = $oldPayment->submission_id ? [$oldPayment->submission_id] : [];
+        }
+
+        $submissions = \App\Models\Submission::whereIn('id', $submissionIds)->get();
+
+        if ($submissions->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data naskah tidak ditemukan.',
+            ], 404);
+        }
+
+        // Mark old payment as expired
+        $oldPayment->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
+
+        try {
+            $newPayment = $this->qrisService->chargeBulkQris($submissions);
+
+            return response()->json([
+                'success' => true,
+                'payment_id' => $newPayment->id,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at?->toIso8601String(),
+                'gross_amount' => $newPayment->gross_amount,
+                'check_url' => route('payments.check.bulk', ['paymentId' => $newPayment->id]),
+                'regenerate_url' => route('payments.regenerate.bulk', ['paymentId' => $newPayment->id]),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat QRIS Baru: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

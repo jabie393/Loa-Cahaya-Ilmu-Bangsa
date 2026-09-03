@@ -227,6 +227,7 @@ class SubmissionsTable
                     })
                     ->sortable(),
             ])
+            ->poll('5s')
             ->defaultSort('volume_sort_key', 'desc')
             ->filters([
                 SelectFilter::make('ojs_base_url')
@@ -621,11 +622,51 @@ class SubmissionsTable
                 ])
                     ->label('')
                     ->button()
+                    ->color('primary')
                     ->icon('heroicon-o-eye'),
             ], position: RecordActionsPosition::BeforeColumns)
 
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('bulk_pay_qris')
+                        ->label('Bayar QRIS Terpilih')
+                        ->icon('heroicon-o-credit-card')
+                        ->color('primary')
+                        ->action(function (Collection $records) {
+                            // 1. Check if any selected submission is still processing review
+                            $processingRecords = $records->filter(fn(Submission $r) => $r->review_status === 'processing' || empty($r->title));
+
+                            if ($processingRecords->isNotEmpty()) {
+                                $processingIds = $processingRecords->pluck('id')->implode(', ');
+                                Notification::make()
+                                    ->warning()
+                                    ->title('Naskah Sedang Dalam Proses Review')
+                                    ->body("Terdapat naskah ({$processingIds}) yang masih dalam proses ekstraksi & peninjauan (review). Mohon tunggu hingga proses review selesai sebelum melakukan pembayaran.")
+                                    ->persistent()
+                                    ->send();
+                                return;
+                            }
+
+                            // 2. Filter only submissions that are pending LOA and unpaid
+                            $unpaidRecords = $records->filter(function (Submission $r) {
+                                return $r->status === 'Pending'
+                                    && $r->payment_status !== 'paid'
+                                    && empty($r->proof_of_payment);
+                            });
+
+                            if ($unpaidRecords->isEmpty()) {
+                                Notification::make()
+                                    ->warning()
+                                    ->title('Tidak Ada Naskah yang Memerlukan Pembayaran')
+                                    ->body('Seluruh naskah yang dipilih sudah berstatus Approved atau sudah lunas.')
+                                    ->send();
+                                return;
+                            }
+
+                            $ids = $unpaidRecords->pluck('id')->implode(',');
+                            return redirect()->to(SubmissionResource::getUrl('payment.bulk') . '?records=' . $ids);
+                        }),
+
                     BulkAction::make('approve_selected')
                         ->label('Approve Selected')
                         ->icon('heroicon-o-check-circle')

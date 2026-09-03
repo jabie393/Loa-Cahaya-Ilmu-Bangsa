@@ -242,15 +242,16 @@ class CreateSubmission extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return static::$resource::getUrl('payment', ['record' => $this->record]);
+        return static::$resource::getUrl('index');
     }
 
     protected function getCreatedNotification(): ?Notification
     {
         return Notification::make()
-            ->warning()
+            ->info()
+            ->icon('heroicon-o-information-circle')
             ->title('Pengajuan Berhasil Dikirim!')
-            ->body('Naskah Anda berhasil dikirim. Silakan selesaikan pembayaran melalui QRIS Midtrans berikut.')
-            ->persistent();
+            ->body('Naskah Anda sedang dalam proses peninjauan (review). Setelah selesai, Anda dapat melakukan pembayaran melalui tombol "Bayar QRIS" di daftar naskah untuk mengaktifkan persetujuan (LOA Approval) otomatis.')
+            ->duration(10000);
     }
 }

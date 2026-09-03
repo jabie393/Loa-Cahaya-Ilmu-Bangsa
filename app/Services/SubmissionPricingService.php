@@ -195,4 +195,42 @@ class SubmissionPricingService
             'developer_net_share' => $devNet,
         ];
     }
+
+    /**
+     * Calculate cumulative pricing breakdown for multiple submissions.
+     */
+    public function calculateBulk($submissions): array
+    {
+        $items = [];
+        $totalGross = 0;
+        $totalJournal = 0;
+        $totalDevGross = 0;
+        $totalMdr = 0;
+        $totalDevNet = 0;
+
+        foreach ($submissions as $submission) {
+            $pricing = $this->calculate($submission);
+            $items[] = [
+                'submission' => $submission,
+                'pricing' => $pricing,
+            ];
+
+            $totalGross += $pricing['gross_amount'];
+            $totalJournal += $pricing['journal_share'];
+            $totalDevGross += $pricing['developer_gross_share'];
+            $totalMdr += $pricing['mdr_amount'];
+            $totalDevNet += $pricing['developer_net_share'];
+        }
+
+        return [
+            'items' => $items,
+            'count' => count($items),
+            'gross_amount' => $totalGross,
+            'journal_share' => $totalJournal,
+            'developer_gross_share' => $totalDevGross,
+            'mdr_amount' => $totalMdr,
+            'developer_net_share' => $totalDevNet,
+        ];
+    }
+
 }

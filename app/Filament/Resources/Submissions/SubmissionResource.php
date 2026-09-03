@@ -91,6 +91,7 @@ class SubmissionResource extends Resource
             'preview_pfc' => Pages\PreviewPfc::route('/{record}/pfc'),
             'payment' => Pages\PaymentSubmission::route('/{record}/payment'),
             'payment.doi' => Pages\PaymentDoiSubmission::route('/{record}/payment-doi'),
+            'payment.bulk' => Pages\PaymentBulkSubmission::route('/bulk-payment'),
         ];
     }
 }

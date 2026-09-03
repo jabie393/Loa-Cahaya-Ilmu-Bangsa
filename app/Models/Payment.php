@@ -16,6 +16,7 @@ class Payment extends Model
         'transaction_id',
         'payment_method',
         'type',
+        'submission_ids',
         'gross_amount',
         'journal_share',
         'developer_gross_share',
@@ -31,6 +32,7 @@ class Payment extends Model
     ];
 
     protected $casts = [
+        'submission_ids' => 'array',
         'gross_amount' => 'decimal:2',
         'journal_share' => 'decimal:2',
         'developer_gross_share' => 'decimal:2',
@@ -40,6 +42,17 @@ class Payment extends Model
         'paid_at' => 'datetime',
         'raw_response' => 'array',
     ];
+
+    
+    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PaymentItem::class);
+    }
+
+    public function submissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Submission::class, 'payment_items');
+    }
 
     public function submission(): BelongsTo
     {

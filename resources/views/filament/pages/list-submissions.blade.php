@@ -1,4 +1,14 @@
 <x-filament-panels::page>
+    <style>
+        /* Specific only to table action buttons to prevent dimming on wire:poll without breaking header buttons/modals */
+        .fi-ta-actions button, .fi-ta-actions a {
+            opacity: 1 !important;
+        }
+        .fi-ta-row [wire\:loading] {
+            opacity: 1 !important;
+        }
+    </style>
+
     <!-- Instructions & Action Banner -->
     <div
         class="border-primary-100 bg-primary-50 dark:border-primary-900/30 dark:bg-primary-900/20 mb-4 rounded-2xl border p-6">

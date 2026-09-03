@@ -41,13 +41,19 @@ class MidtransQrisService
     public function getOrCreatePayment(Submission $submission): Payment
     {
         // 1. Check if submission already has a paid payment
-        $paidPayment = $submission->payments()->where('payment_status', 'paid')->first();
+        $paidPayment = $submission->payments()
+            ->where('payment_status', 'paid')
+            ->where('type', 'submission')
+            ->first();
         if ($paidPayment) {
             return $paidPayment;
         }
 
-        // 2. Check for latest pending payment
-        $latestPayment = $submission->payments()->latest()->first();
+        // 2. Check for latest pending payment specifically for single submission
+        $latestPayment = $submission->payments()
+            ->where('type', 'submission')
+            ->latest()
+            ->first();
 
         if ($latestPayment && $latestPayment->payment_status === 'pending') {
             // Check if expired
@@ -57,12 +63,12 @@ class MidtransQrisService
                     'transaction_status' => 'expire',
                 ]);
             } else {
-                // Still active and valid QRIS
+                // Still active and valid single QRIS
                 return $latestPayment;
             }
         }
 
-        // 3. Generate a new QRIS payment
+        // 3. Generate a new QRIS payment specifically for this single submission
         return $this->chargeQris($submission);
     }
 
@@ -230,13 +236,23 @@ class MidtransQrisService
                         'raw_response' => $data,
                     ]);
 
-                    $submission = $payment->submission;
-                    if ($submission) {
-                        if ($payment->type === 'doi_addon') {
-                            $this->activateDoiForSubmission($submission);
-                        } else {
-                            $submission->update(['payment_status' => 'paid']);
-                            $submission->approveAndProcess();
+                    if ($payment->type === 'bulk_submission') {
+                        $submissions = !empty($payment->submission_ids)
+                            ? Submission::whereIn('id', $payment->submission_ids)->get()
+                            : ($payment->submission ? collect([$payment->submission]) : collect());
+
+                        foreach ($submissions as $sub) {
+                            $sub->update(['payment_status' => 'paid']);
+                            $sub->approveAndProcess();
+                        }
+                    } elseif ($payment->type === 'doi_addon') {
+                        if ($payment->submission) {
+                            $this->activateDoiForSubmission($payment->submission);
+                        }
+                    } else {
+                        if ($payment->submission) {
+                            $payment->submission->update(['payment_status' => 'paid']);
+                            $payment->submission->approveAndProcess();
                         }
                     }
                 } elseif ($transStatus === 'expire') {
@@ -436,4 +452,168 @@ class MidtransQrisService
             Log::warning("OJS sync failed for submission #{$submission->id}: " . $e->getMessage());
         }
     }
+
+    /**
+     * Get or create pending QRIS payment for multiple submissions.
+     */
+    public function getOrCreateBulkPayment($submissions): Payment
+    {
+        $submissionIds = $submissions->pluck('id')->sort()->values()->toArray();
+
+        // 1. Check if there is already a PAID bulk payment for these exact submissions
+        $paidPayment = Payment::where('type', 'bulk_submission')
+            ->where('payment_status', 'paid')
+            ->get()
+            ->first(function ($p) use ($submissionIds) {
+                $ids = is_array($p->submission_ids) ? $p->submission_ids : [];
+                sort($ids);
+                return $ids === $submissionIds;
+            });
+
+        if ($paidPayment) {
+            return $paidPayment;
+        }
+
+        // 2. Check if all submissions are already approved/paid
+        $allPaid = $submissions->every(fn($s) => $s->payment_status === 'paid' || $s->status === 'Approved');
+        if ($allPaid) {
+            $anyPayment = Payment::where('type', 'bulk_submission')
+                ->whereIn('submission_id', $submissionIds)
+                ->where('payment_status', 'paid')
+                ->latest()
+                ->first();
+            if ($anyPayment) {
+                return $anyPayment;
+            }
+        }
+
+        // 3. Check if there is already an active pending bulk payment for the exact same submissions
+        $pendingPayment = Payment::where('type', 'bulk_submission')
+            ->where('payment_status', 'pending')
+            ->where('expired_at', '>', now())
+            ->whereNotNull('qris_url')
+            ->get()
+            ->first(function ($p) use ($submissionIds) {
+                $ids = is_array($p->submission_ids) ? $p->submission_ids : [];
+                sort($ids);
+                return $ids === $submissionIds;
+            });
+
+        if ($pendingPayment) {
+            return $pendingPayment;
+        }
+
+        return $this->chargeBulkQris($submissions);
+    }
+
+    /**
+     * Create bulk QRIS transaction for multiple submissions.
+     */
+    public function chargeBulkQris($submissions): Payment
+    {
+        $pricingData = $this->pricingService->calculateBulk($submissions);
+        $submissionIds = $submissions->pluck('id')->sort()->values()->toArray();
+        $firstId = $submissionIds[0] ?? 0;
+        $orderId = 'BULK-' . count($submissionIds) . 'SUB-' . $firstId . '-' . time() . '-' . strtoupper(Str::random(4));
+
+        $itemDetails = [];
+        foreach ($pricingData['items'] as $item) {
+            $sub = $item['submission'];
+            $pr = $item['pricing'];
+            $itemDetails[] = [
+                'id' => 'SUB-' . $sub->id,
+                'price' => (int) $pr['gross_amount'],
+                'quantity' => 1,
+                'name' => Str::limit('Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel'), 45),
+            ];
+        }
+
+        $customer = [
+            'first_name' => $submissions->first()->author_name ?: 'Author Kolektif',
+            'email' => $submissions->first()->email ?: 'author@example.com',
+        ];
+
+        $payload = [
+            'payment_type' => 'qris',
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $pricingData['gross_amount'],
+            ],
+            'item_details' => $itemDetails,
+            'customer_details' => $customer,
+            'qris' => [
+                'acquirer' => 'gopay',
+            ],
+        ];
+
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => $authHeader,
+        ])->post($this->getBaseUrl() . '/v2/charge', $payload);
+
+        $responseData = $response->json();
+
+        if (!$response->successful()) {
+            Log::error('Midtrans Bulk QRIS charge failed: ' . json_encode($responseData));
+            throw new \Exception('Gagal membuat transaksi Midtrans QRIS Bulk: ' . ($responseData['status_message'] ?? 'Error tidak diketahui'));
+        }
+
+        $qrisUrl = null;
+        $qrString = $responseData['qr_string'] ?? null;
+
+        if (!empty($responseData['actions'])) {
+            foreach ($responseData['actions'] as $action) {
+                if (($action['name'] ?? '') === 'generate-qr-code') {
+                    $qrisUrl = $action['url'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $expiredAt = !empty($responseData['expiry_time'])
+            ? Carbon::parse($responseData['expiry_time'])
+            : now()->addMinutes(15);
+
+        $payment = Payment::create([
+            'submission_id' => $firstId,
+            'submission_ids' => $submissionIds,
+            'order_id' => $orderId,
+            'transaction_id' => $responseData['transaction_id'] ?? null,
+            'payment_method' => 'qris',
+            'type' => 'bulk_submission',
+            'gross_amount' => $pricingData['gross_amount'],
+            'journal_share' => $pricingData['journal_share'],
+            'developer_gross_share' => $pricingData['developer_gross_share'],
+            'mdr_amount' => $pricingData['mdr_amount'],
+            'developer_net_share' => $pricingData['developer_net_share'],
+            'transaction_status' => $responseData['transaction_status'] ?? 'pending',
+            'payment_status' => 'pending',
+            'qris_url' => $qrisUrl,
+            'qr_string' => $qrString,
+            'expired_at' => $expiredAt,
+            'raw_response' => $responseData,
+        ]);
+
+        // Create individual payment items
+        foreach ($pricingData['items'] as $item) {
+            $sub = $item['submission'];
+            $pr = $item['pricing'];
+            \App\Models\PaymentItem::create([
+                'payment_id' => $payment->id,
+                'submission_id' => $sub->id,
+                'gross_amount' => $pr['gross_amount'],
+                'journal_share' => $pr['journal_share'],
+                'developer_gross_share' => $pr['developer_gross_share'],
+                'mdr_amount' => $pr['mdr_amount'],
+                'developer_net_share' => $pr['developer_net_share'],
+            ]);
+        }
+
+        return $payment;
+    }
+
 }
