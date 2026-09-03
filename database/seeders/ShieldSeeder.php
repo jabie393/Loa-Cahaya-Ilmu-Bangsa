@@ -20,7 +20,7 @@ class ShieldSeeder extends Seeder
         $directPermissions = '{"51":{"name":"View:Dashboard","guard_name":"web"}}';
 
         // 1. Seed tenants first (if present)
-        if (! blank($tenants) && $tenants !== '[]') {
+        if (!blank($tenants) && $tenants !== '[]') {
             static::seedTenants($tenants);
         }
 
@@ -31,12 +31,12 @@ class ShieldSeeder extends Seeder
         static::makeDirectPermissions($directPermissions);
 
         // 4. Seed users with their roles/permissions (if present)
-        if (! blank($users) && $users !== '[]') {
+        if (!blank($users) && $users !== '[]') {
             static::seedUsers($users);
         }
 
         // 5. Seed user-tenant pivot (if present)
-        if (! blank($userTenantPivot) && $userTenantPivot !== '[]') {
+        if (!blank($userTenantPivot) && $userTenantPivot !== '[]') {
             static::seedUserTenantPivot($userTenantPivot);
         }
 
@@ -85,7 +85,7 @@ class ShieldSeeder extends Seeder
             );
 
             // Handle tenancy mode - sync roles/permissions per tenant
-            if ($tenancyEnabled && (! empty($tenantRoles) || ! empty($tenantPermissions))) {
+            if ($tenancyEnabled && (!empty($tenantRoles) || !empty($tenantPermissions))) {
                 foreach ($tenantRoles as $tenantId => $roleNames) {
                     $contextId = $tenantId === '_global' ? null : $tenantId;
                     setPermissionsTeamId($contextId);
@@ -99,11 +99,11 @@ class ShieldSeeder extends Seeder
                 }
             } else {
                 // Non-tenancy mode
-                if (! empty($roles)) {
+                if (!empty($roles)) {
                     $user->syncRoles($roles);
                 }
 
-                if (! empty($permissions)) {
+                if (!empty($permissions)) {
                     $user->syncPermissions($permissions);
                 }
             }
@@ -129,11 +129,11 @@ class ShieldSeeder extends Seeder
             }
 
             $tenantForeignKey = 'team_id';
-            if (! blank($tenantForeignKey) && isset($row[$tenantForeignKey])) {
+            if (!blank($tenantForeignKey) && isset($row[$tenantForeignKey])) {
                 $uniqueKeys[$tenantForeignKey] = $row[$tenantForeignKey];
             }
 
-            if (! empty($uniqueKeys)) {
+            if (!empty($uniqueKeys)) {
                 DB::table($pivotTable)->updateOrInsert($uniqueKeys, $row);
             }
         }
@@ -167,15 +167,15 @@ class ShieldSeeder extends Seeder
             ];
 
             // Include tenant ID in role data (can be null for global roles)
-            if ($tenancyEnabled && ! blank($teamForeignKey)) {
+            if ($tenancyEnabled && !blank($teamForeignKey)) {
                 $roleData[$teamForeignKey] = $tenantId;
             }
 
             $role = $roleModel::firstOrCreate($roleData);
 
-            if (! blank($rolePlusPermission['permissions'])) {
+            if (!blank($rolePlusPermission['permissions'])) {
                 $permissionModels = collect($rolePlusPermission['permissions'])
-                    ->map(fn ($permission) => $permissionModel::firstOrCreate([
+                    ->map(fn($permission) => $permissionModel::firstOrCreate([
                         'name' => $permission,
                         'guard_name' => $rolePlusPermission['guard_name'],
                     ]))
