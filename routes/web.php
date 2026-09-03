@@ -659,8 +659,19 @@ Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookContr
 
 
 Route::get('/invoice/preview/{record}', function (App\Models\Submission $record) {
-    // Get all paid payments for this submission
-    $paidPayments = $record->payments()->where('payment_status', 'paid')->get();
+    // 1. Get direct paid payments (e.g. single submission or DOI addon)
+    $directPayments = $record->payments()->where('payment_status', 'paid')->get();
+
+    // 2. Get bulk paid payments via payment_items
+    $bulkPayments = \App\Models\PaymentItem::where('submission_id', $record->id)
+        ->whereHas('payment', fn($q) => $q->where('payment_status', 'paid'))
+        ->with('payment')
+        ->get()
+        ->pluck('payment')
+        ->filter();
+
+    // 3. Merge both collections
+    $paidPayments = $directPayments->merge($bulkPayments)->unique('id')->values();
 
     if ($paidPayments->isEmpty()) {
         $payment = $record->latestPayment;
@@ -670,27 +681,86 @@ Route::get('/invoice/preview/{record}', function (App\Models\Submission $record)
         $paidPayments = collect([$payment]);
     }
 
-    $submissionPayment = $paidPayments->firstWhere('type', 'submission') 
-                         ?? $paidPayments->firstWhere('type', '!=', 'doi_addon') 
-                         ?? $paidPayments->first();
+    // Publication payment must be specifically 'submission' or 'bulk_submission'
+    $submissionPayment = $paidPayments->first(fn($p) => in_array($p->type, ['submission', 'bulk_submission']));
     $doiPayment = $paidPayments->firstWhere('type', 'doi_addon');
 
-    $totalPaid = $paidPayments->sum('gross_amount');
-    $latestPaidAt = $paidPayments->max('paid_at') ?? $paidPayments->max('created_at');
+    if ($submissionPayment) {
+        $submissionPayment->ensureInvoiceNumber();
+    }
+    if ($doiPayment) {
+        $doiPayment->ensureInvoiceNumber();
+    }
 
     $pricingService = app(App\Services\SubmissionPricingService::class);
     $pricing = $pricingService->calculate($record);
+
+    $publicationAmount = 0;
+    if ($submissionPayment) {
+        if ($submissionPayment->type === 'bulk_submission') {
+            $item = \App\Models\PaymentItem::where('payment_id', $submissionPayment->id)
+                ->where('submission_id', $record->id)
+                ->first();
+            $publicationAmount = $item ? $item->gross_amount : $pricing['gross_amount'];
+        } else {
+            $publicationAmount = $submissionPayment->gross_amount;
+        }
+    }
+
+    $doiAmount = $doiPayment ? $doiPayment->gross_amount : 0;
+    $totalPaid = $publicationAmount + $doiAmount;
+    $latestPaidAt = $paidPayments->max('paid_at') ?? $paidPayments->max('created_at');
 
     return view('filament.invoice.invoice', [
         'submission' => $record,
         'paidPayments' => $paidPayments,
         'submissionPayment' => $submissionPayment,
         'doiPayment' => $doiPayment,
+        'publicationAmount' => $publicationAmount,
+        'doiAmount' => $doiAmount,
         'totalPaid' => $totalPaid,
         'latestPaidAt' => $latestPaidAt,
         'pricing' => $pricing,
     ]);
 })->name('public.invoice.preview');
+
+Route::get('/invoice/bulk/{payment}', function (App\Models\Payment $payment) {
+    if (!$payment->isPaid() && $payment->payment_status !== 'paid') {
+        $qrisService = app(App\Services\MidtransQrisService::class);
+        $payment = $qrisService->checkStatusFromMidtrans($payment);
+    }
+
+    $payment->ensureInvoiceNumber();
+    $items = $payment->items()->with(['submission.journal', 'submission.user'])->get();
+
+    if ($items->isEmpty()) {
+        $subIds = $payment->submission_ids ?: ($payment->submission_id ? [$payment->submission_id] : []);
+        $submissions = App\Models\Submission::with(['journal', 'user'])->whereIn('id', $subIds)->get();
+        $pricingService = app(App\Services\SubmissionPricingService::class);
+        $bulkPricing = $pricingService->calculateBulk($submissions);
+        foreach ($bulkPricing['items'] as $itemData) {
+            $sub = $itemData['submission'];
+            $pr = $itemData['pricing'];
+            App\Models\PaymentItem::create([
+                'payment_id' => $payment->id,
+                'submission_id' => $sub->id,
+                'item_type' => 'publication',
+                'item_name' => 'Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel'),
+                'gross_amount' => $pr['gross_amount'],
+                'journal_share' => $pr['journal_share'],
+                'developer_gross_share' => $pr['developer_gross_share'],
+                'mdr_amount' => $pr['mdr_amount'],
+                'developer_net_share' => $pr['developer_net_share'],
+            ]);
+        }
+        $items = $payment->items()->with(['submission.journal', 'submission.user'])->get();
+    }
+
+    return view('filament.invoice.invoice-bulk', [
+        'payment' => $payment,
+        'items' => $items,
+    ]);
+})->name('public.invoice.bulk.preview');
 
 
 // Bulk Payment status check

@@ -72,6 +72,7 @@ class MidtransWebhookController extends Controller
             $updateData['paid_at'] = now();
 
             $payment->update($updateData);
+            $payment->ensureInvoiceNumber();
 
             if ($payment->type === 'bulk_submission') {
                 $submissions = !empty($payment->submission_ids)

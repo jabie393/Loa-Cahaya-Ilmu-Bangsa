@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Models\Payment;
+use App\Models\PaymentItem;
 use App\Models\Submission;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -46,6 +48,7 @@ class MidtransQrisService
             ->where('type', 'submission')
             ->first();
         if ($paidPayment) {
+            $paidPayment->ensureInvoiceNumber();
             return $paidPayment;
         }
 
@@ -80,6 +83,7 @@ class MidtransQrisService
         // If already paid, do not generate new
         $paidPayment = $submission->payments()->where('payment_status', 'paid')->first();
         if ($paidPayment) {
+            $paidPayment->ensureInvoiceNumber();
             return $paidPayment;
         }
 
@@ -108,8 +112,11 @@ class MidtransQrisService
         $serverKey = $this->getServerKey();
         $authHeader = 'Basic ' . base64_encode($serverKey . ':');
 
+        $userId = $submission->user_id ?? Auth::id();
         $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
+
+        $itemName = $pricing['tier_name'] . ' - ' . ($submission->journal?->name ?? 'Jurnal CIB');
 
         $payload = [
             'payment_type' => 'qris',
@@ -129,7 +136,7 @@ class MidtransQrisService
                     'id' => 'SUBMISSION-' . $submission->id,
                     'price' => $grossAmount,
                     'quantity' => 1,
-                    'name' => Str::limit($pricing['tier_name'] . ' - ' . ($submission->journal?->name ?? 'Jurnal'), 50, ''),
+                    'name' => Str::limit($itemName, 50, ''),
                 ]
             ],
         ];
@@ -183,10 +190,14 @@ class MidtransQrisService
         }
 
         $payment = Payment::create([
+            'user_id' => $userId,
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
             'payment_method' => 'qris',
+            'type' => 'submission',
+            'payer_name' => $customerName,
+            'payer_email' => $customerEmail,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -198,6 +209,19 @@ class MidtransQrisService
             'qr_string' => $qrString,
             'expired_at' => $expiredAt,
             'raw_response' => $responseData,
+        ]);
+
+        // Create unified PaymentItem for this payment
+        PaymentItem::create([
+            'payment_id' => $payment->id,
+            'submission_id' => $submission->id,
+            'item_type' => 'publication',
+            'item_name' => $itemName,
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
         ]);
 
         // Keep submission in pending payment
@@ -212,6 +236,7 @@ class MidtransQrisService
     public function checkStatusFromMidtrans(Payment $payment): Payment
     {
         if ($payment->isPaid()) {
+            $payment->ensureInvoiceNumber();
             return $payment;
         }
 
@@ -235,6 +260,8 @@ class MidtransQrisService
                         'paid_at' => now(),
                         'raw_response' => $data,
                     ]);
+
+                    $payment->ensureInvoiceNumber();
 
                     if ($payment->type === 'bulk_submission') {
                         $submissions = !empty($payment->submission_ids)
@@ -282,22 +309,26 @@ class MidtransQrisService
         // 1. Check if submission already has a paid DOI addon payment
         $paidDoi = $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'paid')->first();
         if ($paidDoi) {
+            $paidDoi->ensureInvoiceNumber();
             return $paidDoi;
         }
 
         // 2. If submission already has active DOI (e.g. from initial package or admin), create/return a paid record
         if ($submission->has_doi && !empty($submission->repository_identifier)) {
-            // Find any latest payment or create a mock paid payment record for display
             $existing = $submission->payments()->where('type', 'doi_addon')->first();
             if ($existing) {
                 $existing->update(['payment_status' => 'paid', 'transaction_status' => 'settlement']);
+                $existing->ensureInvoiceNumber();
                 return $existing;
             }
-            return Payment::create([
+            $payment = Payment::create([
+                'user_id' => $submission->user_id ?? Auth::id(),
                 'submission_id' => $submission->id,
                 'order_id' => 'DOI-' . $submission->id . '-INITIAL',
                 'payment_method' => 'qris',
                 'type' => 'doi_addon',
+                'payer_name' => $submission->author_name ?: 'Author',
+                'payer_email' => $submission->email ?: '',
                 'gross_amount' => 20000.00,
                 'journal_share' => 15000.00,
                 'developer_gross_share' => 5000.00,
@@ -307,6 +338,21 @@ class MidtransQrisService
                 'payment_status' => 'paid',
                 'paid_at' => now(),
             ]);
+
+            PaymentItem::create([
+                'payment_id' => $payment->id,
+                'submission_id' => $submission->id,
+                'item_type' => 'doi_addon',
+                'item_name' => 'Add-on Repository Identifier (DOI Resmi) - ' . ($submission->journal?->name ?? 'Jurnal CIB'),
+                'gross_amount' => 20000.00,
+                'journal_share' => 15000.00,
+                'developer_gross_share' => 5000.00,
+                'mdr_amount' => 140.00,
+                'developer_net_share' => 4860.00,
+            ]);
+
+            $payment->ensureInvoiceNumber();
+            return $payment;
         }
 
         // Check for latest pending DOI payment
@@ -334,13 +380,16 @@ class MidtransQrisService
         $pricing = $this->pricingService->calculateDoiAddon();
         $grossAmount = (int) round($pricing['gross_amount']);
 
-        $orderId = 'DOI-' . $submission->id . '-' . time() . '-' . \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(4));
+        $orderId = 'DOI-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
 
         $serverKey = $this->getServerKey();
         $authHeader = 'Basic ' . base64_encode($serverKey . ':');
 
+        $userId = $submission->user_id ?? Auth::id();
         $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
+
+        $itemName = 'Add-on DOI - ' . ($submission->journal?->name ?? 'Jurnal CIB');
 
         $payload = [
             'payment_type' => 'qris',
@@ -352,7 +401,7 @@ class MidtransQrisService
                 'acquirer' => 'gopay',
             ],
             'customer_details' => [
-                'first_name' => \Illuminate\Support\Str::limit($customerName, 45, ''),
+                'first_name' => Str::limit($customerName, 45, ''),
                 'email' => $customerEmail,
             ],
             'item_details' => [
@@ -360,12 +409,12 @@ class MidtransQrisService
                     'id' => 'DOI-' . $submission->id,
                     'price' => $grossAmount,
                     'quantity' => 1,
-                    'name' => 'Add-on DOI - ' . ($submission->journal?->name ?? 'Jurnal'),
+                    'name' => Str::limit($itemName, 50, ''),
                 ]
             ],
         ];
 
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
+        $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'Authorization' => $authHeader,
@@ -392,16 +441,19 @@ class MidtransQrisService
         $expiredAt = now()->addMinutes(15);
         if (!empty($responseData['expiry_time'])) {
             try {
-                $expiredAt = \Carbon\Carbon::parse($responseData['expiry_time']);
+                $expiredAt = Carbon::parse($responseData['expiry_time']);
             } catch (\Exception $e) {}
         }
 
-        return Payment::create([
+        $payment = Payment::create([
+            'user_id' => $userId,
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
             'payment_method' => 'qris',
             'type' => 'doi_addon',
+            'payer_name' => $customerName,
+            'payer_email' => $customerEmail,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -414,6 +466,20 @@ class MidtransQrisService
             'expired_at' => $expiredAt,
             'raw_response' => $responseData,
         ]);
+
+        PaymentItem::create([
+            'payment_id' => $payment->id,
+            'submission_id' => $submission->id,
+            'item_type' => 'doi_addon',
+            'item_name' => $itemName,
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
+        ]);
+
+        return $payment;
     }
 
     /**
@@ -471,6 +537,7 @@ class MidtransQrisService
             });
 
         if ($paidPayment) {
+            $paidPayment->ensureInvoiceNumber();
             return $paidPayment;
         }
 
@@ -483,6 +550,7 @@ class MidtransQrisService
                 ->latest()
                 ->first();
             if ($anyPayment) {
+                $anyPayment->ensureInvoiceNumber();
                 return $anyPayment;
             }
         }
@@ -528,9 +596,13 @@ class MidtransQrisService
             ];
         }
 
+        $payerUser = Auth::user() ?? $submissions->first()->user;
+        $payerName = $payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif');
+        $payerEmail = $payerUser?->email ?? ($submissions->first()->email ?: 'author@example.com');
+
         $customer = [
-            'first_name' => $submissions->first()->author_name ?: 'Author Kolektif',
-            'email' => $submissions->first()->email ?: 'author@example.com',
+            'first_name' => Str::limit($payerName, 45, ''),
+            'email' => $payerEmail,
         ];
 
         $payload = [
@@ -579,12 +651,15 @@ class MidtransQrisService
             : now()->addMinutes(15);
 
         $payment = Payment::create([
+            'user_id' => $payerUser?->id,
             'submission_id' => $firstId,
             'submission_ids' => $submissionIds,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
             'payment_method' => 'qris',
             'type' => 'bulk_submission',
+            'payer_name' => $payerName,
+            'payer_email' => $payerEmail,
             'gross_amount' => $pricingData['gross_amount'],
             'journal_share' => $pricingData['journal_share'],
             'developer_gross_share' => $pricingData['developer_gross_share'],
@@ -602,9 +677,11 @@ class MidtransQrisService
         foreach ($pricingData['items'] as $item) {
             $sub = $item['submission'];
             $pr = $item['pricing'];
-            \App\Models\PaymentItem::create([
+            PaymentItem::create([
                 'payment_id' => $payment->id,
                 'submission_id' => $sub->id,
+                'item_type' => 'publication',
+                'item_name' => 'Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel') . ' (' . ($sub->journal?->name ?? 'Jurnal') . ')',
                 'gross_amount' => $pr['gross_amount'],
                 'journal_share' => $pr['journal_share'],
                 'developer_gross_share' => $pr['developer_gross_share'],
@@ -615,5 +692,4 @@ class MidtransQrisService
 
         return $payment;
     }
-
 }

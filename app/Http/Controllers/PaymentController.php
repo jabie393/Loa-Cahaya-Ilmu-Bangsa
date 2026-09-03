@@ -285,6 +285,7 @@ class PaymentController extends Controller
 
         return response()->json([
             'status' => $isPaid ? 'paid' : $payment->payment_status,
+            'payment_id' => $payment->id,
             'is_paid' => $isPaid,
             'is_expired' => $payment->isExpired(),
             'message' => $isPaid ? 'Pembayaran kolektif berhasil diverifikasi!' : ($payment->isExpired() ? 'QRIS Kedaluwarsa' : 'Menunggu pembayaran...'),

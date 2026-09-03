@@ -340,7 +340,7 @@ class SubmissionsTable
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
-                        ->visible(fn(Submission $record) => $record->payment_status !== 'paid'),
+                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid'),
                     Action::make('review')
                         ->label('Review')
                         ->icon('heroicon-o-eye')
@@ -568,6 +568,16 @@ class SubmissionsTable
                         ->url(fn(Submission $record) => route('public.invoice.preview', ['record' => $record]))
                         ->openUrlInNewTab()
                         ->visible(fn(Submission $record) => $record->payment_status === 'paid'),
+                    Action::make('download_invoice_bulk')
+                        ->label('Download Invoice Kolektif')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->color('info')
+                        ->url(function (Submission $record) {
+                            $bulkPayment = $record->getBulkPayment();
+                            return $bulkPayment ? route('public.invoice.bulk.preview', ['payment' => $bulkPayment->id]) : null;
+                        })
+                        ->openUrlInNewTab()
+                        ->visible(fn(Submission $record) => $record->payment_status === 'paid' && $record->getBulkPayment() !== null),
                     Action::make('download')
                         ->label('Download LOA')
                         ->icon('heroicon-o-arrow-down-tray')

@@ -426,6 +426,24 @@ class Submission extends Model
     }
 
     /**
+     * Get the associated paid bulk payment if this submission was paid via bulk QRIS.
+     */
+    public function getBulkPayment(): ?Payment
+    {
+        $direct = $this->payments()->where('type', 'bulk_submission')->where('payment_status', 'paid')->first();
+        if ($direct) {
+            return $direct;
+        }
+
+        $item = PaymentItem::where('submission_id', $this->id)
+            ->whereHas('payment', fn($q) => $q->where('type', 'bulk_submission')->where('payment_status', 'paid'))
+            ->with('payment')
+            ->first();
+
+        return $item?->payment;
+    }
+
+    /**
      * Approve submission and trigger automated tasks (DOI generation & OJS submission).
      */
     public function approveAndProcess(): void

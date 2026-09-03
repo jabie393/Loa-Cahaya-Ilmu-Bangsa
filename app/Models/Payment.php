@@ -5,18 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Payment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'submission_id',
+        'submission_ids',
+        'invoice_number',
         'order_id',
         'transaction_id',
         'payment_method',
         'type',
-        'submission_ids',
+        'payer_name',
+        'payer_email',
         'gross_amount',
         'journal_share',
         'developer_gross_share',
@@ -43,20 +49,24 @@ class Payment extends Model
         'raw_response' => 'array',
     ];
 
-    
-    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function user(): BelongsTo
     {
-        return $this->hasMany(PaymentItem::class);
-    }
-
-    public function submissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(Submission::class, 'payment_items');
+        return $this->belongsTo(User::class);
     }
 
     public function submission(): BelongsTo
     {
         return $this->belongsTo(Submission::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PaymentItem::class);
+    }
+
+    public function submissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Submission::class, 'payment_items');
     }
 
     public function isPending(): bool
@@ -80,5 +90,23 @@ class Payment extends Model
         }
 
         return false;
+    }
+
+    /**
+     * Generate and save permanent invoice number if not already generated.
+     */
+    public function ensureInvoiceNumber(): string
+    {
+        if (!empty($this->invoice_number)) {
+            return $this->invoice_number;
+        }
+
+        $datePart = ($this->paid_at ?? now())->format('Ymd');
+        $prefix = ($this->type === 'bulk_submission') ? 'INV/BULK' : 'INV/CIB';
+        $number = sprintf('%s/%s/%04d', $prefix, $datePart, $this->id);
+
+        $this->update(['invoice_number' => $number]);
+
+        return $number;
     }
 }

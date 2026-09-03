@@ -36,6 +36,16 @@ class PaymentSubmission extends Page
             abort(403, 'Anda tidak memiliki akses ke halaman pembayaran naskah ini.');
         }
 
+        // If submission is already approved, publication fee is already settled
+        if ($this->record->status === 'Approved') {
+            if (!$this->record->has_doi) {
+                $this->redirect(SubmissionResource::getUrl('payment.doi', ['record' => $this->record]));
+                return;
+            }
+            $this->redirect(SubmissionResource::getUrl('view', ['record' => $this->record]));
+            return;
+        }
+
         $this->loadPaymentData();
     }
 
