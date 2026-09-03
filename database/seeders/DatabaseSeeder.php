@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
 
         $user->assignRole('super_admin');
         $this->call(JournalSeeder::class);
-        $this->call(PackageSeeder::class);
         $this->call(DummyTransactionSeeder::class);
     }
 }
