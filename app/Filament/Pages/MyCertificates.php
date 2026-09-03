@@ -2,9 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\FinanceTransaction;
-use App\Models\Package;
-use App\Models\ServiceRequest;
 use App\Models\Submission;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Notifications\Notification;
@@ -24,14 +21,6 @@ class MyCertificates extends Page
     protected static ?string $navigationLabel = '4. My Publication';
 
     public Collection $submissions;
-
-    // Service Request Modal state
-    public bool $showServiceModal = false;
-    public ?int $selectedSubmissionId = null;
-    public string $selectedServiceType = 'add_doi'; // 'add_doi' or 'update_pdf'
-    public $newPdfFile = null;
-    public $paymentProof = null;
-    public string $serviceNotes = '';
 
     public static function canAccess(): bool
     {
@@ -58,7 +47,7 @@ class MyCertificates extends Page
         $this->submissions = Submission::query()
             ->where('user_id', Auth::id())
             ->where('status', 'Approved')
-            ->with(['journal', 'serviceRequests'])
+            ->with(['journal', 'payments'])
             ->latest('approved_date')
             ->get();
     }

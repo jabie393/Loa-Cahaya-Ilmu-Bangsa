@@ -144,11 +144,6 @@ class Submission extends Model
         return $this->hasMany(FinanceTransaction::class);
     }
 
-    public function serviceRequests(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(ServiceRequest::class);
-    }
-
     /**
      * Determine author count from array or string
      */

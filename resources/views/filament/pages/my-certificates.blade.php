@@ -137,140 +137,69 @@
                         <div class="mt-2 border-t border-gray-100 pt-4 dark:border-gray-800">
                             <div class="mb-3 flex items-center justify-between">
                                 <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Layanan Tambahan</span>
-
-                                {{-- Check pending requests --}}
-                                @php
-                                    $pendingReq = $record->serviceRequests?->where('status', 'pending')->first();
-                                @endphp
-
-                                @if ($pendingReq)
-                                    <span class="animate-pulse rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                                        {{ $pendingReq->service_type === 'add_doi' ? 'DOI Diajukan' : 'Ganti PDF Diajukan' }}
-                                    </span>
-                                @endif
                             </div>
 
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 gap-2">
                                 {{-- Request DOI Button (if not already having DOI) --}}
                                 @if (!$record->has_doi)
-                                    <button wire:click="openServiceModal({{ $record->id }}, 'add_doi')"
-                                        class="flex items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 px-3 py-2.5 text-xs font-bold text-purple-700 shadow-sm transition-all hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-950/30 dark:text-purple-300">
+                                    <a href="{{ route('filament.admin.resources.submissions.payment.doi', ['record' => $record->id]) }}"
+                                        class="flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs font-bold text-blue-700 shadow-sm transition-all hover:bg-blue-100 hover:border-blue-300 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300">
                                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                         </svg>
-                                        <span>Tambah DOI</span>
-                                        <span class="text-[10px] opacity-75">(20rb)</span>
-                                    </button>
+                                        <span>Tambah DOI Resmi (Rp. 20.000)</span>
+                                    </a>
                                 @else
-                                    <div class="flex items-center justify-center gap-1 rounded-xl bg-gray-50 px-3 py-2.5 text-xs font-medium text-gray-400 dark:bg-gray-800/50">
-                                        <svg class="h-3.5 w-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd"></path>
-                                        </svg>
-                                        <span>DOI Aktif</span>
-                                    </div>
-                                @endif
+                                    @php
+                                        $doiUrl = $record->repository_redirect_url;
+                                        if (empty($doiUrl) && !empty($record->repository_identifier)) {
+                                            $doiUrl = str_starts_with($record->repository_identifier, 'http')
+                                                ? $record->repository_identifier
+                                                : (config('services.repo_url', 'http://127.0.0.1:8001') . '/identifier/' . $record->repository_identifier);
+                                        }
+                                    @endphp
 
-                                {{-- Update PDF Manuscript Button --}}
-                                <button wire:click="openServiceModal({{ $record->id }}, 'update_pdf')"
-                                    class="flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs font-bold text-blue-700 shadow-sm transition-all hover:bg-blue-100 dark:border-blue-800/60 dark:bg-blue-950/30 dark:text-blue-300">
-                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                    </svg>
-                                    <span>Ganti PDF</span>
-                                    <span class="text-[10px] opacity-75">(25rb)</span>
-                                </button>
+                                    @if ($doiUrl)
+                                        <a href="{{ $doiUrl }}" target="_blank"
+                                            class="group flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-2.5 text-xs font-medium text-emerald-800 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-100 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                            <div class="flex items-center gap-1.5">
+                                                <svg class="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="font-bold">DOI Aktif:</span>
+                                            </div>
+                                            <div class="flex items-center gap-1">
+                                                <span class="font-mono text-[11px] font-bold text-emerald-700 group-hover:underline dark:text-emerald-300">
+                                                    {{ $record->repository_identifier ?: 'Lihat DOI' }}
+                                                </span>
+                                                <svg class="h-3.5 w-3.5 text-emerald-600 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                </svg>
+                                            </div>
+                                        </a>
+                                    @else
+                                        <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+                                            <div class="flex items-center gap-1.5">
+                                                <svg class="h-4 w-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd"
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                        clip-rule="evenodd"></path>
+                                                </svg>
+                                                <span class="font-bold">DOI Aktif:</span>
+                                            </div>
+                                            <span class="font-mono text-[11px] font-bold text-primary-600">
+                                                {{ $record->repository_identifier ?: 'DOI Terverifikasi' }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                @endif
                             </div>
                         </div>
 
                     </div>
                 @endforeach
-            </div>
-        @endif
-
-        {{-- SERVICE REQUEST MODAL --}}
-        @if ($showServiceModal)
-            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                <div class="max-h-[90vh] w-full max-w-lg space-y-5 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
-                        <div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white">
-                                {{ $selectedServiceType === 'add_doi' ? 'Layanan Tambah DOI (Doi Saja)' : 'Layanan Ganti File PDF Naskah' }}
-                            </h3>
-                            <p class="mt-0.5 text-xs text-gray-500">
-                                Pengajuan #{{ $selectedSubmissionId }}
-                            </p>
-                        </div>
-                        <button wire:click="$set('showServiceModal', false)" class="text-gray-400 hover:text-gray-600">
-                            ✕
-                        </button>
-                    </div>
-
-                    {{-- QRIS & PRICE BOX --}}
-                    <div class="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-800/50">
-                        <img src="{{ asset('assets/qris.jpg') }}" alt="QRIS" class="mb-2 w-full max-w-[220px] rounded-xl shadow-sm" />
-                        <span class="block text-center text-[11px] text-gray-500">Scan QRIS di atas dengan m-Banking atau E-Wallet apa saja</span>
-                        <div class="mt-3 text-center">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Total Biaya Layanan:</span>
-                            <div class="text-primary-600 dark:text-primary-400 font-mono text-xl font-extrabold">
-                                {{ $selectedServiceType === 'add_doi' ? 'Rp 20.000' : 'Rp 25.000' }}
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- FORM INPUTS --}}
-                    <form wire:submit.prevent="submitServiceRequest" class="space-y-4 text-xs">
-
-                        {{-- UPLOAD NEW PDF (ONLY FOR GANTI PDF) --}}
-                        @if ($selectedServiceType === 'update_pdf')
-                            <div>
-                                <label class="mb-1 block font-bold text-gray-700 dark:text-gray-300">
-                                    Upload File PDF Naskah Baru <span class="text-red-500">*</span>
-                                </label>
-                                <input type="file" wire:model="newPdfFile" accept="application/pdf"
-                                    class="w-full rounded-xl border border-gray-300 p-1 text-xs text-gray-500 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-blue-700 hover:file:bg-blue-100 dark:border-gray-700" />
-                                @error('newPdfFile')
-                                    <span class="mt-1 block text-[11px] text-red-500">{{ $message }}</span>
-                                @enderror
-                                <div wire:loading wire:target="newPdfFile" class="text-primary-600 mt-1 text-xs">Mengunggah PDF...</div>
-                            </div>
-                        @endif
-
-                        {{-- UPLOAD BUKTI PEMBAYARAN --}}
-                        <div>
-                            <label class="mb-1 block font-bold text-gray-700 dark:text-gray-300">
-                                Upload Bukti Pembayaran <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" wire:model="paymentProof" accept="image/*"
-                                class="w-full rounded-xl border border-gray-300 p-1 text-xs text-gray-500 file:mr-3 file:rounded-xl file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-emerald-700 hover:file:bg-emerald-100 dark:border-gray-700" />
-                            @error('paymentProof')
-                                <span class="mt-1 block text-[11px] text-red-500">{{ $message }}</span>
-                            @enderror
-                            <div wire:loading wire:target="paymentProof" class="mt-1 text-xs text-emerald-600">Mengunggah Bukti Bayar...</div>
-                        </div>
-
-                        {{-- NOTES / IDENTIFIER --}}
-                        <div>
-                            <label class="mb-1 block font-bold text-gray-700 dark:text-gray-300">
-                                Catatan / Keterangan (Opsional)
-                            </label>
-                            <textarea wire:model="serviceNotes" rows="2" class="w-full rounded-xl border-gray-300 text-xs dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                                placeholder="{{ $selectedServiceType === 'add_doi' ? 'Tuliskan catatan request DOI jika ada...' : 'Tuliskan bagian apa saja yang diperbaiki pada PDF baru...' }}"></textarea>
-                        </div>
-
-                        <div class="flex items-center justify-end gap-2 border-t border-gray-100 pt-3 dark:border-gray-800">
-                            <button type="button" wire:click="$set('showServiceModal', false)" class="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-800">
-                                Batal
-                            </button>
-                            <button type="submit" wire:loading.attr="disabled"
-                                class="bg-primary-600 hover:bg-primary-700 flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-sm">
-                                <span wire:loading.remove wire:target="submitServiceRequest">Kirim Pengajuan</span>
-                                <span wire:loading wire:target="submitServiceRequest">Memproses...</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
             </div>
         @endif
 
