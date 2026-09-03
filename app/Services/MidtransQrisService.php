@@ -67,6 +67,10 @@ class MidtransQrisService
                 ]);
             } else {
                 // Still active and valid single QRIS
+                if (empty($latestPayment->qris_url) && !empty($latestPayment->qr_string)) {
+                    $latestPayment->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latestPayment->qr_string);
+                    $latestPayment->save();
+                }
                 return $latestPayment;
             }
         }
@@ -176,6 +180,9 @@ class MidtransQrisService
         }
 
         $qrString = $responseData['qr_string'] ?? null;
+        if (empty($qrisUrl) && !empty($qrString)) {
+            $qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrString);
+        }
 
         // Parse expiry time
         $expiredAt = null;
@@ -365,6 +372,10 @@ class MidtransQrisService
                     'transaction_status' => 'expire',
                 ]);
             } else {
+                if (empty($latestDoi->qris_url) && !empty($latestDoi->qr_string)) {
+                    $latestDoi->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latestDoi->qr_string);
+                    $latestDoi->save();
+                }
                 return $latestDoi;
             }
         }
@@ -438,6 +449,9 @@ class MidtransQrisService
         }
 
         $qrString = $responseData['qr_string'] ?? null;
+        if (empty($qrisUrl) && !empty($qrString)) {
+            $qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrString);
+        }
         $expiredAt = now()->addMinutes(15);
         if (!empty($responseData['expiry_time'])) {
             try {
@@ -644,6 +658,10 @@ class MidtransQrisService
                     break;
                 }
             }
+        }
+
+        if (empty($qrisUrl) && !empty($qrString)) {
+            $qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrString);
         }
 
         $expiredAt = !empty($responseData['expiry_time'])

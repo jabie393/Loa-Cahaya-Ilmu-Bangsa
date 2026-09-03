@@ -17,7 +17,8 @@
             initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
             isExtracting: {{ $isExtracting ? 'true' : 'false' }},
             initialQrisUrl: '{{ $payment ? $payment->qris_url : '' }}',
-            initialOrderId: '{{ $payment ? $payment->order_id : '' }}'
+            initialOrderId: '{{ $payment ? $payment->order_id : '' }}',
+            errorMessage: '{{ $errorMessage ? addslashes($errorMessage) : '' }}'
          })" x-init="initPayment()" class="space-y-6">
 
         <!-- Top Notification Banner for Status -->
@@ -256,13 +257,33 @@
                                 <!-- QRIS Image Box -->
                                 <div
                                     class="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-800 mb-4 flex flex-col items-center justify-center">
-                                    <template x-if="qrisUrl">
+                                    <template x-if="qrisUrl && !errorMessage">
                                         <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                                             <img :src="qrisUrl" alt="QRIS Midtrans"
                                                 class="w-56 h-56 object-contain rounded-lg">
                                         </div>
                                     </template>
-                                    <template x-if="!qrisUrl">
+                                    <template x-if="errorMessage">
+                                        <div class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
+                                            <div class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
+                                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                                </svg>
+                                            </div>
+                                            <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug" x-text="errorMessage"></h4>
+                                            <div class="pt-1">
+                                                <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">
+                                                    <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="!qrisUrl && !errorMessage">
                                         <div
                                             class="w-56 h-56 flex flex-col items-center justify-center text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                                             <svg class="w-8 h-8 animate-spin text-blue-600 mb-2" fill="none"
@@ -412,6 +433,7 @@
                 isExtracting: config.isExtracting,
                 qrisUrl: config.initialQrisUrl,
                 orderId: config.initialOrderId,
+                errorMessage: config.errorMessage || null,
                 isExpired: false,
                 isChecking: false,
                 isRegenerating: false,
