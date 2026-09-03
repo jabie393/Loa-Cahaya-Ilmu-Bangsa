@@ -3,11 +3,11 @@
 
         {{-- TOP STAT CARDS: FINANCIAL OVERVIEW --}}
         @php
-            $totalGross = \App\Models\Submission::all()->sum('gross_price');
-            $totalQris = \App\Models\Submission::all()->sum('qris_fee');
-            $totalDev = \App\Models\Submission::all()->sum('dev_cut');
-            $totalAdmin = \App\Models\Submission::all()->sum('admin_cut');
-            $countSubmissions = \App\Models\Submission::count();
+            $totalGross = \App\Models\Payment::where('payment_status', 'paid')->sum('gross_amount');
+            $totalQris = \App\Models\Payment::where('payment_status', 'paid')->sum('mdr_amount');
+            $totalDev = \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+            $totalAdmin = \App\Models\Payment::where('payment_status', 'paid')->sum('journal_share');
+            $countPayments = \App\Models\Payment::where('payment_status', 'paid')->count();
         @endphp
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -24,7 +24,7 @@
                         Rp {{ number_format($totalGross, 0, ',', '.') }}
                     </div>
                     <p class="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                        <span>{{ $countSubmissions }} Transaksi Naskah Terdata</span>
+                        <span>{{ $countPayments }} Transaksi QRIS Lunas</span>
                     </p>
                 </div>
             </div>

@@ -51,12 +51,12 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             ->numeric()
                             ->required()
                             ->default(function () {
-                                $earned = \App\Models\Submission::all()->sum('dev_cut');
+                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
                                 $paid = (float) \App\Models\DevPayout::sum('amount');
                                 return max(0, $earned - $paid);
                             })
                             ->helperText(function () {
-                                $earned = \App\Models\Submission::all()->sum('dev_cut');
+                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
                                 $paid = (float) \App\Models\DevPayout::sum('amount');
                                 $unpaid = max(0, $earned - $paid);
                                 return 'Sisa hak Developer yang siap dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
@@ -88,7 +88,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             return;
                         }
 
-                        $earned = \App\Models\Submission::all()->sum('dev_cut');
+                        $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
                         $paid = (float) \App\Models\DevPayout::sum('amount');
                         $unpaid = max(0, $earned - $paid);
 
