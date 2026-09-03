@@ -22,12 +22,23 @@ class MidtransQrisService
 
     public function getServerKey(): string
     {
-        return (string) config('services.midtrans.server_key', '');
+        $key = config('services.midtrans.server_key') ?: env('MIDTRANS_SERVER_KEY', '');
+        return trim((string) $key);
+    }
+
+    public function getClientKey(): string
+    {
+        $key = config('services.midtrans.client_key') ?: env('MIDTRANS_CLIENT_KEY', '');
+        return trim((string) $key);
     }
 
     public function isProduction(): bool
     {
-        return (bool) config('services.midtrans.is_production', false);
+        $isProd = config('services.midtrans.is_production');
+        if ($isProd === null) {
+            $isProd = env('MIDTRANS_IS_PRODUCTION', false);
+        }
+        return (bool) $isProd;
     }
 
     public function getBaseUrl(): string
