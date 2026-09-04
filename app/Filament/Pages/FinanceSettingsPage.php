@@ -124,24 +124,12 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->badge(fn(Payment $record) => $record->type === 'bulk_submission')
                     ->color(fn(Payment $record) => $record->type === 'bulk_submission' ? 'info' : null),
                 TextColumn::make('gross_amount')
-                    ->label('Total Kotor')
+                    ->label('Total')
                     ->money('IDR')
+                    ->badge()
+                    ->color('success')
                     ->weight(\Filament\Support\Enums\FontWeight::Bold)
                     ->sortable(),
-                TextColumn::make('mdr_amount')
-                    ->label('QRIS (0.7%)')
-                    ->money('IDR')
-                    ->color('warning'),
-                TextColumn::make('developer_net_share')
-                    ->label('Cut Dev (Net)')
-                    ->money('IDR')
-                    ->badge()
-                    ->color('success'),
-                TextColumn::make('journal_share')
-                    ->label('Cut Admin')
-                    ->money('IDR')
-                    ->badge()
-                    ->color('info'),
                 TextColumn::make('payment_status')
                     ->label('Status')
                     ->badge()
@@ -153,7 +141,8 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->label('Detail Transaksi')
                     ->icon('heroicon-m-document-magnifying-glass')
                     ->color('primary')
-                    ->modalHeading('Detail Transaksi & Pembagian Hasil')
+                    ->modalHeading(false)
+                    ->modalWidth(\Filament\Support\Enums\Width::FourExtraLarge)
                     ->modalContent(fn(Payment $record) => view('filament.pages.settings.partials.transaction-modal', ['record' => $record]))
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Tutup'),

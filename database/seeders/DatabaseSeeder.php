@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ShieldSeeder::class);
 
         Role::firstOrCreate(['name' => 'panel_user', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'ryu_dev', 'guard_name' => 'web']);
 
         $user = User::factory()->create([
             'name' => 'Test User',
@@ -28,6 +29,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $user->assignRole('super_admin');
+
+        $dev = User::factory()->create([
+            'name' => 'Ryu Dev',
+            'phone' => '1234567890',
+            'email' => 'dev@example.com',
+            'password' => bcrypt('password'),
+        ]);
+
+        $dev->assignRole('ryu_dev');
+
         $this->call(JournalSeeder::class);
     }
 }

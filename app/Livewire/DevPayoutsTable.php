@@ -35,6 +35,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
             ->query(DevPayout::query()->latest())
             ->headerActions([
                 Action::make('create_payout')
+                    ->visible(fn () => (bool) Auth::user()?->hasRole('super_admin'))
                     ->label('Bayar Developer (Payout Baru)')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
