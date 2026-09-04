@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\DevPayout;
+use App\Services\TelegramService;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
@@ -105,7 +106,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         $payoutCount = DevPayout::count() + 1;
                         $payoutNo = 'PO-DEV-' . now()->format('Ym') . '-' . sprintf('%03d', $payoutCount);
 
-                        DevPayout::create([
+                        $payout = DevPayout::create([
                             'payout_no' => $payoutNo,
                             'user_id' => Auth::id(),
                             'amount' => $amount,
@@ -114,6 +115,13 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             'notes' => $data['notes'] ?? 'Pencairan Hak Developer',
                             'status' => 'completed',
                         ]);
+
+                        $remainingBalance = max(0, $unpaid - $amount);
+                        app(TelegramService::class)->sendDevPayoutNotification(
+                            $payout,
+                            $remainingBalance,
+                            Auth::user()?->name ?? 'Admin'
+                        );
 
                         $this->dispatch('payout-created');
 
