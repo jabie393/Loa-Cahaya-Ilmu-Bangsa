@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('reference_no')->nullable();
             $table->string('proof_file')->nullable();
             $table->text('notes')->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->string('status')->default('completed');
             $table->timestamps();
         });

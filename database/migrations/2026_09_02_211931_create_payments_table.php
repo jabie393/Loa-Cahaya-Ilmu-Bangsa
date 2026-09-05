@@ -40,20 +40,6 @@ return new class extends Migration
             $table->index(['user_id', 'payment_status']);
             $table->index(['type', 'payment_status']);
         });
-
-        Schema::create('payment_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('payment_id')->constrained('payments')->cascadeOnDelete();
-            $table->foreignId('submission_id')->nullable()->constrained('submissions')->cascadeOnDelete();
-            $table->string('item_type')->default('publication'); // 'publication', 'doi_addon'
-            $table->string('item_name')->nullable();
-            $table->decimal('gross_amount', 12, 2);
-            $table->decimal('journal_share', 12, 2)->default(0);
-            $table->decimal('developer_gross_share', 12, 2)->default(0);
-            $table->decimal('mdr_amount', 12, 2)->default(0);
-            $table->decimal('developer_net_share', 12, 2)->default(0);
-            $table->timestamps();
-        });
     }
 
     /**
@@ -61,7 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_items');
         Schema::dropIfExists('payments');
     }
 };

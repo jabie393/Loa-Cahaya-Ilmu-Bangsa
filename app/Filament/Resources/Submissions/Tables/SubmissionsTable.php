@@ -332,7 +332,7 @@ class SubmissionsTable
                         return $query->where('ojs_status', $value);
                     }),
             ])
-            ->recordUrl(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn(Submission $record): ?string => $record->review_status === 'processing' ? null : SubmissionResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 ActionGroup::make([
                     Action::make('bayar')
@@ -340,13 +340,13 @@ class SubmissionsTable
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
-                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid'),
+                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && $record->review_status !== 'processing'),
                     Action::make('review')
                         ->label('Review')
                         ->icon('heroicon-o-eye')
                         ->color('warning')
                         ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('review', ['record' => $record]))
-                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved'),
+                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->review_status !== 'processing'),
                     Action::make('request_review_again')
                         ->label('Minta Review Lagi')
                         ->icon('heroicon-o-arrow-path')
@@ -370,7 +370,7 @@ class SubmissionsTable
                                 ->default(fn(Submission $record) => $record->want_doi ? 1 : 0)
                                 ->required(),
                         ])
-                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved')
+                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->review_status !== 'processing')
                         ->disabled(fn(Submission $record) => $record->review_status === 'processing' || empty($record->title))
                         ->action(function (Submission $record, array $data) {
                             $hasDoi = (bool) $data['has_doi'];
@@ -460,7 +460,7 @@ class SubmissionsTable
                                 ->send();
                         })
                         ->visible(function (Submission $record) {
-                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->has_doi) {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->has_doi || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {
@@ -479,7 +479,7 @@ class SubmissionsTable
                         ->color('info')
                         ->requiresConfirmation()
                         ->visible(function (Submission $record) {
-                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published'])) {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published']) || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {
@@ -515,7 +515,7 @@ class SubmissionsTable
                         ->modalHeading('Sinkronisasi Ulang ke OJS')
                         ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
                         ->visible(function (Submission $record) {
-                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->ojs_status !== 'submitted') {
+                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {
@@ -546,10 +546,11 @@ class SubmissionsTable
                         ->label('View')
                         ->icon('heroicon-o-eye')
                         ->color('primary')
-                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record])),
+                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
+                        ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
                     EditAction::make()
                         ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
-                        ->disabled(fn(Submission $record) => $record->review_status === 'processing'),
+                        ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
                     Action::make('Konfirmasi LOA ke Admin')
                         ->label('Konfirmasi LOA ke Admin')
                         ->icon('heroicon-o-chat-bubble-left-right')
