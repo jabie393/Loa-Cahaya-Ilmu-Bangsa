@@ -63,6 +63,10 @@ class MidtransQrisService
             return $paidPayment;
         }
 
+        // Calculate current pricing
+        $pricing = $this->pricingService->calculate($submission);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         // 2. Check for latest pending payment specifically for single submission
         $latestPayment = $submission->payments()
             ->where('type', 'submission')
@@ -70,14 +74,16 @@ class MidtransQrisService
             ->first();
 
         if ($latestPayment && $latestPayment->payment_status === 'pending') {
-            // Check if expired
-            if ($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) {
+            $paymentGross = (int) round($latestPayment->gross_amount);
+
+            // Check if expired OR if the amount no longer matches current pricing (e.g. DOI changed or authors changed)
+            if (($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) || $paymentGross !== $currentGross) {
                 $latestPayment->update([
                     'payment_status' => 'expired',
                     'transaction_status' => 'expire',
                 ]);
             } else {
-                // Still active and valid single QRIS
+                // Still active and valid single QRIS with matching amount
                 if (empty($latestPayment->qris_url) && !empty($latestPayment->qr_string)) {
                     $latestPayment->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latestPayment->qr_string);
                     $latestPayment->save();
