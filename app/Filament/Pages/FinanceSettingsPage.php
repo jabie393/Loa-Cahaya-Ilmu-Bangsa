@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\DevPayout;
 use App\Models\Payment;
 use Filament\Actions\Action;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -26,9 +27,22 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     protected static ?string $title = 'Finance, Revenue Split & Dev Payouts';
     protected static ?string $slug = 'settings/finance';
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
-    protected static ?int $navigationSort = 10;
-
+    protected static ?int $navigationSort = 1;
     protected string $view = 'filament.pages.settings.finance-settings-page';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
+        $devTotalPaid = (float) DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $devUnpaidBalance = max(0, $devTotalEarned - $devTotalPaid);
+
+        return $devUnpaidBalance > 0 ? '💸' : null;
+    }
+
+    public static function getNavigationBadgeColor(): string | array | null
+    {
+        return 'success';
+    }
 
     // Active Tab: 'transactions', 'payouts'
     public string $activeTab = 'transactions';
