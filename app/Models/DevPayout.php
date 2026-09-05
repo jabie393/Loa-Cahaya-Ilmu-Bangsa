@@ -21,6 +21,7 @@ class DevPayout extends Model
         'reference_no',
         'proof_file',
         'notes',
+        'rejection_reason',
         'status',
     ];
 

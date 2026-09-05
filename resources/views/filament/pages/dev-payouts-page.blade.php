@@ -2,7 +2,7 @@
     <div class="space-y-6">
         @php
             $devTotalEarned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-            $devTotalPaid = (float) \App\Models\DevPayout::sum('amount');
+            $devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
             $devUnpaidBalance = max(0, $devTotalEarned - $devTotalPaid);
         @endphp
 
@@ -34,7 +34,7 @@
                     <div class="text-2xl font-black font-mono text-blue-700 dark:text-blue-300">
                         Rp {{ number_format($devTotalPaid, 0, ',', '.') }}
                     </div>
-                    <span class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1 block">{{ \App\Models\DevPayout::count() }} Kali Pencairan Berhasil</span>
+                    <span class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1 block">{{ \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->count() }} Kali Pencairan Berhasil</span>
                 </div>
             </div>
 

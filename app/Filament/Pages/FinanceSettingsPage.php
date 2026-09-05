@@ -13,6 +13,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class FinanceSettingsPage extends Page implements HasTable, HasForms
@@ -50,7 +51,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     public function refreshBalances(): void
     {
         $this->devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
-        $this->devTotalPaid = (float) \App\Models\DevPayout::sum('amount');
+        $this->devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $this->devTotalPaid);
     }
 
@@ -106,7 +107,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                             ->orWhereHas('items.submission', fn($q) => $q->where('title', 'like', "%{$search}%"));
                     })
                     ->description(function (Payment $record): string {
-                        $payer = $record->payer_name ?: ($record->user?->name ?? 'Author');
+                        $payer = Str::limit($record->payer_name ?: ($record->user?->name ?? 'Author'), 25);
                         return "Pembayar: {$payer}";
                     }),
                 TextColumn::make('journal_target')
