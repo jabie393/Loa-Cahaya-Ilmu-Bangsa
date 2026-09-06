@@ -25,7 +25,7 @@ class GeminiReviewService implements AiReviewContract
             throw new Exception("File naskah tidak ditemukan.");
         }
 
-        $text = $this->extractText($filePath);
+        $text = $this->extractText($filePath, $record);
         
         if (empty($text)) {
             throw new Exception("Gagal mengekstrak teks dari dokumen.");
@@ -121,13 +121,33 @@ class GeminiReviewService implements AiReviewContract
     /**
      * Extract text from PDF or DOCX.
      */
-    protected function extractText(string $filePath): string
+    protected function extractText(string $filePath, ?Model $record = null): string
     {
-        $absolutePath = storage_path('app/public/' . $filePath);
-        
+        $disk = 'public';
+        $absolutePath = Storage::disk($disk)->path($filePath);
+
+        if (!Storage::disk($disk)->exists($filePath)) {
+            // Check if file was stored with renamed ID format
+            if ($record && $record->id) {
+                $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                $renamedPath = "manuscripts/file-{$record->id}" . ($extension ? ".{$extension}" : "");
+                if (Storage::disk($disk)->exists($renamedPath)) {
+                    $absolutePath = Storage::disk($disk)->path($renamedPath);
+                    $filePath = $renamedPath;
+                }
+            }
+        }
+
         if (!file_exists($absolutePath)) {
-            // Try direct path if not in storage/app/public
-            $absolutePath = Storage::path($filePath);
+            if (file_exists(storage_path('app/public/' . $filePath))) {
+                $absolutePath = storage_path('app/public/' . $filePath);
+            } elseif (Storage::exists($filePath)) {
+                $absolutePath = Storage::path($filePath);
+            }
+        }
+
+        if (!file_exists($absolutePath)) {
+            throw new Exception("File naskah tidak ditemukan pada server: {$filePath}");
         }
 
         $extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));

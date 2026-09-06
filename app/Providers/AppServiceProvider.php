@@ -63,6 +63,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Filament\Resources\Submissions\Pages\CreateSubmission::class
         );
 
+        FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn () => view('components.submission-button-scripts')
+        );
+
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

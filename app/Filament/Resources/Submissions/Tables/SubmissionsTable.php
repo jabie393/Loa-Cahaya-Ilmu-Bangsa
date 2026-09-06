@@ -561,6 +561,11 @@ class SubmissionsTable
                                 return;
                             }
 
+                            // Jika hanya 1 naskah yang belum lunas, arahkan langsung ke halaman pembayaran single
+                            if ($unpaidRecords->count() === 1) {
+                                return redirect()->to(SubmissionResource::getUrl('payment', ['record' => $unpaidRecords->first()]));
+                            }
+
                             $ids = $unpaidRecords->pluck('id')->implode(',');
                             return redirect()->to(SubmissionResource::getUrl('payment.bulk') . '?records=' . $ids);
                         }),

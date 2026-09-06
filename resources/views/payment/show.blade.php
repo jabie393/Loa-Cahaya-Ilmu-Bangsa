@@ -463,6 +463,11 @@
 
                         const data = await res.json();
 
+                        if (this.isExtracting && data.status !== 'extracting') {
+                            window.location.reload();
+                            return;
+                        }
+
                         if (data.is_paid || data.status === 'paid') {
                             this.status = 'paid';
                             this.isExtracting = false;
@@ -471,11 +476,10 @@
                             this.status = 'expired';
                         } else if (data.status === 'extracting') {
                             this.isExtracting = true;
-                        } else {
-                            // If it was extracting and now ready, reload to refresh metadata
-                            if (this.isExtracting) {
-                                window.location.reload();
-                            }
+                        } else if (data.status === 'pending') {
+                            this.status = 'pending';
+                            this.isExpired = false;
+                            this.isExtracting = false;
                         }
                     } catch (e) {
                         console.error('Check status error:', e);

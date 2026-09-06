@@ -211,10 +211,19 @@ class CreateSubmission extends CreateRecord
             ->columns(1);
     }
 
+    protected function getLoadingProtectionAttributes(): array
+    {
+        return [
+            'wire:loading.attr' => 'disabled',
+            'wire:loading.class' => 'opacity-50 cursor-wait pointer-events-none animate-pulse',
+        ];
+    }
+
     protected function getCreateFormAction(): \Filament\Actions\Action
     {
         return parent::getCreateFormAction()
-            ->label('Submit');
+            ->label('Submit')
+            ->extraAttributes($this->getLoadingProtectionAttributes());
     }
 
     protected function getFormActions(): array

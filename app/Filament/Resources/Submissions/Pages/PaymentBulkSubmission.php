@@ -43,11 +43,24 @@ class PaymentBulkSubmission extends Page
             ->where('payment_status', '<>', 'paid')
             ->get();
 
+        // Jika hanya ada 1 naskah yang belum dibayar, redirect ke pembayaran single
+        if ($this->submissions->count() === 1) {
+            $this->redirect(SubmissionResource::getUrl('payment', ['record' => $this->submissions->first()]));
+            return;
+        }
+
         if ($this->submissions->isEmpty()) {
             // Check if they are all already paid
-            $this->submissions = Submission::with(['journal', 'user'])
+            $allSubmissions = Submission::with(['journal', 'user'])
                 ->whereIn('id', $this->selectedIds)
                 ->get();
+
+            if ($allSubmissions->count() === 1) {
+                $this->redirect(SubmissionResource::getUrl('payment', ['record' => $allSubmissions->first()]));
+                return;
+            }
+
+            $this->submissions = $allSubmissions;
         }
 
         $bulkPricing = $pricingService->calculateBulk($this->submissions);

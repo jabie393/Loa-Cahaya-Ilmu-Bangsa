@@ -159,23 +159,11 @@ class Submission extends Model
     }
 
     /**
-     * Resolve the corresponding pricing package for this submission
+     * Resolve the corresponding pricing for this submission
      */
-    public function resolvePackage(): ?Package
+    public function resolvePricing(): array
     {
-        $count = $this->author_count;
-        $wantDoi = (bool) ($this->want_doi || $this->has_doi);
-
-        // Check if journal is international (e.g. ijefi or pjls or flag)
-        $isInternational = false;
-        if ($this->journal) {
-            $url = $this->journal->ojs_base_url ?? '';
-            if (str_contains(strtolower($url), 'ijefi') || str_contains(strtolower($url), 'pjls')) {
-                $isInternational = true;
-            }
-        }
-
-        return Package::resolveForSubmission($count, $wantDoi, $isInternational);
+        return app(\App\Services\SubmissionPricingService::class)->calculate($this);
     }
 
     public function getLoaNumberAttribute(): string
@@ -282,33 +270,31 @@ class Submission extends Model
                 'status' => 'Pending',
             ];
 
-            // Metadata updates from automated extraction (only if currently empty, to prioritize manual input)
-            if (empty($this->title) && !empty($results['detected_title'])) {
+            // Metadata updates from automated extraction
+            if (!empty($results['detected_title'])) {
                 $updates['title'] = $results['detected_title'];
             }
-            if (empty($this->abstract) && !empty($results['detected_abstract'])) {
+            if (!empty($results['detected_abstract'])) {
                 $updates['abstract'] = $results['detected_abstract'];
             }
-            if (empty($this->keywords) && !empty($results['detected_keywords'])) {
+            if (!empty($results['detected_keywords'])) {
                 $updates['keywords'] = is_array($results['detected_keywords']) ? implode(', ', $results['detected_keywords']) : $results['detected_keywords'];
             }
-            if (empty($this->references) && !empty($results['detected_references'])) {
+            if (!empty($results['detected_references'])) {
                 $updates['references'] = $results['detected_references'];
             }
 
-            // Check if the current authors list is the default one (1 author, matching user name or empty, with empty institution)
-            $isDefaultAuthor = false;
-            if (is_array($this->authors) && count($this->authors) === 1) {
-                $firstAuthor = $this->authors[0];
-                $defaultName = $this->user?->name ?? '';
-                if (($firstAuthor['name'] === $defaultName || empty($firstAuthor['name'])) && empty($firstAuthor['institution'])) {
-                    $isDefaultAuthor = true;
-                }
-            }
-
-            // Fallback metadata updates (only if currently empty or default, to prioritize manual input)
-            if ((empty($this->authors) || $isDefaultAuthor) && !empty($results['detected_authors']) && is_array($results['detected_authors'])) {
+            if (!empty($results['detected_authors']) && is_array($results['detected_authors'])) {
                 $updates['authors'] = $results['detected_authors'];
+                $authorNames = [];
+                foreach ($results['detected_authors'] as $authorItem) {
+                    if (is_array($authorItem) && !empty($authorItem['name'])) {
+                        $authorNames[] = trim($authorItem['name']);
+                    }
+                }
+                if (!empty($authorNames)) {
+                    $updates['author_name'] = implode(', ', $authorNames);
+                }
             }
 
             // Fallback to user details if both automated and manual input are empty
@@ -316,6 +302,7 @@ class Submission extends Model
                 $updates['authors'] = [
                     ['name' => $this->user?->name ?? 'Author', 'institution' => '']
                 ];
+                $updates['author_name'] = $this->user?->name ?? 'Author';
             }
             if (empty($this->email) && empty($updates['email'])) {
                 $updates['email'] = $this->user?->email;
@@ -323,19 +310,10 @@ class Submission extends Model
 
             $this->update($updates);
 
-
-
             // Send Pre-Submission Review Email (Only for internal journals)
             if (!$isExternal) {
                 \Illuminate\Support\Facades\Mail::to($this->email)->send(new \App\Mail\PreSubmissionReviewMail($this));
                 $this->update(['review_email_sent_at' => now()]);
-            }
-
-            if (!app()->runningInConsole()) {
-                \Filament\Notifications\Notification::make()
-                    ->title($isExternal ? 'Ekstraksi Metadata Berhasil' : 'Request Review Berhasil Terkirim')
-                    ->success()
-                    ->send();
             }
         } catch (\Exception $e) {
             $this->update([
