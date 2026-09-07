@@ -340,7 +340,7 @@ class SubmissionsTable
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
-                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && $record->review_status !== 'processing'),
+                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && !in_array($record->review_status, ['processing', 'failed'])),
                     Action::make('review')
                         ->label('Review')
                         ->icon('heroicon-o-eye')
@@ -449,13 +449,6 @@ class SubmissionsTable
                         ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
                         ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
                         ->modalCancelActionLabel('Periksa Kembali'),
-                    Action::make('download_invoice')
-                        ->label('Download Invoice')
-                        ->icon('heroicon-o-document-currency-dollar')
-                        ->color('primary')
-                        ->url(fn(Submission $record) => route('public.invoice.preview', ['record' => $record]))
-                        ->openUrlInNewTab()
-                        ->visible(fn(Submission $record) => $record->payment_status === 'paid'),
                     Action::make('download_invoice_bulk')
                         ->label('Download Invoice Kolektif')
                         ->icon('heroicon-o-document-duplicate')
@@ -466,6 +459,13 @@ class SubmissionsTable
                         })
                         ->openUrlInNewTab()
                         ->visible(fn(Submission $record) => $record->payment_status === 'paid' && $record->getBulkPayment() !== null),
+                    Action::make('download_invoice')
+                        ->label(fn(Submission $record) => $record->getBulkPayment() !== null ? 'Download Invoice Satuan' : 'Download Invoice')
+                        ->icon('heroicon-o-document-text')
+                        ->color('primary')
+                        ->url(fn(Submission $record) => route('public.invoice.preview', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->visible(fn(Submission $record) => $record->payment_status === 'paid'),
                     Action::make('download')
                         ->label('Download LOA')
                         ->icon('heroicon-o-arrow-down-tray')
@@ -531,15 +531,15 @@ class SubmissionsTable
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->action(function (Collection $records) {
-                            // 1. Check if any selected submission is still processing review
-                            $processingRecords = $records->filter(fn(Submission $r) => $r->review_status === 'processing' || empty($r->title));
+                            // 1. Check if any selected submission is still processing or failed review
+                            $invalidRecords = $records->filter(fn(Submission $r) => in_array($r->review_status, ['processing', 'failed']) || empty($r->title));
 
-                            if ($processingRecords->isNotEmpty()) {
-                                $processingIds = $processingRecords->pluck('id')->implode(', ');
+                            if ($invalidRecords->isNotEmpty()) {
+                                $invalidIds = $invalidRecords->pluck('id')->implode(', ');
                                 Notification::make()
                                     ->warning()
-                                    ->title('Naskah Sedang Dalam Proses Review')
-                                    ->body("Terdapat naskah ({$processingIds}) yang masih dalam proses ekstraksi & peninjauan (review). Mohon tunggu hingga proses review selesai sebelum melakukan pembayaran.")
+                                    ->title('Naskah Belum Selesai Direview')
+                                    ->body("Terdapat naskah ({$invalidIds}) yang masih dalam proses atau gagal peninjauan (review). Mohon lakukan review ulang terlebih dahulu sebelum melakukan pembayaran.")
                                     ->persistent()
                                     ->send();
                                 return;

@@ -146,7 +146,7 @@ class ReviewSubmission extends Page
                     ->icon('heroicon-m-credit-card')
                     ->color('success')
                     ->url(fn(): string => static::$resource::getUrl('payment', ['record' => $this->record]))
-                    ->visible(fn(): bool => $this->record->payment_status !== 'paid'),
+                    ->visible(fn(): bool => $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed'])),
                 EditAction::make()
                     ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square')

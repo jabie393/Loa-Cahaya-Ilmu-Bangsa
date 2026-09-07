@@ -36,6 +36,12 @@ class PaymentSubmission extends Page
             abort(403, 'Anda tidak memiliki akses ke halaman pembayaran naskah ini.');
         }
 
+        // If review failed, redirect to view page so user can request review again
+        if ($this->record->review_status === 'failed') {
+            $this->redirect(SubmissionResource::getUrl('view', ['record' => $this->record]));
+            return;
+        }
+
         // If submission is already approved, publication fee is already settled
         if ($this->record->status === 'Approved') {
             if (!$this->record->has_doi) {

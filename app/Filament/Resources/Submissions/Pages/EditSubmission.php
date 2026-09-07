@@ -54,7 +54,7 @@ class EditSubmission extends EditRecord
         ];
 
         // Tombol cepat ke Pembayaran QRIS sejajar dengan tombol Save Changes (Simpan & Langsung Buka Pembayaran)
-        if ($this->record->status !== 'Approved' && $this->record->payment_status !== 'paid') {
+        if ($this->record->status !== 'Approved' && $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed'])) {
             $actions[] = Action::make('bayar_qris')
                 ->label('Proceed to Payment')
                 ->icon('heroicon-o-credit-card')

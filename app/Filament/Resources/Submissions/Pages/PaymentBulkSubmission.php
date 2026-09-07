@@ -37,10 +37,11 @@ class PaymentBulkSubmission extends Page
             return;
         }
 
-        // Get submissions that are unpaid
+        // Get submissions that are unpaid and successfully reviewed
         $this->submissions = Submission::with(['journal', 'user'])
             ->whereIn('id', $this->selectedIds)
             ->where('payment_status', '<>', 'paid')
+            ->whereNotIn('review_status', ['processing', 'failed'])
             ->get();
 
         // Jika hanya ada 1 naskah yang belum dibayar, redirect ke pembayaran single
