@@ -25,7 +25,7 @@
         <div
             class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 rounded-lg">
+                <div class="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/50">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                     </svg>
@@ -38,15 +38,15 @@
             <div>
                 <template x-if="status === 'paid'">
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                        <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                         PDF Telah Diperbarui
                     </span>
                 </template>
                 <template x-if="status === 'pending' && !isExpired">
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
                         Menunggu Pembayaran
                     </span>
                 </template>
@@ -71,7 +71,7 @@
                     class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                     <h3
                         class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
@@ -101,7 +101,7 @@
                         </div>
 
                         <div
-                            class="pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-400 leading-relaxed bg-amber-50/50 dark:bg-amber-950/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800/40">
+                            class="pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-blue-900 dark:text-blue-300 leading-relaxed bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800/40">
                             <strong>Informasi Layanan:</strong> Pembayaran ini digunakan untuk biaya penggantian file naskah PDF dan pembaruan otomatis ke server OJS. Jumlah penulis pada file baru telah diverifikasi sesuai dengan data awal.
                         </div>
                     </div>
@@ -112,7 +112,7 @@
                     class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
                     <h3
                         class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25a60.074 60.074 0 0 1 15.797-2.101c.727-.198 1.453.342 1.453 1.096V4.5m0 0v10.5m0-10.5a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V6m18 8.25a60.07 60.07 0 0 1-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V14.25" />
@@ -127,7 +127,7 @@
                         </div>
                         <div class="flex justify-between items-center pt-1 font-bold text-base text-gray-900 dark:text-white">
                             <span>Total Tagihan:</span>
-                            <span class="text-primary-600 dark:text-primary-400 font-extrabold text-lg">Rp 25.000</span>
+                            <span class="text-blue-600 dark:text-blue-400 font-extrabold text-lg">Rp 25.000</span>
                         </div>
                     </div>
                 </div>
@@ -143,7 +143,7 @@
                     <template x-if="status === 'paid'">
                         <div class="py-6 space-y-4">
                             <div
-                                class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                class="w-16 h-16 bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
                                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke-width="3"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -155,7 +155,7 @@
                             </p>
                             <div class="pt-2 space-y-2">
                                 <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('view', ['record' => $record]) }}"
-                                    class="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
                                     <span>Lihat Naskah (Review Page)</span>
                                 </a>
                                 <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('index') }}"
@@ -172,15 +172,15 @@
                             <div
                                 class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
                                 <div
-                                    class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 font-semibold">
-                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                                    class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300 font-semibold">
+                                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
                                     <span>Scan QRIS</span>
                                 </div>
 
                                 <!-- Countdown Timer -->
                                 <div
-                                    class="text-xs font-mono bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24"
+                                    class="text-xs font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-bold">
+                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24"
                                         stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -253,7 +253,7 @@
                             </p>
                             <div class="pt-2">
                                 <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
-                                    class="w-full inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
                                     <svg x-show="isRegenerating" class="w-4 h-4 animate-spin" fill="none"
                                         viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"

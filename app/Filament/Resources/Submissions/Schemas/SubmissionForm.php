@@ -19,7 +19,9 @@ class SubmissionForm
             ->components([
                 Section::make('Form Submission')
                     ->columnSpanFull()
-                    ->description('Lengkapi atau perbarui data pengajuan di bawah ini.')
+                    ->description(fn($record) => $record !== null && $record->status === 'Approved'
+                        ? 'Naskah telah Disetujui (Approved). Hanya Link Publikasi yang dapat diperbarui.'
+                        : 'Lengkapi atau perbarui data pengajuan di bawah ini.')
                     ->schema([
                         Hidden::make('user_id')
                             ->default(Auth::user()->id),
@@ -45,7 +47,7 @@ class SubmissionForm
                                 }
                             })
                             ->helperText('Pilihan ini mempengaruhi nominal tarif pembayaran QRIS secara otomatis.')
-                            ->disabled(fn($record) => ($record !== null && !empty($record->repository_identifier)) || ($record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'))
+                            ->disabled(fn($record) => $record !== null && ($record->status === 'Approved' || !empty($record->repository_identifier)))
                             ->required(),
 
                         FileUpload::make('manuscript_file')
@@ -140,7 +142,7 @@ class SubmissionForm
                                     };
                                 }
                             ])
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && $record->status === 'Approved'),
 
                         TextInput::make('email')
                             ->label('Email Korespondensi (Penerima LOA)')
@@ -148,7 +150,14 @@ class SubmissionForm
                             ->required()
                             ->default(fn() => Auth::user()?->email)
                             ->placeholder('email@example.com')
-                            ->disabled(fn($record) => $record !== null && !Auth::user()?->hasRole('super_admin') && $record->status === 'Approved'),
+                            ->disabled(fn($record) => $record !== null && $record->status === 'Approved'),
+
+                        TextInput::make('publication_link')
+                            ->label('Link Publikasi (URL Artikel OJS)')
+                            ->url()
+                            ->placeholder('https://...')
+                            ->helperText('Tautan artikel ilmiah yang telah terbit pada website jurnal OJS.')
+                            ->nullable(),
                     ]),
             ])
             ->columns(1);
