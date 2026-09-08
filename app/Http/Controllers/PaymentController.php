@@ -300,6 +300,8 @@ class PaymentController extends Controller
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
 
         if ($payment->isPaid()) {
+            $this->qrisService->applyReplacePdfForSubmission($submission, $payment);
+
             return response()->json([
                 'status' => 'paid',
                 'is_paid' => true,
@@ -330,6 +332,16 @@ class PaymentController extends Controller
         try {
             $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
             $tempPath = $latest?->raw_response['new_pdf_path'] ?? '';
+
+            if (empty($tempPath)) {
+                $allPrev = $submission->payments()->where('type', 'replace_pdf')->latest()->get();
+                foreach ($allPrev as $prev) {
+                    if (!empty($prev->raw_response['new_pdf_path'])) {
+                        $tempPath = $prev->raw_response['new_pdf_path'];
+                        break;
+                    }
+                }
+            }
 
             // Mark existing pending payment as expired
             $submission->payments()

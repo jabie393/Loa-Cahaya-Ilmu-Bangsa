@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MidtransQrisService
@@ -278,11 +279,17 @@ class MidtransQrisService
                 $transStatus = $data['transaction_status'] ?? null;
 
                 if (in_array($transStatus, ['capture', 'settlement'])) {
+                    $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
+                    $mergedRaw = array_merge($existingRaw, $data);
+                    if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
+                        $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
+                    }
+
                     $payment->update([
                         'payment_status' => 'paid',
                         'transaction_status' => $transStatus,
                         'paid_at' => now(),
-                        'raw_response' => $data,
+                        'raw_response' => $mergedRaw,
                     ]);
 
                     $payment->ensureInvoiceNumber();
@@ -559,6 +566,11 @@ class MidtransQrisService
      */
     public function getOrCreateReplacePdfPayment(Submission $submission, ?string $tempFilePath = null): Payment
     {
+        if (empty($tempFilePath)) {
+            $prev = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
+            $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? null;
+        }
+
         // Check for latest pending Replace PDF payment
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
@@ -570,7 +582,7 @@ class MidtransQrisService
                 ]);
             } else {
                 if ($tempFilePath) {
-                    $raw = $latest->raw_response ?? [];
+                    $raw = is_array($latest->raw_response) ? $latest->raw_response : [];
                     $raw['new_pdf_path'] = $tempFilePath;
                     $latest->raw_response = $raw;
                     $latest->save();
@@ -590,8 +602,13 @@ class MidtransQrisService
     /**
      * Charge QRIS for Replace PDF Service (Rp 25,000).
      */
-    public function chargeReplacePdfQris(Submission $submission, string $tempFilePath): Payment
+    public function chargeReplacePdfQris(Submission $submission, string $tempFilePath = ''): Payment
     {
+        if (empty($tempFilePath)) {
+            $prev = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
+            $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? '';
+        }
+
         $pricing = $this->pricingService->calculateReplacePdf();
         $grossAmount = (int) round($pricing['gross_amount']);
 
@@ -707,8 +724,32 @@ class MidtransQrisService
      */
     public function applyReplacePdfForSubmission(Submission $submission, Payment $payment): void
     {
-        $raw = $payment->raw_response;
+        $raw = is_array($payment->raw_response) ? $payment->raw_response : [];
         $tempPath = $raw['new_pdf_path'] ?? null;
+
+        // Fallback 1: Search previous replace_pdf payments for this submission
+        if (empty($tempPath) || !Storage::disk('public')->exists($tempPath)) {
+            $prevPayments = $submission->payments()->where('type', 'replace_pdf')->latest()->get();
+            foreach ($prevPayments as $prev) {
+                $pRaw = is_array($prev->raw_response) ? $prev->raw_response : [];
+                $pPath = $pRaw['new_pdf_path'] ?? null;
+                if ($pPath && Storage::disk('public')->exists($pPath)) {
+                    $tempPath = $pPath;
+                    break;
+                }
+            }
+        }
+
+        // Fallback 2: Check files in temp_replace_pdf directory
+        if (empty($tempPath) || !Storage::disk('public')->exists($tempPath)) {
+            $tempFiles = Storage::disk('public')->files('temp_replace_pdf');
+            if (!empty($tempFiles)) {
+                usort($tempFiles, function ($a, $b) {
+                    return Storage::disk('public')->lastModified($b) <=> Storage::disk('public')->lastModified($a);
+                });
+                $tempPath = $tempFiles[0];
+            }
+        }
 
         if ($tempPath && Storage::disk('public')->exists($tempPath)) {
             $extension = pathinfo($tempPath, PATHINFO_EXTENSION) ?: 'pdf';
@@ -718,9 +759,9 @@ class MidtransQrisService
             Storage::disk('public')->put($targetPath, Storage::disk('public')->get($tempPath));
             Storage::disk('public')->delete($tempPath);
 
-            $submission->update([
-                'manuscript_file' => $targetPath,
-            ]);
+            $submission->manuscript_file = $targetPath;
+            $submission->save();
+            $submission->touch();
 
             Log::info("Replace PDF applied successfully for Submission #{$submission->id}. Target: {$targetPath}");
 
@@ -730,6 +771,8 @@ class MidtransQrisService
             } catch (\Throwable $e) {
                 Log::error("Failed to dispatch OJS sync after PDF replacement for Submission #{$submission->id}: " . $e->getMessage());
             }
+        } else {
+            Log::warning("Replace PDF: No valid temp file found for Submission #{$submission->id}, Payment #{$payment->id}");
         }
     }
 

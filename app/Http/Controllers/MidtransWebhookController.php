@@ -61,10 +61,16 @@ class MidtransWebhookController extends Controller
         }
 
         // Process status based on Midtrans transaction_status
+        $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
+        $mergedRaw = array_merge($existingRaw, is_array($payload) ? $payload : []);
+        if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
+            $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
+        }
+
         $updateData = [
             'transaction_id' => $transactionId ?: $payment->transaction_id,
             'transaction_status' => $transactionStatus,
-            'raw_response' => $payload,
+            'raw_response' => $mergedRaw,
         ];
 
         if (in_array($transactionStatus, ['capture', 'settlement'])) {
