@@ -100,23 +100,42 @@ class ReplacePdfSubmission extends Page implements HasForms
             }
             $fullPath = Storage::disk('public')->path($relativePublicPath);
         } elseif (is_string($rawFile)) {
-            if (Storage::disk('public')->exists($rawFile)) {
-                $relativePublicPath = $rawFile;
-                $fullPath = Storage::disk('public')->path($rawFile);
-            } elseif (file_exists(storage_path('app/public/' . $rawFile))) {
-                $relativePublicPath = $rawFile;
-                $fullPath = storage_path('app/public/' . $rawFile);
-            } elseif (file_exists($rawFile)) {
-                $fullPath = $rawFile;
-                $safeName = time() . '_' . basename($rawFile);
-                $relativePublicPath = 'temp_replace_pdf/' . $safeName;
-                Storage::disk('public')->put($relativePublicPath, file_get_contents($fullPath));
-                $fullPath = Storage::disk('public')->path($relativePublicPath);
-            } elseif (Storage::disk('local')->exists($rawFile)) {
-                $safeName = time() . '_' . basename($rawFile);
-                $relativePublicPath = 'temp_replace_pdf/' . $safeName;
-                Storage::disk('public')->put($relativePublicPath, Storage::disk('local')->get($rawFile));
-                $fullPath = Storage::disk('public')->path($relativePublicPath);
+            $candidates = [
+                $rawFile,
+                'temp_replace_pdf/' . ltrim($rawFile, '/'),
+                'manuscripts/' . ltrim($rawFile, '/'),
+            ];
+
+            foreach ($candidates as $candidate) {
+                if (Storage::disk('public')->exists($candidate)) {
+                    $relativePublicPath = $candidate;
+                    $fullPath = Storage::disk('public')->path($candidate);
+                    break;
+                }
+                if (file_exists(storage_path('app/public/' . $candidate))) {
+                    $relativePublicPath = $candidate;
+                    $fullPath = storage_path('app/public/' . $candidate);
+                    break;
+                }
+            }
+
+            if (!$fullPath) {
+                $localCandidates = [
+                    $rawFile,
+                    storage_path('app/private/livewire-tmp/' . $rawFile),
+                    storage_path('app/private/' . $rawFile),
+                    storage_path('app/' . $rawFile),
+                ];
+
+                foreach ($localCandidates as $loc) {
+                    if (file_exists($loc) && !is_dir($loc)) {
+                        $safeName = time() . '_' . basename($loc);
+                        $relativePublicPath = 'temp_replace_pdf/' . $safeName;
+                        Storage::disk('public')->put($relativePublicPath, file_get_contents($loc));
+                        $fullPath = Storage::disk('public')->path($relativePublicPath);
+                        break;
+                    }
+                }
             }
         }
 
@@ -228,7 +247,7 @@ class ReplacePdfSubmission extends Page implements HasForms
                 ->success()
                 ->send();
 
-            $this->redirect(route('submissions.payment.replace-pdf', $this->record->id));
+            $this->redirect(SubmissionResource::getUrl('payment.replace_pdf', ['record' => $this->record]));
         } catch (\Throwable $e) {
             Notification::make()
                 ->title('Gagal Membuat Tagihan Pembayaran')

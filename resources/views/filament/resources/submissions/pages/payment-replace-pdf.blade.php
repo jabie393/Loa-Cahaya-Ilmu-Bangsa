@@ -25,28 +25,31 @@
         <div
             class="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
             <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/50">
+                <div class="p-2 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-lg">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Pembayaran Layanan Ganti PDF Naskah #{{ $record->id }}</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Pembaruan file artikel ilmiah dan sinkronisasi otomatis ke OJS.</p>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Pembayaran Layanan Ganti PDF Naskah
+                        #{{ $record->id }}</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Selesaikan pembayaran untuk memperbarui file
+                        naskah dan sinkronisasi otomatis ke OJS.</p>
                 </div>
             </div>
             <div>
                 <template x-if="status === 'paid'">
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                         <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                        PDF Telah Diperbarui
+                        File PDF Telah Diperbarui
                     </span>
                 </template>
                 <template x-if="status === 'pending' && !isExpired">
                     <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                         Menunggu Pembayaran
                     </span>
                 </template>
@@ -83,51 +86,79 @@
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Judul Artikel:</span>
                             <span class="font-bold text-gray-900 dark:text-white leading-snug block">
-                                {{ !empty($record->title) ? $record->title : '-' }}
+                                {{ !empty($record->title) ? $record->title : 'Naskah #' . $record->id }}
                             </span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-gray-800">
                             <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Jurnal:</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Jurnal
+                                    Target:</span>
                                 <span
                                     class="font-semibold text-gray-800 dark:text-gray-200">{{ $record->journal?->name ?? '-' }}</span>
+                                <span
+                                    class="text-[11px] text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded inline-block mt-0.5 font-medium">
+                                    {{ $record->isExternal() ? 'Internasional' : 'Nasional ISSN' }}
+                                </span>
                             </div>
                             <div>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Penulis Utama:</span>
-                                <span
-                                    class="font-semibold text-gray-800 dark:text-gray-200">{{ $record->author_name ?? '-' }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Layanan:</span>
+                                <span class="font-semibold text-blue-600 dark:text-blue-400">
+                                    Ganti PDF Naskah
+                                </span>
                             </div>
                         </div>
+
+                        @php
+                            $authors = is_array($record->authors) ? $record->authors : [];
+                            $authorCount = count($authors);
+                            if ($authorCount === 0 && !empty($record->author_name)) {
+                                $authors = [['name' => $record->author_name]];
+                                $authorCount = 1;
+                            }
+                        @endphp
+
+                        <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Jumlah
+                                    Penulis:</span>
+                                <span class="font-bold text-gray-900 dark:text-white">
+                                    {{ $authorCount }} Penulis
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Email
+                                    Korespondensi:</span>
+                                <span
+                                    class="font-medium text-gray-800 dark:text-gray-200 truncate block">{{ $record->email }}</span>
+                            </div>
+                        </div>
+
+                        @if(count($authors) > 0)
+                            <div class="pt-3 border-t border-gray-100 dark:border-gray-800">
+                                <span class="text-xs text-gray-500 dark:text-gray-400 block mb-1">Daftar Penulis:</span>
+                                <ul
+                                    class="text-xs text-gray-700 dark:text-gray-300 space-y-1 bg-gray-50 dark:bg-gray-800/40 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                                    @foreach($authors as $index => $author)
+                                        <li class="flex items-center gap-1.5">
+                                            <span
+                                                class="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center justify-center text-[10px] font-bold">{{ $index + 1 }}</span>
+                                            <span
+                                                class="font-medium">{{ is_array($author) ? ($author['name'] ?? '-') : $author }}</span>
+                                            @if(is_array($author) && !empty($author['institution']))
+                                                <span class="text-gray-400">({{ $author['institution'] }})</span>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         <div
                             class="pt-3 border-t border-gray-100 dark:border-gray-800 text-xs text-blue-900 dark:text-blue-300 leading-relaxed bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800/40">
-                            <strong>Informasi Layanan:</strong> Pembayaran ini digunakan untuk biaya penggantian file naskah PDF dan pembaruan otomatis ke server OJS. Jumlah penulis pada file baru telah diverifikasi sesuai dengan data awal.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Price Breakdown Card -->
-                <div
-                    class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-                    <h3
-                        class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0v8.25m0-8.25a60.074 60.074 0 0 1 15.797-2.101c.727-.198 1.453.342 1.453 1.096V4.5m0 0v10.5m0-10.5a60.07 60.07 0 0 0-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V6m18 8.25a60.07 60.07 0 0 1-15.797 2.101c-.727.198-1.453-.342-1.453-1.096V14.25" />
-                        </svg>
-                        <span>Rincian Pembayaran</span>
-                    </h3>
-
-                    <div class="space-y-3 text-sm">
-                        <div class="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-800">
-                            <span class="text-gray-600 dark:text-gray-400">Layanan Ganti PDF Naskah</span>
-                            <span class="font-semibold text-gray-900 dark:text-white">Rp 25.000</span>
-                        </div>
-                        <div class="flex justify-between items-center pt-1 font-bold text-base text-gray-900 dark:text-white">
-                            <span>Total Tagihan:</span>
-                            <span class="text-blue-600 dark:text-blue-400 font-extrabold text-lg">Rp 25.000</span>
+                            <strong>Informasi Layanan:</strong> Pembayaran ini digunakan untuk biaya penggantian file
+                            naskah PDF dan pembaruan otomatis ke server OJS. Jumlah penulis pada file baru telah
+                            diverifikasi sesuai dengan data awal.
                         </div>
                     </div>
                 </div>
@@ -151,16 +182,28 @@
                             </div>
                             <h3 class="text-lg font-black text-gray-900 dark:text-white">PDF Berhasil Diperbarui!</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-                                Pembayaran terverifikasi. File naskah PDF telah resmi diperbarui pada sistem dan disinkronkan ke server OJS.
+                                Pembayaran telah terverifikasi. File naskah PDF telah resmi diperbarui pada sistem dan
+                                disinkronkan ke server OJS.
                             </p>
+                            <div
+                                class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl p-3 text-xs text-blue-800 dark:text-blue-300">
+                                Status OJS: <strong
+                                    class="font-bold text-blue-700 dark:text-blue-400 uppercase">Submitted
+                                    (Updated)</strong>
+                            </div>
                             <div class="pt-2 space-y-2">
-                                <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('view', ['record' => $record]) }}"
+                                <a href="{{ route('public.invoice.preview', ['record' => $record]) }}" target="_blank"
                                     class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
-                                    <span>Lihat Naskah (Review Page)</span>
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    <span>Download Invoice / Bukti Bayar PDF</span>
                                 </a>
-                                <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('index') }}"
+                                <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('view', ['record' => $record]) }}"
                                     class="w-full inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-4 rounded-xl text-xs transition-all">
-                                    <span>Kembali ke Daftar Naskah</span>
+                                    <span>Kembali ke Review Naskah</span>
                                 </a>
                             </div>
                         </div>
@@ -172,15 +215,15 @@
                             <div
                                 class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
                                 <div
-                                    class="flex items-center gap-1.5 text-xs text-blue-700 dark:text-blue-300 font-semibold">
-                                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                                    class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 font-semibold">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
                                     <span>Scan QRIS</span>
                                 </div>
 
                                 <!-- Countdown Timer -->
                                 <div
-                                    class="text-xs font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-bold">
-                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24"
+                                    class="text-xs font-mono bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24"
                                         stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -209,50 +252,150 @@
                                     </div>
                                 </template>
                                 <template x-if="errorMessage">
-                                    <div class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
-                                        <div class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
-                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                    <div
+                                        class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
+                                        <div
+                                            class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                             </svg>
                                         </div>
-                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug" x-text="errorMessage"></h4>
+                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug"
+                                            x-text="errorMessage"></h4>
                                         <div class="pt-1">
                                             <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">
-                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
                                                 </svg>
-                                                <span x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
+                                                <span
+                                                    x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
                                             </button>
                                         </div>
                                     </div>
                                 </template>
+                                <template x-if="!qrisUrl && !errorMessage">
+                                    <div
+                                        class="w-56 h-56 flex flex-col items-center justify-center text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                                        <svg class="w-8 h-8 animate-spin text-blue-600 mb-2" fill="none"
+                                            viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        <span class="text-xs">Membuat QRIS...</span>
+                                    </div>
+                                </template>
+
+                                <div class="mt-3 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                                    Mendukung GoPay, OVO, DANA, BCA, Mandiri & Seluruh M-Banking
+                                </div>
+
+                                @if(!config('services.midtrans.is_production', false))
+                                    <div
+                                        class="mt-3 w-full p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 text-left space-y-1.5 shadow-sm">
+                                        <div class="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                                            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 1-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                                            </svg>
+                                            <span>Petunjuk Simulasi Sandbox:</span>
+                                        </div>
+                                        <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                            <button type="button"
+                                                @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
+                                                class="px-2.5 py-1 bg-white dark:bg-gray-800 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-semibold rounded-md border border-amber-300 dark:border-amber-700 text-[10px] transition-colors">
+                                                Salin URL
+                                            </button>
+                                            <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
+                                                class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
+                                                <span>Buka Simulator</span>
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
-                            <p class="text-[11px] text-gray-500 dark:text-gray-400">
-                                Buka aplikasi e-wallet / mobile banking Anda (GoPay, BCA, Mandiri, OVO, Dana, dll) lalu scan QR code di atas.
-                            </p>
+                            <!-- Integrated Pricing Breakdown under QRIS -->
+                            <div
+                                class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700/60 text-left mb-4">
+                                <div class="space-y-2 text-xs">
+                                    <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                                        <span>Layanan:</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">Ganti PDF
+                                            Naskah</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
+                                        <span>Biaya Layanan:</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">Rp
+                                            {{ number_format($pricing['gross_amount'] ?? 25000, 0, ',', '.') }}</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="pt-2.5 mt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-baseline">
+                                    <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Total
+                                        Tagihan:</span>
+                                    <span class="text-xl font-black text-blue-600 dark:text-blue-400">
+                                        Rp {{ number_format($pricing['gross_amount'] ?? 25000, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="space-y-2">
+                                <button @click="checkStatus()" :disabled="isChecking"
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-all shadow-sm active:scale-[0.99]">
+                                    <svg x-show="isChecking" class="w-4 h-4 animate-spin" fill="none"
+                                        viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <svg x-show="!isChecking" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                    </svg>
+                                    <span x-text="isChecking ? 'Memeriksa...' : 'Periksa Status Pembayaran'"></span>
+                                </button>
+                            </div>
                         </div>
                     </template>
 
                     <!-- When Expired -->
                     <template x-if="status === 'expired' || isExpired">
-                        <div class="py-6 space-y-3">
+                        <div class="py-6 space-y-4">
                             <div
-                                class="w-14 h-14 bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto">
-                                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                class="w-16 h-16 bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke-width="2"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                 </svg>
                             </div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white">QRIS Telah Kedaluwarsa</h3>
+                            <h3 class="text-base font-black text-gray-900 dark:text-white">QRIS Telah Kedaluwarsa</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
-                                Batas waktu pembayaran telah habis. Silakan buat kode QRIS baru untuk melanjutkan.
+                                Waktu pembayaran telah habis. Klik tombol di bawah untuk membuat QRIS baru.
                             </p>
                             <div class="pt-2">
-                                <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
+                                <button @click="regenerateQris()" :disabled="isRegenerating"
                                     class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md">
                                     <svg x-show="isRegenerating" class="w-4 h-4 animate-spin" fill="none"
                                         viewBox="0 0 24 24">
@@ -262,7 +405,7 @@
                                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                         </path>
                                     </svg>
-                                    <span x-text="isRegenerating ? 'Membuat QRIS Baru...' : 'Buat QRIS Baru'"></span>
+                                    <span x-text="isRegenerating ? 'Membuat QRIS...' : 'Buat QRIS Baru'"></span>
                                 </button>
                             </div>
                         </div>
@@ -272,7 +415,6 @@
             </div>
 
         </div>
-
     </div>
 
     <script>
@@ -281,114 +423,116 @@
                 checkUrl: config.checkUrl,
                 regenerateUrl: config.regenerateUrl,
                 status: config.initialStatus,
-                expiresAt: config.initialExpiresAt,
+                expiresAt: config.initialExpiresAt ? new Date(config.initialExpiresAt) : null,
+                isExtracting: config.isExtracting,
                 qrisUrl: config.initialQrisUrl,
                 orderId: config.initialOrderId,
-                errorMessage: config.errorMessage,
+                errorMessage: config.errorMessage || null,
                 isExpired: false,
+                isChecking: false,
                 isRegenerating: false,
                 countdownText: '15:00',
-                timerInterval: null,
-                pollingInterval: null,
+                pollTimer: null,
+                countdownTimer: null,
 
                 initPayment() {
-                    if (this.status === 'paid') {
+                    this.updateCountdown();
+                    this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+
+                    this.pollTimer = setInterval(() => {
+                        if (this.status === 'pending' && !this.isExpired) {
+                            this.checkStatus(true);
+                        } else if (this.isExtracting) {
+                            this.checkStatus(true);
+                        }
+                    }, 5000);
+                },
+
+                updateCountdown() {
+                    if (!this.expiresAt || this.status !== 'pending') {
                         return;
                     }
-                    this.startCountdown();
-                    this.startPolling();
+
+                    const now = new Date();
+                    const diff = this.expiresAt.getTime() - now.getTime();
+
+                    if (diff <= 0) {
+                        this.isExpired = true;
+                        this.countdownText = '00:00';
+                        return;
+                    }
+
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    this.countdownText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 },
 
-                startCountdown() {
-                    if (!this.expiresAt) return;
+                async checkStatus(silent = false) {
+                    if (!silent) this.isChecking = true;
 
-                    const updateTimer = () => {
-                        const now = new Date().getTime();
-                        const expireTime = new Date(this.expiresAt).getTime();
-                        const distance = expireTime - now;
+                    try {
+                        const res = await fetch(this.checkUrl, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
 
-                        if (distance <= 0) {
+                        const data = await res.json();
+
+                        if (this.isExtracting && data.status !== 'extracting') {
+                            window.location.reload();
+                            return;
+                        }
+
+                        if (data.is_paid || data.status === 'paid') {
+                            this.status = 'paid';
+                            this.isExtracting = false;
+                        } else if (data.status === 'expired' || data.is_expired) {
                             this.isExpired = true;
                             this.status = 'expired';
-                            this.countdownText = '00:00';
-                            clearInterval(this.timerInterval);
-                            clearInterval(this.pollingInterval);
-                            return;
+                        } else if (data.status === 'extracting') {
+                            this.isExtracting = true;
+                        } else if (data.status === 'pending') {
+                            this.status = 'pending';
+                            this.isExpired = false;
+                            this.isExtracting = false;
                         }
-
-                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        this.countdownText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                    };
-
-                    updateTimer();
-                    this.timerInterval = setInterval(updateTimer, 1000);
-                },
-
-                startPolling() {
-                    this.pollingInterval = setInterval(async () => {
-                        if (this.status === 'paid' || this.isExpired) {
-                            clearInterval(this.pollingInterval);
-                            return;
-                        }
-
-                        try {
-                            const res = await fetch(this.checkUrl, {
-                                headers: {
-                                    'Accept': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            });
-                            const data = await res.json();
-
-                            if (data.is_paid || data.status === 'paid') {
-                                this.status = 'paid';
-                                clearInterval(this.pollingInterval);
-                                clearInterval(this.timerInterval);
-                            } else if (data.is_expired || data.status === 'expired') {
-                                this.isExpired = true;
-                                this.status = 'expired';
-                                clearInterval(this.pollingInterval);
-                                clearInterval(this.timerInterval);
-                            }
-                        } catch (e) {
-                            console.error('Polling error:', e);
-                        }
-                    }, 3000);
+                    } catch (e) {
+                        console.error('Check status error:', e);
+                    } finally {
+                        if (!silent) this.isChecking = false;
+                    }
                 },
 
                 async regenerateQris() {
                     this.isRegenerating = true;
                     try {
-                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
                         const res = await fetch(this.regenerateUrl, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
-                                'X-CSRF-TOKEN': token || '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
                             }
                         });
-                        const data = await res.json();
 
+                        const data = await res.json();
                         if (data.success) {
-                            this.qrisUrl = data.qris_url;
-                            this.orderId = data.order_id;
-                            this.expiresAt = data.expired_at;
-                            this.errorMessage = '';
                             this.status = 'pending';
                             this.isExpired = false;
-
-                            clearInterval(this.timerInterval);
-                            clearInterval(this.pollingInterval);
-
-                            this.startCountdown();
-                            this.startPolling();
+                            this.orderId = data.order_id;
+                            this.qrisUrl = data.qris_url;
+                            this.expiresAt = data.expired_at ? new Date(data.expired_at) : new Date(Date.now() + 15 * 60000);
+                            this.updateCountdown();
                         } else {
-                            alert(data.message || 'Gagal membuat QRIS.');
+                            alert(data.message || 'Gagal membuat QRIS baru.');
                         }
                     } catch (e) {
-                        alert('Terjadi kesalahan saat membuat QRIS baru.');
+                        alert('Terjadi kesalahan jaringan.');
                     } finally {
                         this.isRegenerating = false;
                     }

@@ -273,31 +273,10 @@ class PaymentController extends Controller
     /**
      * Show Replace PDF payment page.
      */
-    public function showReplacePdf(int $id): View
+    public function showReplacePdf(int $id)
     {
-        $submission = Submission::with(['journal', 'user', 'payments'])->findOrFail($id);
-
-        $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
-            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
-        }
-
-        $pricing = $this->pricingService->calculateReplacePdf();
-        $payment = null;
-        $errorMessage = null;
-
-        try {
-            $payment = $this->qrisService->getOrCreateReplacePdfPayment($submission);
-        } catch (\Exception $e) {
-            $errorMessage = $e->getMessage();
-        }
-
-        return view('filament.resources.submissions.pages.payment-replace-pdf', [
-            'record' => $submission,
-            'pricing' => $pricing,
-            'payment' => $payment,
-            'errorMessage' => $errorMessage,
-        ]);
+        $submission = Submission::findOrFail($id);
+        return redirect()->to(\App\Filament\Resources\Submissions\SubmissionResource::getUrl('payment.replace_pdf', ['record' => $submission]));
     }
 
     /**

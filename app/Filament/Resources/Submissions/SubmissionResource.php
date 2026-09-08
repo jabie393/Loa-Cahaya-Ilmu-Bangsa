@@ -93,6 +93,7 @@ class SubmissionResource extends Resource
             'payment.doi' => Pages\PaymentDoiSubmission::route('/{record}/payment-doi'),
             'payment.bulk' => Pages\PaymentBulkSubmission::route('/bulk-payment'),
             'replace_pdf' => Pages\ReplacePdfSubmission::route('/{record}/replace-pdf'),
+            'payment.replace_pdf' => Pages\PaymentReplacePdfSubmission::route('/{record}/payment-replace-pdf'),
         ];
     }
 }
