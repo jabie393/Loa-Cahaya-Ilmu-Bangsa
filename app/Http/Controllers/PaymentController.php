@@ -271,6 +271,112 @@ class PaymentController extends Controller
     }
 
     /**
+     * Show Replace PDF payment page.
+     */
+    public function showReplacePdf(int $id): View
+    {
+        $submission = Submission::with(['journal', 'user', 'payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        $pricing = $this->pricingService->calculateReplacePdf();
+        $payment = null;
+        $errorMessage = null;
+
+        try {
+            $payment = $this->qrisService->getOrCreateReplacePdfPayment($submission);
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+        }
+
+        return view('filament.resources.submissions.pages.payment-replace-pdf', [
+            'record' => $submission,
+            'pricing' => $pricing,
+            'payment' => $payment,
+            'errorMessage' => $errorMessage,
+        ]);
+    }
+
+    /**
+     * Check status for Replace PDF payment.
+     */
+    public function checkReplacePdfStatus(int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $latestPayment = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
+
+        if (!$latestPayment) {
+            return response()->json(['status' => 'no_payment', 'is_paid' => false]);
+        }
+
+        $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
+
+        if ($payment->isPaid()) {
+            return response()->json([
+                'status' => 'paid',
+                'is_paid' => true,
+                'message' => 'File PDF naskah berhasil diperbarui dan disinkronkan ke OJS!',
+            ]);
+        }
+
+        return response()->json([
+            'status' => $payment->payment_status,
+            'is_paid' => $payment->isPaid(),
+            'is_expired' => $payment->isExpired(),
+            'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
+        ]);
+    }
+
+    /**
+     * Re-generate QRIS for Replace PDF Service.
+     */
+    public function regenerateReplacePdf(int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        try {
+            $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
+            $tempPath = $latest?->raw_response['new_pdf_path'] ?? '';
+
+            // Mark existing pending payment as expired
+            $submission->payments()
+                ->where('type', 'replace_pdf')
+                ->where('payment_status', 'pending')
+                ->update(['payment_status' => 'expired']);
+
+            $payment = $this->qrisService->chargeReplacePdfQris($submission, $tempPath);
+
+            return response()->json([
+                'success' => true,
+                'order_id' => $payment->order_id,
+                'qris_url' => $payment->qris_url,
+                'qr_string' => $payment->qr_string,
+                'expired_at' => $payment->expired_at ? $payment->expired_at->toIso8601String() : null,
+                'message' => 'QRIS baru berhasil dibuat.',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat QRIS: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Check status for Bulk Payment transaction.
      */
     public function checkBulkStatus(int $paymentId): JsonResponse

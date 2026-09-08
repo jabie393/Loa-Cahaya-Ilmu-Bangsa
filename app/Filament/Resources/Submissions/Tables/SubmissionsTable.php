@@ -429,6 +429,74 @@ class SubmissionsTable
                                     ->send();
                             }
                         }),
+                    Action::make('replace_pdf')
+                        ->label('Ganti PDF')
+                        ->color('warning')
+                        ->icon('heroicon-o-arrow-up-tray')
+                        ->modalHeading('Ganti File PDF Naskah')
+                        ->modalDescription('Unggah file PDF artikel yang telah diperbarui. Sistem akan memverifikasi bahwa jumlah penulis pada file baru sama dengan naskah awal. Biaya layanan penggantian file PDF adalah Rp 25.000.')
+                        ->modalSubmitActionLabel('Verifikasi & Lanjut Bayar')
+                        ->form([
+                            \Filament\Forms\Components\FileUpload::make('new_manuscript_file')
+                                ->label('File PDF Naskah Baru')
+                                ->acceptedFileTypes(['application/pdf'])
+                                ->disk('public')
+                                ->directory('temp_replace_pdf')
+                                ->required()
+                                ->helperText('Format PDF saja. Pastikan jumlah dan daftar penulis sama dengan naskah awal.'),
+                        ])
+                        ->action(function (array $data, Submission $record) {
+                            $uploadedFilePath = $data['new_manuscript_file'] ?? null;
+                            if (!$uploadedFilePath || !Storage::disk('public')->exists($uploadedFilePath)) {
+                                Notification::make()
+                                    ->title('Gagal Mengunggah File')
+                                    ->body('File PDF tidak ditemukan.')
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
+
+                            $pricingService = app(\App\Services\SubmissionPricingService::class);
+                            $currentAuthorCount = $pricingService->getAuthorCount($record);
+
+                            // Extract & verify author count from new PDF
+                            try {
+                                $reviewService = app(\App\Services\GeminiReviewService::class);
+                                $extracted = $reviewService->extractMetadataFromFile($uploadedFilePath, $record->isExternal());
+                                $newAuthors = $extracted['detected_authors'] ?? [];
+                                $newAuthorCount = count(array_filter($newAuthors, fn($a) => !empty(trim($a['name'] ?? ''))));
+                                if ($newAuthorCount === 0) {
+                                    $newAuthorCount = 1;
+                                }
+                            } catch (\Throwable $e) {
+                                $newAuthorCount = $currentAuthorCount;
+                            }
+
+                            if ($newAuthorCount !== $currentAuthorCount) {
+                                Storage::disk('public')->delete($uploadedFilePath);
+                                Notification::make()
+                                    ->title('Perubahan Jumlah Penulis Ditolak')
+                                    ->body("Jumlah penulis pada file PDF baru terdeteksi {$newAuthorCount} orang, sedangkan naskah awal memiliki {$currentAuthorCount} orang. Fitur Ganti PDF tidak mengizinkan penambahan atau pengurangan jumlah penulis.")
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                                return;
+                            }
+
+                            // Charge QRIS for Replace PDF
+                            $qrisService = app(\App\Services\MidtransQrisService::class);
+                            try {
+                                $qrisService->getOrCreateReplacePdfPayment($record, $uploadedFilePath);
+                                return redirect()->to(route('submissions.payment.replace-pdf', $record->id));
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('Gagal Membuat Tagihan Pembayaran')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn(Submission $record) => $record->ojs_status === 'submitted'),
                     Action::make('view')
                         ->label('View')
                         ->icon('heroicon-o-eye')

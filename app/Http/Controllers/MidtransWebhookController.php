@@ -90,6 +90,12 @@ class MidtransWebhookController extends Controller
                     $this->qrisService->activateDoiForSubmission($submission);
                     Log::info("Midtrans Webhook: Submission #{$submission->id} DOI activated successfully");
                 }
+            } elseif ($payment->type === 'replace_pdf') {
+                $submission = $payment->submission;
+                if ($submission) {
+                    $this->qrisService->applyReplacePdfForSubmission($submission, $payment);
+                    Log::info("Midtrans Webhook: Submission #{$submission->id} PDF replaced and synced to OJS successfully");
+                }
             } else {
                 $submission = $payment->submission;
                 if ($submission) {

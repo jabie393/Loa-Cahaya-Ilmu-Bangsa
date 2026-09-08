@@ -300,6 +300,10 @@ class MidtransQrisService
                         if ($payment->submission) {
                             $this->activateDoiForSubmission($payment->submission);
                         }
+                    } elseif ($payment->type === 'replace_pdf') {
+                        if ($payment->submission) {
+                            $this->applyReplacePdfForSubmission($payment->submission, $payment);
+                        }
                     } else {
                         if ($payment->submission) {
                             $payment->submission->update(['payment_status' => 'paid']);
@@ -547,6 +551,185 @@ class MidtransQrisService
             \App\Services\OjsSubmissionService::submitInBackground($submission);
         } catch (\Throwable $e) {
             Log::warning("OJS sync failed for submission #{$submission->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get or create pending QRIS payment for Replace PDF service.
+     */
+    public function getOrCreateReplacePdfPayment(Submission $submission, ?string $tempFilePath = null): Payment
+    {
+        // Check for latest pending Replace PDF payment
+        $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
+
+        if ($latest && $latest->payment_status === 'pending') {
+            if ($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) {
+                $latest->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+            } else {
+                if ($tempFilePath) {
+                    $raw = $latest->raw_response ?? [];
+                    $raw['new_pdf_path'] = $tempFilePath;
+                    $latest->raw_response = $raw;
+                    $latest->save();
+                }
+
+                if (empty($latest->qris_url) && !empty($latest->qr_string)) {
+                    $latest->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latest->qr_string);
+                    $latest->save();
+                }
+                return $latest;
+            }
+        }
+
+        return $this->chargeReplacePdfQris($submission, $tempFilePath ?: '');
+    }
+
+    /**
+     * Charge QRIS for Replace PDF Service (Rp 25,000).
+     */
+    public function chargeReplacePdfQris(Submission $submission, string $tempFilePath): Payment
+    {
+        $pricing = $this->pricingService->calculateReplacePdf();
+        $grossAmount = (int) round($pricing['gross_amount']);
+
+        $orderId = 'REPLACE-PDF-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
+
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        $userId = $submission->user_id ?? Auth::id();
+        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
+
+        $itemName = 'Ganti PDF Naskah - ' . ($submission->journal?->name ?? 'Jurnal CIB');
+
+        $payload = [
+            'payment_type' => 'qris',
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
+            ],
+            'qris' => [
+                'acquirer' => 'gopay',
+            ],
+            'customer_details' => [
+                'first_name' => Str::limit($customerName, 45, ''),
+                'email' => $customerEmail,
+            ],
+            'item_details' => [
+                [
+                    'id' => 'REPLACE-PDF-' . $submission->id,
+                    'price' => $grossAmount,
+                    'quantity' => 1,
+                    'name' => Str::limit($itemName, 50, ''),
+                ]
+            ],
+        ];
+
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Authorization' => $authHeader,
+        ])->timeout(20)->post($this->getBaseUrl() . '/v2/charge', $payload);
+
+        $responseData = $response->json();
+
+        if (!$response->successful() || empty($responseData)) {
+            $errorMsg = $responseData['status_message'] ?? 'Gagal menghubungi server Midtrans.';
+            throw new \Exception("Gagal membuat QRIS Ganti PDF: " . $errorMsg);
+        }
+
+        $qrisUrl = null;
+        if (!empty($responseData['actions']) && is_array($responseData['actions'])) {
+            foreach ($responseData['actions'] as $action) {
+                if (($action['name'] ?? '') === 'generate-qr-code') {
+                    $qrisUrl = $action['url'] ?? null;
+                    break;
+                }
+            }
+        }
+
+        $qrString = $responseData['qr_string'] ?? null;
+        if (empty($qrisUrl) && !empty($qrString)) {
+            $qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrString);
+        }
+        $expiredAt = now()->addMinutes(15);
+        if (!empty($responseData['expiry_time'])) {
+            try {
+                $expiredAt = Carbon::parse($responseData['expiry_time']);
+            } catch (\Exception $e) {}
+        }
+
+        $responseData['new_pdf_path'] = $tempFilePath;
+
+        $payment = Payment::create([
+            'user_id' => $userId,
+            'submission_id' => $submission->id,
+            'order_id' => $orderId,
+            'transaction_id' => $responseData['transaction_id'] ?? null,
+            'payment_method' => 'qris',
+            'type' => 'replace_pdf',
+            'payer_name' => $customerName,
+            'payer_email' => $customerEmail,
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
+            'transaction_status' => $responseData['transaction_status'] ?? 'pending',
+            'payment_status' => 'pending',
+            'qris_url' => $qrisUrl,
+            'qr_string' => $qrString,
+            'expired_at' => $expiredAt,
+            'raw_response' => $responseData,
+        ]);
+
+        PaymentItem::create([
+            'payment_id' => $payment->id,
+            'submission_id' => $submission->id,
+            'item_type' => 'replace_pdf',
+            'item_name' => $itemName,
+            'gross_amount' => $grossAmount,
+            'journal_share' => $pricing['journal_share'],
+            'developer_gross_share' => $pricing['developer_gross_share'],
+            'mdr_amount' => $pricing['mdr_amount'],
+            'developer_net_share' => $pricing['developer_net_share'],
+        ]);
+
+        return $payment;
+    }
+
+    /**
+     * Apply new PDF manuscript to submission upon successful replace_pdf payment.
+     */
+    public function applyReplacePdfForSubmission(Submission $submission, Payment $payment): void
+    {
+        $raw = $payment->raw_response;
+        $tempPath = $raw['new_pdf_path'] ?? null;
+
+        if ($tempPath && Storage::disk('public')->exists($tempPath)) {
+            $extension = pathinfo($tempPath, PATHINFO_EXTENSION) ?: 'pdf';
+            $targetPath = "manuscripts/file-{$submission->id}.{$extension}";
+
+            // Move temp file to permanent location
+            Storage::disk('public')->put($targetPath, Storage::disk('public')->get($tempPath));
+            Storage::disk('public')->delete($tempPath);
+
+            $submission->update([
+                'manuscript_file' => $targetPath,
+            ]);
+
+            Log::info("Replace PDF applied successfully for Submission #{$submission->id}. Target: {$targetPath}");
+
+            // Automatically sync updated PDF file to OJS in background
+            try {
+                \App\Services\OjsSubmissionService::submitInBackground($submission);
+            } catch (\Throwable $e) {
+                Log::error("Failed to dispatch OJS sync after PDF replacement for Submission #{$submission->id}: " . $e->getMessage());
+            }
         }
     }
 

@@ -651,6 +651,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/payment-doi', [\App\Http\Controllers\PaymentController::class, 'showDoi'])->name('submissions.payment.doi');
     Route::get('/submissions/{id}/payment-doi/check', [\App\Http\Controllers\PaymentController::class, 'checkDoiStatus'])->name('submissions.payment.doi.check');
     Route::post('/submissions/{id}/payment-doi/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateDoi'])->name('submissions.payment.doi.regenerate');
+    Route::get('/submissions/{id}/payment-replace-pdf', [\App\Http\Controllers\PaymentController::class, 'showReplacePdf'])->name('submissions.payment.replace-pdf');
+    Route::get('/submissions/{id}/payment-replace-pdf/check', [\App\Http\Controllers\PaymentController::class, 'checkReplacePdfStatus'])->name('submissions.payment.replace-pdf.check');
+    Route::post('/submissions/{id}/payment-replace-pdf/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateReplacePdf'])->name('submissions.payment.replace-pdf.regenerate');
 
 });
 
@@ -684,12 +687,16 @@ Route::get('/invoice/preview/{record}', function (App\Models\Submission $record)
     // Publication payment must be specifically 'submission' or 'bulk_submission'
     $submissionPayment = $paidPayments->first(fn($p) => in_array($p->type, ['submission', 'bulk_submission']));
     $doiPayment = $paidPayments->firstWhere('type', 'doi_addon');
+    $replacePdfPayments = $paidPayments->where('type', 'replace_pdf');
 
     if ($submissionPayment) {
         $submissionPayment->ensureInvoiceNumber();
     }
     if ($doiPayment) {
         $doiPayment->ensureInvoiceNumber();
+    }
+    foreach ($replacePdfPayments as $rpp) {
+        $rpp->ensureInvoiceNumber();
     }
 
     $pricingService = app(App\Services\SubmissionPricingService::class);
@@ -708,7 +715,8 @@ Route::get('/invoice/preview/{record}', function (App\Models\Submission $record)
     }
 
     $doiAmount = $doiPayment ? $doiPayment->gross_amount : 0;
-    $totalPaid = $publicationAmount + $doiAmount;
+    $replacePdfAmount = $replacePdfPayments->sum('gross_amount');
+    $totalPaid = $publicationAmount + $doiAmount + $replacePdfAmount;
     $latestPaidAt = $paidPayments->max('paid_at') ?? $paidPayments->max('created_at');
 
     return view('filament.invoice.invoice', [
@@ -716,8 +724,10 @@ Route::get('/invoice/preview/{record}', function (App\Models\Submission $record)
         'paidPayments' => $paidPayments,
         'submissionPayment' => $submissionPayment,
         'doiPayment' => $doiPayment,
+        'replacePdfPayments' => $replacePdfPayments,
         'publicationAmount' => $publicationAmount,
         'doiAmount' => $doiAmount,
+        'replacePdfAmount' => $replacePdfAmount,
         'totalPaid' => $totalPaid,
         'latestPaidAt' => $latestPaidAt,
         'pricing' => $pricing,

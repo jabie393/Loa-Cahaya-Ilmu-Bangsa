@@ -105,6 +105,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                         return match ($record->type) {
                             'bulk_submission' => 'Kolektif (' . count($record->items) . ' Naskah)',
                             'doi_addon' => 'Add-on DOI Resmi',
+                            'replace_pdf' => 'Ganti PDF Naskah',
                             default => $record->submission?->title ?: 'Publikasi Naskah',
                         };
                     })
@@ -112,6 +113,9 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->tooltip(function (Payment $record): string {
                         if ($record->type === 'bulk_submission') {
                             return 'Pembayaran Kolektif untuk ' . count($record->items) . ' naskah';
+                        }
+                        if ($record->type === 'replace_pdf') {
+                            return 'Layanan Ganti PDF Naskah';
                         }
                         return $record->submission?->title ?? 'Pembayaran Midtrans';
                     })
@@ -132,6 +136,9 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                         }
                         if ($record->type === 'doi_addon') {
                             return 'Repository CIB (DOI)';
+                        }
+                        if ($record->type === 'replace_pdf') {
+                            return 'Pembaruan File PDF';
                         }
                         return $record->submission?->journal?->name ?? 'Jurnal CIB';
                     })

@@ -197,6 +197,31 @@ class SubmissionPricingService
     }
 
     /**
+     * Calculate pricing specifically for Replace PDF service.
+     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%): Rp 175 | Dev Net: Rp 4,825 | Journal Share: Rp 20,000
+     */
+    public function calculateReplacePdf(): array
+    {
+        $grossAmount = 25000.0;
+        $devGross = 5000.0;
+        $mdr = round($grossAmount * self::MDR_RATE); // 175
+        $devNet = $devGross - $mdr; // 4825
+        $journalShare = $grossAmount - $devGross; // 20000
+
+        return [
+            'tier_name' => 'Ganti PDF Naskah',
+            'author_count' => 0,
+            'is_international' => false,
+            'with_doi' => false,
+            'gross_amount' => $grossAmount,
+            'journal_share' => $journalShare,
+            'developer_gross_share' => $devGross,
+            'mdr_amount' => $mdr,
+            'developer_net_share' => $devNet,
+        ];
+    }
+
+    /**
      * Calculate cumulative pricing breakdown for multiple submissions.
      */
     public function calculateBulk($submissions): array

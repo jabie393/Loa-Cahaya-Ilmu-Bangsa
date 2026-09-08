@@ -303,6 +303,54 @@
                                 </td>
                             </tr>
                         @endif
+
+                        {{-- Line 3+: Replace PDF Payments (If author bought Ganti PDF service) --}}
+                        @if(isset($replacePdfPayments) && $replacePdfPayments->isNotEmpty())
+                            @foreach($replacePdfPayments as $rpp)
+                                <tr class="align-top hover:bg-slate-50/50 transition-colors">
+                                    <td class="py-4 px-4 text-center font-bold text-slate-400">{{ $itemNo++ }}</td>
+                                    <td class="py-4 px-4 pr-6">
+                                        <div
+                                            class="text-[10.5px] font-mono text-slate-500 font-bold mb-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                            <div class="flex items-center gap-1">
+                                                <span
+                                                    class="text-slate-400 font-sans font-semibold text-[10px] uppercase tracking-wider">Order
+                                                    ID:</span>
+                                                <span>{{ $rpp->order_id }}</span>
+                                            </div>
+                                            @if($rpp->paid_at)
+                                                <span class="text-slate-300">•</span>
+                                                <div class="flex items-center gap-1 text-slate-400 font-sans text-[10.5px]">
+                                                    <span>Lunas:</span>
+                                                    <span
+                                                        class="font-semibold text-slate-600">{{ \Carbon\Carbon::parse($rpp->paid_at)->translatedFormat('d M Y, H:i') }}
+                                                        WIB</span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <h4 class="font-bold text-slate-900 text-xs leading-relaxed uppercase">
+                                            Layanan Pembaruan / Ganti PDF Naskah
+                                        </h4>
+                                    </td>
+                                    <td class="py-4 px-4 text-left">
+                                        <span class="font-bold text-slate-800 block text-xs leading-tight mb-1">
+                                            Pembaruan File OJS
+                                        </span>
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            <span
+                                                class="inline-block px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                Update Galley PDF
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <span class="font-bold text-slate-900 text-sm font-mono block">
+                                            Rp {{ number_format($rpp->gross_amount, 0, ',', '.') }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>
