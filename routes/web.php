@@ -550,7 +550,7 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
 
     $jsonData = json_encode($data);
 
-    $targetUrl = env('REPO_URL', 'http://127.0.0.1:8001');
+    $targetUrl = config('services.repo_url', env('REPO_URL', 'http://127.0.0.1:8001'));
     $targetHost = parse_url($targetUrl, PHP_URL_HOST);
     $targetPort = parse_url($targetUrl, PHP_URL_PORT);
     $portSuffix = $targetPort ? ':' . $targetPort : '';
@@ -628,8 +628,8 @@ Route::get('/sso/logout', function (\Illuminate\Http\Request $request) {
         return redirect($redirect ?: '/');
     }
 
-    $repoUrl = env('REPO_URL', 'http://127.0.0.1:8001');
-    return redirect($repoUrl . '/sso/logout?sso=true&redirect=' . urlencode($redirect ?: 'http://127.0.0.1:8000'));
+    $repoUrl = config('services.repo_url', env('REPO_URL', 'http://127.0.0.1:8001'));
+    return redirect(rtrim($repoUrl, '/') . '/sso/logout?sso=true&redirect=' . urlencode($redirect ?: url('/')));
 })->name('sso.logout');
 
 

@@ -45,7 +45,7 @@ return [
         'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
-    'repo_url' => env('REPO_URL', 'http://127.0.0.1:8001'),
+    'repo_url' => env('REPO_URL', env('DOI_URL', env('REPOSITORY_URL', 'http://127.0.0.1:8001'))),
 
     'gemini' => [
         'key' => env('GEMINI_API_KEY'),

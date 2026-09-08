@@ -102,7 +102,7 @@
                                     Ini:</span>
                                 <template x-if="status === 'paid' && doiIdentifier">
                                     <div class="flex items-center gap-2">
-                                        <a :href="doiUrl || ('http://127.0.0.1:8001/' + doiIdentifier)" target="_blank"
+                                        <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)" target="_blank"
                                             class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-lg border border-blue-300 dark:border-blue-700 hover:underline">
                                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                                             <span x-text="doiIdentifier"></span>
@@ -159,7 +159,7 @@
                                     <span
                                         class="block text-[11px] uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold">Repository
                                         Identifier (DOI):</span>
-                                    <a :href="doiUrl || ('http://127.0.0.1:8001/' + doiIdentifier)" target="_blank"
+                                    <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)" target="_blank"
                                         class="font-mono font-bold text-sm text-blue-700 dark:text-blue-300 hover:underline block"
                                         x-text="doiIdentifier">
                                     </a>

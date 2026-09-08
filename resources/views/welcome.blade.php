@@ -338,12 +338,12 @@
 
 
     <!-- SSO Iframe Check & Dynamic Auth Synchronization -->
-    <iframe id="sso-iframe" src="{{ env('REPO_URL', 'http://127.0.0.1:8001') }}/sso/iframe-check?origin={{ urlencode(url('/')) }}" style="display:none;"></iframe>
+    <iframe id="sso-iframe" src="{{ config('services.repo_url', env('REPO_URL', 'http://127.0.0.1:8001')) }}/sso/iframe-check?origin={{ urlencode(url('/')) }}" style="display:none;"></iframe>
 
     <script>
         (function() {
             let localUserLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-            const repoUrl = "{{ env('REPO_URL', 'http://127.0.0.1:8001') }}";
+            const repoUrl = "{{ config('services.repo_url', env('REPO_URL', 'http://127.0.0.1:8001')) }}";
 
             window.addEventListener('message', function(event) {
                 if (!event.origin.startsWith(repoUrl)) return;
