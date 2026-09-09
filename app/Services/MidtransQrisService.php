@@ -740,14 +740,15 @@ class MidtransQrisService
             }
         }
 
-        // Fallback 2: Check files in temp_replace_pdf directory
+        // Fallback 2: Check files in temp_replace_pdf specifically scoped to this submission
         if (empty($tempPath) || !Storage::disk('public')->exists($tempPath)) {
             $tempFiles = Storage::disk('public')->files('temp_replace_pdf');
-            if (!empty($tempFiles)) {
-                usort($tempFiles, function ($a, $b) {
+            $matchingFiles = array_filter($tempFiles, fn($f) => str_contains(basename($f), 'replace_sub_' . $submission->id . '_'));
+            if (!empty($matchingFiles)) {
+                usort($matchingFiles, function ($a, $b) {
                     return Storage::disk('public')->lastModified($b) <=> Storage::disk('public')->lastModified($a);
                 });
-                $tempPath = $tempFiles[0];
+                $tempPath = reset($matchingFiles);
             }
         }
 

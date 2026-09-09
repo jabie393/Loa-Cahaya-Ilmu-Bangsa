@@ -486,7 +486,7 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <x-filament::button href="{{ Storage::disk('public')->url($record->manuscript_file) }}"
+                                <x-filament::button href="{{ Storage::disk('public')->url($record->manuscript_file) . '?v=' . ($record->updated_at?->timestamp ?? time()) }}"
                                     tag="a" download target="_blank" icon="heroicon-m-arrow-down-tray" color="primary"
                                     class="w-full">
                                     Download File PDF

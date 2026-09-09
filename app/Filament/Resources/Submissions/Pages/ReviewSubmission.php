@@ -58,7 +58,9 @@ class ReviewSubmission extends Page
                 })
                 ->disabled(fn() => $this->record->ojs_status === 'pending')
                 ->visible(function () {
-                    if (!Auth::user()?->hasRole('super_admin') || $this->record->status !== 'Approved' || in_array($this->record->ojs_status, ['submitted', 'published'])) {
+                    $user = Auth::user();
+                    $isOwnerOrAdmin = $user && ($this->record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                    if (!$isOwnerOrAdmin || $this->record->status !== 'Approved' || in_array($this->record->ojs_status, ['submitted', 'published'])) {
                         return false;
                     }
                     if (!empty($this->record->publication_link)) {
@@ -95,7 +97,9 @@ class ReviewSubmission extends Page
                     }
                 })
                 ->visible(function () {
-                    if (!Auth::user()?->hasRole('super_admin') || $this->record->status !== 'Approved' || $this->record->ojs_status !== 'submitted') {
+                    $user = Auth::user();
+                    $isOwnerOrAdmin = $user && ($this->record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                    if (!$isOwnerOrAdmin || $this->record->status !== 'Approved' || $this->record->ojs_status !== 'submitted') {
                         return false;
                     }
                     if (!empty($this->record->publication_link)) {

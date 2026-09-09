@@ -33,7 +33,8 @@
                 </div>
                 <div>
                     <h2 class="text-base font-bold text-gray-900 dark:text-white">Pembayaran Layanan Ganti PDF Naskah
-                        #{{ $record->id }}</h2>
+                        {{ $record->id }}
+                    </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Selesaikan pembayaran untuk memperbarui file
                         naskah dan sinkronisasi otomatis ke OJS.</p>
                 </div>
@@ -86,7 +87,7 @@
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Judul Artikel:</span>
                             <span class="font-bold text-gray-900 dark:text-white leading-snug block">
-                                {{ !empty($record->title) ? $record->title : 'Naskah #' . $record->id }}
+                                {{ !empty($record->title) ? $record->title : 'Naskah ' . $record->id }}
                             </span>
                         </div>
 
@@ -201,9 +202,9 @@
                                     </svg>
                                     <span>Download Invoice / Bukti Bayar PDF</span>
                                 </a>
-                                <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('view', ['record' => $record]) }}"
+                                <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('index') }}"
                                     class="w-full inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-4 rounded-xl text-xs transition-all">
-                                    <span>Kembali ke Review Naskah</span>
+                                    <span>Kembali ke Daftar Naskah</span>
                                 </a>
                             </div>
                         </div>

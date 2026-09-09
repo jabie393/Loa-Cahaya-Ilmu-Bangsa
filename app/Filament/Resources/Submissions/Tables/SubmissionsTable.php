@@ -201,7 +201,7 @@ class SubmissionsTable
                     ->label('File PDF')
                     ->icon(fn($state) => $state ? 'heroicon-o-arrow-down-tray' : null)
                     ->color('primary')
-                    ->url(fn(Submission $record) => $record->manuscript_file ? Storage::disk('public')->url($record->manuscript_file) : null)
+                    ->url(fn(Submission $record) => $record->manuscript_file ? (Storage::disk('public')->url($record->manuscript_file) . '?v=' . ($record->updated_at?->timestamp ?? time())) : null)
                     ->openUrlInNewTab()
                     ->placeholder('-'),
                 TextColumn::make('submission_date')
@@ -366,7 +366,9 @@ class SubmissionsTable
                         ->color('info')
                         ->requiresConfirmation()
                         ->visible(function (Submission $record) {
-                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published']) || $record->review_status === 'processing') {
+                            $user = Auth::user();
+                            $isOwnerOrAdmin = $user && ($record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                            if (!$isOwnerOrAdmin || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published']) || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {
@@ -402,7 +404,9 @@ class SubmissionsTable
                         ->modalHeading('Sinkronisasi Ulang ke OJS')
                         ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
                         ->visible(function (Submission $record) {
-                            if (!Auth::user()?->hasRole('super_admin') || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
+                            $user = Auth::user();
+                            $isOwnerOrAdmin = $user && ($record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                            if (!$isOwnerOrAdmin || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {

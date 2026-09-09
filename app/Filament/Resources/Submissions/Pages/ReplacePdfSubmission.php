@@ -16,6 +16,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
 
 class ReplacePdfSubmission extends Page implements HasForms
@@ -29,7 +30,7 @@ class ReplacePdfSubmission extends Page implements HasForms
 
     public ?array $data = [];
 
-    public function mount(int | string $record): void
+    public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
 
@@ -88,51 +89,81 @@ class ReplacePdfSubmission extends Page implements HasForms
         $relativePublicPath = null;
         $fullPath = null;
 
-        if (is_object($rawFile) && method_exists($rawFile, 'getRealPath')) {
-            $originalName = method_exists($rawFile, 'getClientOriginalName') ? $rawFile->getClientOriginalName() : 'manuscript.pdf';
-            $safeName = time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $originalName);
+        $targetUniqueName = 'replace_sub_' . $this->record->id . '_' . time() . '_' . Str::random(6) . '.pdf';
+        $targetRelativePath = 'temp_replace_pdf/' . $targetUniqueName;
 
-            if (method_exists($rawFile, 'storeAs')) {
-                $relativePublicPath = $rawFile->storeAs('temp_replace_pdf', $safeName, 'public');
-            } else {
-                $relativePublicPath = 'temp_replace_pdf/' . $safeName;
-                Storage::disk('public')->put($relativePublicPath, file_get_contents($rawFile->getRealPath()));
+        if (is_object($rawFile)) {
+            $content = null;
+            if (method_exists($rawFile, 'getRealPath') && file_exists($rawFile->getRealPath())) {
+                $content = file_get_contents($rawFile->getRealPath());
+            } elseif (method_exists($rawFile, 'get')) {
+                $content = $rawFile->get();
+            } elseif (method_exists($rawFile, 'readStream')) {
+                $content = stream_get_contents($rawFile->readStream());
             }
-            $fullPath = Storage::disk('public')->path($relativePublicPath);
+
+            if ($content !== null) {
+                Storage::disk('public')->put($targetRelativePath, $content);
+                $relativePublicPath = $targetRelativePath;
+                $fullPath = Storage::disk('public')->path($targetRelativePath);
+            }
         } elseif (is_string($rawFile)) {
-            $candidates = [
-                $rawFile,
-                'temp_replace_pdf/' . ltrim($rawFile, '/'),
-                'manuscripts/' . ltrim($rawFile, '/'),
+            $rawFileClean = trim($rawFile);
+            $rawFileDecoded = urldecode($rawFileClean);
+            $baseName = basename($rawFileDecoded);
+
+            // Priority 1: Check Livewire temporary directories for newly uploaded file
+            $livewireLocations = [
+                storage_path('app/private/livewire-tmp/' . $rawFileClean),
+                storage_path('app/private/livewire-tmp/' . $baseName),
+                storage_path('app/livewire-tmp/' . $rawFileClean),
+                storage_path('app/livewire-tmp/' . $baseName),
             ];
 
-            foreach ($candidates as $candidate) {
-                if (Storage::disk('public')->exists($candidate)) {
-                    $relativePublicPath = $candidate;
-                    $fullPath = Storage::disk('public')->path($candidate);
-                    break;
-                }
-                if (file_exists(storage_path('app/public/' . $candidate))) {
-                    $relativePublicPath = $candidate;
-                    $fullPath = storage_path('app/public/' . $candidate);
+            foreach ($livewireLocations as $loc) {
+                if (file_exists($loc) && !is_dir($loc)) {
+                    Storage::disk('public')->put($targetRelativePath, file_get_contents($loc));
+                    $relativePublicPath = $targetRelativePath;
+                    $fullPath = Storage::disk('public')->path($targetRelativePath);
                     break;
                 }
             }
 
+            // Priority 2: Check stored path on public disk
             if (!$fullPath) {
-                $localCandidates = [
-                    $rawFile,
-                    storage_path('app/private/livewire-tmp/' . $rawFile),
-                    storage_path('app/private/' . $rawFile),
-                    storage_path('app/' . $rawFile),
+                $publicLocations = [
+                    $rawFileClean,
+                    $rawFileDecoded,
+                    'temp_replace_pdf/' . ltrim($rawFileClean, '/'),
+                    'temp_replace_pdf/' . ltrim($rawFileDecoded, '/'),
                 ];
 
-                foreach ($localCandidates as $loc) {
+                foreach ($publicLocations as $loc) {
+                    if (Storage::disk('public')->exists($loc)) {
+                        Storage::disk('public')->put($targetRelativePath, Storage::disk('public')->get($loc));
+                        $relativePublicPath = $targetRelativePath;
+                        $fullPath = Storage::disk('public')->path($targetRelativePath);
+                        break;
+                    }
+                }
+            }
+
+            // Priority 3: Fallback check anywhere in storage_path
+            if (!$fullPath) {
+                $fallbackLocations = [
+                    storage_path('app/public/' . $rawFileClean),
+                    storage_path('app/public/' . $rawFileDecoded),
+                    storage_path('app/public/temp_replace_pdf/' . $rawFileClean),
+                    storage_path('app/public/temp_replace_pdf/' . $baseName),
+                    storage_path('app/private/' . $rawFileClean),
+                    storage_path('app/' . $rawFileClean),
+                ];
+
+                foreach ($fallbackLocations as $loc) {
                     if (file_exists($loc) && !is_dir($loc)) {
-                        $safeName = time() . '_' . basename($loc);
-                        $relativePublicPath = 'temp_replace_pdf/' . $safeName;
-                        Storage::disk('public')->put($relativePublicPath, file_get_contents($loc));
-                        $fullPath = Storage::disk('public')->path($relativePublicPath);
+                        Storage::disk('public')->put($targetRelativePath, file_get_contents($loc));
+                        $relativePublicPath = $targetRelativePath;
+                        $fullPath = Storage::disk('public')->path($targetRelativePath);
                         break;
                     }
                 }
@@ -142,7 +173,7 @@ class ReplacePdfSubmission extends Page implements HasForms
         if (!$relativePublicPath || !$fullPath || !file_exists($fullPath)) {
             Notification::make()
                 ->title('File Tidak Ditemukan')
-                ->body('Berkas PDF tidak dapat diakses pada server. Silakan coba unggah ulang.')
+                ->body('Berkas PDF tidak dapat diakses pada server. Silakan coba pilih dan unggah ulang berkas PDF Anda.')
                 ->danger()
                 ->send();
             return;
@@ -185,9 +216,12 @@ class ReplacePdfSubmission extends Page implements HasForms
                     }
                 } else {
                     $found = false;
-                    if (!empty($slug) && str_contains($text, $slug)) $found = true;
-                    if (!empty($name) && str_contains($text, $name)) $found = true;
-                    if (!empty($firstWord) && str_contains($text, $firstWord)) $found = true;
+                    if (!empty($slug) && str_contains($text, $slug))
+                        $found = true;
+                    if (!empty($name) && str_contains($text, $name))
+                        $found = true;
+                    if (!empty($firstWord) && str_contains($text, $firstWord))
+                        $found = true;
 
                     if (!$found) {
                         throw new \Exception("Pastikan naskah artikel disesuaikan dengan template {$journal->name} yang sudah disediakan.");
@@ -197,6 +231,7 @@ class ReplacePdfSubmission extends Page implements HasForms
                 if (Storage::disk('public')->exists($relativePublicPath)) {
                     Storage::disk('public')->delete($relativePublicPath);
                 }
+                $this->form->fill(['new_manuscript_file' => null]);
                 Notification::make()
                     ->title('Format Template Tidak Sesuai')
                     ->body($e->getMessage())
@@ -227,6 +262,7 @@ class ReplacePdfSubmission extends Page implements HasForms
             if (Storage::disk('public')->exists($relativePublicPath)) {
                 Storage::disk('public')->delete($relativePublicPath);
             }
+            $this->form->fill(['new_manuscript_file' => null]);
             Notification::make()
                 ->title('Perubahan Jumlah Penulis Ditolak')
                 ->body("Jumlah penulis pada file PDF baru terdeteksi {$newAuthorCount} orang, sedangkan naskah awal memiliki {$currentAuthorCount} orang. Fitur Ganti PDF tidak mengizinkan penambahan atau pengurangan jumlah penulis.")
@@ -259,7 +295,7 @@ class ReplacePdfSubmission extends Page implements HasForms
 
     public function getTitle(): string
     {
-        return 'Ganti File PDF Naskah #' . $this->record->id;
+        return 'Ganti File PDF Naskah ' . $this->record->id;
     }
 
     public function getBreadcrumbs(): array

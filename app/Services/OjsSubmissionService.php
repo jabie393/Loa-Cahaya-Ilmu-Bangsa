@@ -45,12 +45,14 @@ class OjsSubmissionService
                 $submission->refresh();
             }
 
-            // Update tracking to pending
-            $submission->update([
-                'ojs_status' => 'pending',
-                'ojs_synced_at' => now(),
-                'ojs_error_message' => null,
-            ]);
+            // Update tracking to pending only if not already submitted
+            if ($submission->ojs_status !== 'submitted') {
+                $submission->update([
+                    'ojs_status' => 'pending',
+                    'ojs_synced_at' => now(),
+                    'ojs_error_message' => null,
+                ]);
+            }
 
             $journal = $submission->journal;
             if (!$journal) {
@@ -215,7 +217,7 @@ class OjsSubmissionService
             Log::error("OJS integration failed for submission ID: {$submission->id}. Error: {$errorMessage}");
 
             $submission->update([
-                'ojs_status' => 'failed',
+                'ojs_status' => $submission->ojs_submission_id ? 'submitted' : 'failed',
                 'ojs_synced_at' => now(),
                 'ojs_error_message' => $errorMessage,
             ]);
@@ -229,42 +231,35 @@ class OjsSubmissionService
      *
      * @param Submission $submission
      * @return void
+     * @throws \Exception
      */
     public static function publishToRepository(Submission $submission): void
     {
-        $repoUrl = config('services.repo_url', 'http://localhost:8080');
-        $apiToken = env('REPO_API_TOKEN', 'cib_repo_api_token_2026');
+        $repoUrl = rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/');
+        $apiToken = config('services.repo_api_token');
 
-        $authorNames = [];
-        if (is_array($submission->authors)) {
-            foreach ($submission->authors as $author) {
-                if (!empty($author['name'])) {
-                    $authorNames[] = $author['name'];
-                }
-            }
+        if (empty($apiToken)) {
+            \Illuminate\Support\Facades\Log::warning("Repository API token not set, skipping publish for submission ID: {$submission->id}");
+            return;
         }
-        if (empty($authorNames)) {
-            $authorNames = array_map('trim', explode(',', $submission->author_name ?: ''));
-        }
-        $authorNames = array_values(array_filter($authorNames));
-        if (empty($authorNames)) {
-            $authorNames = ['Author'];
-        }
+
+        $pdfUrl = $submission->manuscript_file ? \Illuminate\Support\Facades\Storage::disk('public')->url($submission->manuscript_file) : null;
 
         $payload = [
+            'identifier' => $submission->repository_identifier,
             'title' => $submission->title,
-            'abstract' => $submission->abstract ?: '',
-            'authors' => $authorNames,
-            'keywords' => $submission->keywords ?: '',
-            'journal_id' => (int) $submission->journal_id,
-            'doi' => $submission->repository_redirect_url,
+            'abstract' => $submission->abstract,
+            'keywords' => $submission->keywords,
+            'author_name' => $submission->author_name,
+            'authors' => $submission->authors,
+            'journal_name' => $submission->journal?->name ?? 'Jurnal CIB',
+            'journal_issn' => $submission->journal?->issn ?? '',
             'volume' => $submission->volume,
-            'issue' => $submission->issue ?? '',
-            'pages' => $submission->pages ?? '',
-            'published_date' => $submission->approved_date ? $submission->approved_date->format('Y-m-d') : now()->format('Y-m-d'),
+            'publication_date' => $submission->approved_date ?? now()->toDateString(),
             'pdf_path' => $submission->manuscript_file,
-            'ojs_url' => $submission->publication_link,
-            'category' => $submission->journal?->name ?: 'Pendidikan',
+            'pdf_url' => $pdfUrl,
+            'original_article_url' => $submission->publication_link,
+            'references' => $submission->references,
         ];
 
         $response = \Illuminate\Support\Facades\Http::withToken($apiToken)
@@ -286,12 +281,14 @@ class OjsSubmissionService
      */
     public static function submitInBackground(Submission $submission): void
     {
-        // Set state to pending in web request so UI updates immediately
-        $submission->update([
-            'ojs_status' => 'pending',
-            'ojs_synced_at' => now(),
-            'ojs_error_message' => null,
-        ]);
+        // Only set state to pending if not already submitted
+        if ($submission->ojs_status !== 'submitted') {
+            $submission->update([
+                'ojs_status' => 'pending',
+                'ojs_synced_at' => now(),
+                'ojs_error_message' => null,
+            ]);
+        }
 
         $id = (int) $submission->id;
         $artisanPath = base_path('artisan');
