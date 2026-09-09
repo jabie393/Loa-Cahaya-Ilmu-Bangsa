@@ -106,6 +106,10 @@ class OjsSubmissionService
             }
 
             $pdfUrl = $submission->manuscript_file ? \Illuminate\Support\Facades\Storage::disk('public')->url($submission->manuscript_file) : null;
+            if ($pdfUrl) {
+                $version = $submission->updated_at ? $submission->updated_at->timestamp : time();
+                $pdfUrl .= '?v=' . $version;
+            }
 
             // Build API endpoint URL
             if (!str_contains($baseUrl, 'index.php')) {
