@@ -21,21 +21,25 @@ class DatabaseSeeder extends Seeder
         Role::firstOrCreate(['name' => 'panel_user', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'ryu_dev', 'guard_name' => 'web']);
 
-        $user = User::factory()->create([
-            'name' => 'Test User',
-            'phone' => '1234567890',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'phone' => '1234567890',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         $user->assignRole('super_admin');
 
-        $dev = User::factory()->create([
-            'name' => 'Ryu Dev',
-            'phone' => '1234567890',
-            'email' => 'dev@example.com',
-            'password' => bcrypt('password'),
-        ]);
+        $dev = User::firstOrCreate(
+            ['email' => 'dev@example.com'],
+            [
+                'name' => 'Ryu Dev',
+                'phone' => '1234567890',
+                'password' => bcrypt('password'),
+            ]
+        );
 
         $dev->assignRole('ryu_dev');
 
