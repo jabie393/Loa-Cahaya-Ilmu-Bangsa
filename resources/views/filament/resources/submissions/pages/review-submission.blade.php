@@ -496,37 +496,68 @@
                     </div>
                 @endif
 
-                @if ($record->ojs_username)
+                @if ($record->ojs_status === 'submitted' || $record->ojs_username)
+                    @php
+                        $journalBase = rtrim($record->journal?->ojs_base_url ?: config('ojs.base_url', ''), '/');
+                        $journalSlug = $record->journal?->slug ?? '';
+                        $ojsLoginUrl = $journalBase ? "{$journalBase}/index.php/{$journalSlug}/login" : null;
+                        $ojsLostPasswordUrl = $journalBase ? "{$journalBase}/index.php/{$journalSlug}/login/lostPassword" : null;
+                        $displayUsername = $record->ojs_username ?: strstr($record->email, '@', true);
+                    @endphp
                     <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Akun Penulis
-                            OJS</h4>
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                Akun Penulis OJS
+                            </h4>
+                            <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400">
+                                Terhubung ke OJS
+                            </span>
+                        </div>
                         <div
                             class="flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-500">Username/Email:</span>
+                                    <span class="text-gray-500 dark:text-gray-400">Username / Email:</span>
                                     <span
-                                        class="font-mono font-semibold text-gray-900 dark:text-white">{{ $record->ojs_username }}
+                                        class="font-mono font-semibold text-gray-900 dark:text-white">{{ $displayUsername }}
                                         ({{ $record->email }})</span>
                                 </div>
                                 @if ($record->ojs_password)
                                     <div class="flex justify-between items-center text-xs">
-                                        <span class="text-gray-500">Password OJS:</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Password OJS:</span>
                                         <span
-                                            class="font-mono font-semibold text-primary-600 dark:text-primary-400">{{ $record->ojs_password }}</span>
+                                            class="font-mono font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/60 px-2 py-0.5 rounded">{{ $record->ojs_password }}</span>
                                     </div>
                                     <p class="text-[11px] text-amber-600 dark:text-amber-400 italic mt-1 leading-normal">
-                                        *Password ini digenerate secara otomatis karena akun belum terdaftar sebelumnya di OJS.
+                                        *Password ini digenerate secara otomatis karena akun baru pertama kali didaftarkan ke OJS.
                                     </p>
                                 @else
-                                    <p class="text-[11px] text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
-                                        untuk login silakan menggunakan akun ojs yang sudah ada sesuai dengan email berikut.
-                                    </p>
+                                    <div class="rounded-lg bg-blue-50/60 dark:bg-blue-950/30 p-2.5 mt-1 border border-blue-100 dark:border-blue-900/40">
+                                        <p class="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
+                                            Email ini telah terdaftar di OJS sebelumnya. Silakan login ke portal OJS menggunakan password akun yang sudah Anda miliki.
+                                        </p>
+                                    </div>
                                     <div
                                         class="flex justify-between items-center text-xs pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                                        <span class="text-gray-500">Email:</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Email Login:</span>
                                         <span
                                             class="font-mono font-semibold text-gray-900 dark:text-white">{{ $record->email }}</span>
+                                    </div>
+                                @endif
+
+                                @if ($ojsLoginUrl)
+                                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs">
+                                        <a href="{{ $ojsLoginUrl }}" target="_blank"
+                                           class="inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 hover:underline dark:text-primary-400">
+                                            <span>Masuk ke Portal OJS</span>
+                                            <x-heroicon-m-arrow-top-right-on-square class="w-3.5 h-3.5" />
+                                        </a>
+                                        @if (!$record->ojs_password && $ojsLostPasswordUrl)
+                                            <a href="{{ $ojsLostPasswordUrl }}" target="_blank"
+                                               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-[11px] hover:underline">
+                                                Lupa Password OJS?
+                                            </a>
+                                        @endif
                                     </div>
                                 @endif
                             </div>

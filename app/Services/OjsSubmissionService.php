@@ -177,8 +177,13 @@ class OjsSubmissionService
                 }
             }
 
-            $ojsUsername = $responseJson['ojs_username'] ?? null;
-            $ojsPassword = $responseJson['ojs_password'] ?? null;
+            $ojsUsername = !empty($responseJson['ojs_username'])
+                ? $responseJson['ojs_username']
+                : ($submission->ojs_username ?: strstr($submission->email, '@', true));
+
+            $ojsPassword = !empty($responseJson['ojs_password'])
+                ? $responseJson['ojs_password']
+                : $submission->ojs_password;
 
 
 
