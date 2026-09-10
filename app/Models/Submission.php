@@ -181,16 +181,20 @@ class Submission extends Model
             }
             $names = [];
             foreach ($this->authors as $author) {
-                $name = $author['name'] ?? '';
-                $inst = $author['institution'] ?? '';
+                $name = trim($author['name'] ?? '');
                 if (!empty($name)) {
-                    $names[] = $name . (!empty($inst) ? " ({$inst})" : "");
+                    $names[] = $name;
                 }
             }
             return implode(', ', $names);
         }
 
-        return $this->author_name ?: '';
+        if (!empty($this->author_name)) {
+            $cleaned = preg_replace('/\s*\([^)]*\)/', '', $this->author_name);
+            return trim($cleaned);
+        }
+
+        return '';
     }
 
     public function getTemplateView(): string
