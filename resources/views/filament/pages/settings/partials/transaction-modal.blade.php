@@ -9,8 +9,9 @@
         default => 'Publikasi Tunggal',
     };
 
-    $payerName = $record->payer_name ?: ($record->user?->name ?? 'Author');
-    $payerEmail = $record->payer_email ?: ($record->user?->email ?? '-');
+    $payerUser = $record->user ?? $record->submission?->user;
+    $payerName = $payerUser?->name ?: ($record->payer_name ?: 'Author');
+    $payerEmail = $payerUser?->email ?: ($record->payer_email ?: '-');
 
     // Initials for avatar circle (e.g. "TU" for "Test User")
     $words = preg_split('/\s+/', trim($payerName));
