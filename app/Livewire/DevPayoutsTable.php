@@ -14,6 +14,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
@@ -40,44 +42,66 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->visible(fn () => (bool) Auth::user()?->hasRole('super_admin'))
                     ->label('Bayar Developer (Payout Baru)')
                     ->icon('heroicon-o-banknotes')
-                    ->color('success')
+                    ->color('info')
                     ->modalHeading('Formulir Transfer / Bayar Developer')
                     ->modalDescription('Catat pengiriman bagi hasil ke Developer dan kurangi saldo hak dev secara real-time.')
                     ->modalSubmitActionLabel('Konfirmasi Transfer & Catat Payout')
+                    ->modalWidth('5xl')
                     ->schema([
-                        Placeholder::make('qris_payment_dummy')
-                            ->hiddenLabel()
-                            ->content(fn () => view('filament.pages.settings.partials.qris-dummy-card')),
-                        TextInput::make('amount')
-                            ->label('Nominal yang Ditransfer (Rp)')
-                            ->prefix('Rp')
-                            ->numeric()
-                            ->required()
-                            ->default(function () {
-                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-                                return max(0, $earned - $paid);
-                            })
-                            ->helperText(function () {
-                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-                                $unpaid = max(0, $earned - $paid);
-                                return 'Sisa hak Developer yang siap dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
-                            }),
-                        TextInput::make('reference_no')
-                            ->label('Nomor Referensi Mutasi Bank')
-                            ->placeholder('Contoh: TRF-BCA-98127391 (Opsional)'),
-                        FileUpload::make('proof_file')
-                            ->label('Upload Slip Bukti Transfer')
-                            ->disk('public')
-                            ->directory('payouts')
-                            ->image()
-                            ->maxSize(5120),
-                        Textarea::make('notes')
-                            ->label('Catatan Pembayaran Payout')
-                            ->placeholder('Contoh: Pencairan bagi hasil periode 1-15 September 2026...')
-                            ->rows(2)
-                            ->default('Pencairan Hak Developer Periode Berjalan'),
+                        Grid::make(12)
+                            ->schema([
+                                // Left Column: Reference No, Proof File, Notes
+                                Group::make([
+                                    TextInput::make('reference_no')
+                                        ->label('Nomor Referensi Mutasi Bank')
+                                        ->placeholder('Contoh: TRF-BCA-98127391 (Opsional)'),
+                                    FileUpload::make('proof_file')
+                                        ->label('Upload Slip Bukti Transfer')
+                                        ->disk('public')
+                                        ->directory('payouts')
+                                        ->image()
+                                        ->maxSize(5120),
+                                    Textarea::make('notes')
+                                        ->label('Catatan Pembayaran Payout')
+                                        ->placeholder('Contoh: Pencairan bagi hasil periode 1-15 September 2026...')
+                                        ->rows(3)
+                                        ->default('Pencairan Hak Developer Periode Berjalan'),
+                                ])
+                                    ->columnSpan([
+                                        'default' => 12,
+                                        'lg' => 6,
+                                    ]),
+
+                                // Right Column: Dynamic QRIS on top, Price Input below it
+                                Group::make([
+                                    Placeholder::make('qris_payment_card')
+                                        ->hiddenLabel()
+                                        ->content(fn($get) => view('filament.pages.settings.partials.developer-qris-card', [
+                                            'amount' => (float) ($get('amount') ?? 0),
+                                        ])),
+                                    TextInput::make('amount')
+                                        ->label('Nominal yang Ditransfer (Rp)')
+                                        ->prefix('Rp')
+                                        ->numeric()
+                                        ->required()
+                                        ->live(debounce: 500)
+                                        ->default(function () {
+                                            $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                                            $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                            return max(0, $earned - $paid);
+                                        })
+                                        ->helperText(function () {
+                                            $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                                            $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                            $unpaid = max(0, $earned - $paid);
+                                            return 'Sisa hak Developer yang siap dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
+                                        }),
+                                ])
+                                    ->columnSpan([
+                                        'default' => 12,
+                                        'lg' => 6,
+                                    ]),
+                            ]),
                     ])
                     ->action(function (array $data) {
                         $amount = (float) ($data['amount'] ?? 0);

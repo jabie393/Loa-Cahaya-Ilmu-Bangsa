@@ -148,10 +148,10 @@
                         </div>
                     </div>
 
-                    <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">Sisa Hak Dev Belum Cair</span>
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-400/20 border border-emerald-300/30 text-emerald-100">
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Sisa Hak Dev Belum Cair</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-400/20 border border-blue-300/30 text-blue-100">
                                 Siap Dicairkan
                             </span>
                         </div>
@@ -159,7 +159,7 @@
                             <div class="text-3xl font-black font-mono tracking-tight">
                                 Rp {{ number_format($devUnpaidBalance, 0, ',', '.') }}
                             </div>
-                            <div class="mt-2 flex items-center justify-between text-xs text-emerald-100/90">
+                            <div class="mt-2 flex items-center justify-between text-xs text-blue-100/90">
                                 <span>Saldo outstanding yang dapat dibayarkan</span>
                             </div>
                         </div>
