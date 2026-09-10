@@ -15,6 +15,15 @@ class EditUsers extends EditRecord
         return \Filament\Support\Enums\Width::Full;
     }
 
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        if ($this->getRecord()?->hasRole('ryu_dev')) {
+            $this->redirect(UsersResource::getUrl('index'));
+        }
+    }
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Pastikan user ini punya record plagiarism quota agar bisa disimpan lewat form

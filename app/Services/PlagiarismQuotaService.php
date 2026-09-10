@@ -28,8 +28,8 @@ class PlagiarismQuotaService
      */
     public function canCheck(User $user): bool
     {
-        // Super admin has unlimited quota
-        if ($user->hasRole('super_admin')) {
+        // Super admin and developer have unlimited quota
+        if ($user->hasRole('super_admin') || $user->hasRole('ryu_dev')) {
             return true;
         }
 
@@ -54,8 +54,8 @@ class PlagiarismQuotaService
      */
     public function consumeQuota(User $user): bool
     {
-        // Super admin doesn't consume quota
-        if ($user->hasRole('super_admin')) {
+        // Super admin and developer don't consume quota
+        if ($user->hasRole('super_admin') || $user->hasRole('ryu_dev')) {
             return true;
         }
 

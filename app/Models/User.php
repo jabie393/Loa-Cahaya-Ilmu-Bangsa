@@ -41,6 +41,10 @@ class User extends Authenticatable implements FilamentUser
 
     public function isMember(): bool
     {
+        if ($this->hasRole('ryu_dev')) {
+            return true;
+        }
+
         return (bool) $this->is_member;
     }
 

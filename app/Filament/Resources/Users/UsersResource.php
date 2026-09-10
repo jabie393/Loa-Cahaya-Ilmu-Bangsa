@@ -34,7 +34,24 @@ class UsersResource extends Resource
             ->withCount([
                 'submissions as pending_submissions_count' => fn (Builder $query) => $query->where('status', 'Pending'),
                 'submissions as rejected_submissions_count' => fn (Builder $query) => $query->where('status', 'Rejected'),
-            ]);
+            ])
+            ->orderByRaw("
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM model_has_roles 
+                        JOIN roles ON roles.id = model_has_roles.role_id 
+                        WHERE model_has_roles.model_id = users.id 
+                        AND roles.name = 'super_admin'
+                    ) THEN 1
+                    WHEN EXISTS (
+                        SELECT 1 FROM model_has_roles 
+                        JOIN roles ON roles.id = model_has_roles.role_id 
+                        WHERE model_has_roles.model_id = users.id 
+                        AND roles.name = 'ryu_dev'
+                    ) THEN 2
+                    ELSE 3
+                END ASC, users.id ASC
+            ");
     }
 
     public static function form(Schema $schema): Schema
