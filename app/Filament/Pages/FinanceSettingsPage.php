@@ -122,10 +122,14 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->searchable(query: function ($query, string $search) {
                         return $query->where('payer_name', 'like', "%{$search}%")
                             ->orWhere('order_id', 'like', "%{$search}%")
+                            ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"))
+                            ->orWhereHas('submission.user', fn($q) => $q->where('name', 'like', "%{$search}%"))
                             ->orWhereHas('items.submission', fn($q) => $q->where('title', 'like', "%{$search}%"));
                     })
                     ->description(function (Payment $record): string {
-                        $payer = Str::limit($record->payer_name ?: ($record->user?->name ?? 'Author'), 25);
+                        $payerUser = $record->user ?? $record->submission?->user;
+                        $payerName = $payerUser?->name ?: ($record->payer_name ?: 'Author');
+                        $payer = Str::limit($payerName, 25);
                         return "Pembayar: {$payer}";
                     }),
                 TextColumn::make('journal_target')
