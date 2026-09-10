@@ -9,6 +9,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class UsersTable
 {
@@ -30,9 +31,15 @@ class UsersTable
                 TextColumn::make('roles.name')
                     ->label('Role')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'panel_user' => 'User',
+                        'ryu_dev' => 'Developer',
+                        default => Str::headline($state),
+                    })
+                    ->color(fn(string $state): string => match (strtolower(str_replace(' ', '_', $state))) {
                         'super_admin' => 'danger',
-                        'panel_user' => 'success',
+                        'panel_user', 'user' => 'success',
+                        'ryu_dev', 'developer' => 'info',
                         default => 'gray',
                     })
                     ->sortable(),

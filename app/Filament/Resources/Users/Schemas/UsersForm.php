@@ -8,6 +8,8 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class UsersForm
 {
@@ -44,7 +46,16 @@ class UsersForm
 
                                     Select::make('roles')
                                         ->label('Role')
-                                        ->relationship('roles', 'name')
+                                        ->relationship(
+                                            name: 'roles',
+                                            titleAttribute: 'name',
+                                            modifyQueryUsing: fn(Builder $query) => $query->where('name', '!=', 'ryu_dev'),
+                                        )
+                                        ->getOptionLabelFromRecordUsing(fn($record) => match ($record->name) {
+                                            'panel_user' => 'User',
+                                            'ryu_dev' => 'Developer',
+                                            default => Str::headline($record->name),
+                                        })
                                         ->preload()
                                         ->required()
                                         ->live(),
