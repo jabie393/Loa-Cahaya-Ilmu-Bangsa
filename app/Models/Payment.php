@@ -24,6 +24,8 @@ class Payment extends Model
         'payer_name',
         'payer_email',
         'gross_amount',
+        'original_amount',
+        'discount_amount',
         'journal_share',
         'developer_gross_share',
         'mdr_amount',
@@ -40,6 +42,8 @@ class Payment extends Model
     protected $casts = [
         'submission_ids' => 'array',
         'gross_amount' => 'decimal:2',
+        'original_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'journal_share' => 'decimal:2',
         'developer_gross_share' => 'decimal:2',
         'mdr_amount' => 'decimal:2',

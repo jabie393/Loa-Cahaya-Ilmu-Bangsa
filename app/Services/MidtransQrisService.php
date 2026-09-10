@@ -223,6 +223,8 @@ class MidtransQrisService
             'type' => 'submission',
             'payer_name' => $customerName,
             'payer_email' => $customerEmail,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -242,6 +244,8 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'item_type' => 'publication',
             'item_name' => $itemName,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -416,7 +420,9 @@ class MidtransQrisService
      */
     public function chargeDoiAddonQris(Submission $submission): Payment
     {
-        $pricing = $this->pricingService->calculateDoiAddon();
+        $userId = $submission->user_id ?? Auth::id();
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateDoiAddon($user);
         $grossAmount = (int) round($pricing['gross_amount']);
 
         $orderId = 'DOI-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
@@ -424,7 +430,6 @@ class MidtransQrisService
         $serverKey = $this->getServerKey();
         $authHeader = 'Basic ' . base64_encode($serverKey . ':');
 
-        $userId = $submission->user_id ?? Auth::id();
         $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
 
@@ -463,7 +468,7 @@ class MidtransQrisService
 
         if (!$response->successful() || empty($responseData)) {
             $errorMsg = $responseData['status_message'] ?? 'Gagal menghubungi server Midtrans.';
-            throw new \Exception("Gagal membuat QRIS DOI: " . $errorMsg);
+            throw new \Exception("Gagal membuat QRIS Add-on DOI: " . $errorMsg);
         }
 
         $qrisUrl = null;
@@ -496,6 +501,8 @@ class MidtransQrisService
             'type' => 'doi_addon',
             'payer_name' => $customerName,
             'payer_email' => $customerEmail,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -514,6 +521,8 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'item_type' => 'doi_addon',
             'item_name' => $itemName,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -609,7 +618,9 @@ class MidtransQrisService
             $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? '';
         }
 
-        $pricing = $this->pricingService->calculateReplacePdf();
+        $userId = $submission->user_id ?? Auth::id();
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateReplacePdf($user);
         $grossAmount = (int) round($pricing['gross_amount']);
 
         $orderId = 'REPLACE-PDF-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
@@ -617,7 +628,6 @@ class MidtransQrisService
         $serverKey = $this->getServerKey();
         $authHeader = 'Basic ' . base64_encode($serverKey . ':');
 
-        $userId = $submission->user_id ?? Auth::id();
         $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
 
@@ -691,6 +701,8 @@ class MidtransQrisService
             'type' => 'replace_pdf',
             'payer_name' => $customerName,
             'payer_email' => $customerEmail,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -709,6 +721,8 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'item_type' => 'replace_pdf',
             'item_name' => $itemName,
+            'original_amount' => $pricing['original_amount'] ?? $grossAmount,
+            'discount_amount' => $pricing['discount_amount'] ?? 0,
             'gross_amount' => $grossAmount,
             'journal_share' => $pricing['journal_share'],
             'developer_gross_share' => $pricing['developer_gross_share'],
@@ -814,6 +828,10 @@ class MidtransQrisService
         }
 
         // 3. Check if there is already an active pending bulk payment for the exact same submissions
+        $payerUser = Auth::user() ?? $submissions->first()->user;
+        $currentPricing = $this->pricingService->calculateBulk($submissions, $payerUser);
+        $currentGross = (int) round($currentPricing['gross_amount']);
+
         $pendingPayment = Payment::where('type', 'bulk_submission')
             ->where('payment_status', 'pending')
             ->where('expired_at', '>', now())
@@ -826,7 +844,15 @@ class MidtransQrisService
             });
 
         if ($pendingPayment) {
-            return $pendingPayment;
+            $paymentGross = (int) round($pendingPayment->gross_amount);
+            if ($paymentGross !== $currentGross) {
+                $pendingPayment->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+            } else {
+                return $pendingPayment;
+            }
         }
 
         return $this->chargeBulkQris($submissions);
@@ -837,7 +863,8 @@ class MidtransQrisService
      */
     public function chargeBulkQris($submissions): Payment
     {
-        $pricingData = $this->pricingService->calculateBulk($submissions);
+        $payerUser = Auth::user() ?? $submissions->first()->user;
+        $pricingData = $this->pricingService->calculateBulk($submissions, $payerUser);
         $submissionIds = $submissions->pluck('id')->sort()->values()->toArray();
         $firstId = $submissionIds[0] ?? 0;
         $orderId = 'BULK-' . count($submissionIds) . 'SUB-' . $firstId . '-' . time() . '-' . strtoupper(Str::random(4));
@@ -854,7 +881,6 @@ class MidtransQrisService
             ];
         }
 
-        $payerUser = Auth::user() ?? $submissions->first()->user;
         $payerName = $payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif');
         $payerEmail = $payerUser?->email ?? ($submissions->first()->email ?: 'author@example.com');
 
@@ -922,6 +948,8 @@ class MidtransQrisService
             'type' => 'bulk_submission',
             'payer_name' => $payerName,
             'payer_email' => $payerEmail,
+            'original_amount' => $pricingData['original_amount'] ?? $pricingData['gross_amount'],
+            'discount_amount' => $pricingData['discount_amount'] ?? 0,
             'gross_amount' => $pricingData['gross_amount'],
             'journal_share' => $pricingData['journal_share'],
             'developer_gross_share' => $pricingData['developer_gross_share'],
@@ -944,6 +972,8 @@ class MidtransQrisService
                 'submission_id' => $sub->id,
                 'item_type' => 'publication',
                 'item_name' => 'Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel') . ' (' . ($sub->journal?->name ?? 'Jurnal') . ')',
+                'original_amount' => $pr['original_amount'] ?? $pr['gross_amount'],
+                'discount_amount' => $pr['discount_amount'] ?? 0,
                 'gross_amount' => $pr['gross_amount'],
                 'journal_share' => $pr['journal_share'],
                 'developer_gross_share' => $pr['developer_gross_share'],

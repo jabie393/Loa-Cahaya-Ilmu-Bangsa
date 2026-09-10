@@ -344,8 +344,18 @@
                                     <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
                                         <span>Biaya Layanan:</span>
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">Rp
-                                            {{ number_format($pricing['gross_amount'] ?? 25000, 0, ',', '.') }}</span>
+                                            {{ number_format(($pricing['original_amount'] ?? 25000), 0, ',', '.') }}</span>
                                     </div>
+                                    @if(!empty($pricing['is_member']) || (!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0))
+                                        <div
+                                            class="flex justify-between items-center text-blue-600 dark:text-blue-400 font-medium">
+                                            <span class="flex items-center gap-1.5">
+                                                <span>Potongan Member CIB:</span>
+                                            </span>
+                                            <span class="font-bold">-Rp
+                                                {{ number_format($pricing['discount_amount'] ?? 10000, 0, ',', '.') }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div
                                     class="pt-2.5 mt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-baseline">

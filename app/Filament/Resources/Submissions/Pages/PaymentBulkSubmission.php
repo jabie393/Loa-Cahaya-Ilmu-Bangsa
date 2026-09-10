@@ -9,6 +9,7 @@ use App\Services\MidtransQrisService;
 use App\Services\SubmissionPricingService;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentBulkSubmission extends Page
 {
@@ -64,7 +65,7 @@ class PaymentBulkSubmission extends Page
             $this->submissions = $allSubmissions;
         }
 
-        $bulkPricing = $pricingService->calculateBulk($this->submissions);
+        $bulkPricing = $pricingService->calculateBulk($this->submissions, Auth::user());
         $this->pricing = $bulkPricing;
         $this->itemsPricing = $bulkPricing['items'];
 

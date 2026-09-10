@@ -33,7 +33,8 @@ class PaymentDoiSubmission extends Page
         $pricingService = app(SubmissionPricingService::class);
         $qrisService = app(MidtransQrisService::class);
 
-        $pricing = $pricingService->calculateDoiAddon();
+        $user = $this->record->user ?? Auth::user();
+        $pricing = $pricingService->calculateDoiAddon($user);
         $payment = null;
         $errorMessage = null;
 

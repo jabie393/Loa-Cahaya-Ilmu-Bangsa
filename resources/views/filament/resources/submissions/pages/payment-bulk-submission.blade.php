@@ -149,9 +149,19 @@
                         <div
                             class="pt-2.5 border-t border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs">
                             <span class="text-slate-500 font-medium">Paket: {{ $pr['tier_name'] }}</span>
-                            <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">
-                                Rp {{ number_format($pr['gross_amount'], 0, ',', '.') }}
-                            </span>
+                            <div class="text-right">
+                                @if(!empty($pr['is_member']) || (!empty($pr['discount_amount']) && $pr['discount_amount'] > 0))
+                                    <div class="flex items-center justify-end gap-1">
+                                        <span class="line-through text-gray-400 text-[11px] whitespace-nowrap">Rp
+                                            {{ number_format($pr['original_amount'], 0, ',', '.') }}</span>
+                                        <span
+                                            class="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 whitespace-nowrap">-Rp {{ number_format($pr['discount_amount'] ?? 10000, 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">
+                                    Rp {{ number_format($pr['gross_amount'], 0, ',', '.') }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -233,21 +243,31 @@
                                         class="w-52 h-52 object-contain rounded-lg shadow-sm border border-white">
                                 </template>
                                 <template x-if="errorMessage">
-                                    <div class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
-                                        <div class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
-                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                    <div
+                                        class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
+                                        <div
+                                            class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                             </svg>
                                         </div>
-                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug" x-text="errorMessage"></h4>
+                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug"
+                                            x-text="errorMessage"></h4>
                                         <div class="pt-1">
                                             <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">
-                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
                                                 </svg>
-                                                <span x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
+                                                <span
+                                                    x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
                                             </button>
                                         </div>
                                     </div>
@@ -304,10 +324,25 @@
                                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
                                         <span class="truncate max-w-[180px]">Naskah {{ $item['submission']->id }}:</span>
                                         <span class="font-mono font-semibold text-gray-800 dark:text-gray-200">
+                                            @if(!empty($item['pricing']['discount_amount']) && $item['pricing']['discount_amount'] > 0)
+                                                <span class="line-through text-gray-400 text-[10px] mr-1">Rp
+                                                    {{ number_format($item['pricing']['original_amount'], 0, ',', '.') }}</span>
+                                            @endif
                                             Rp {{ number_format($item['pricing']['gross_amount'], 0, ',', '.') }}
                                         </span>
                                     </div>
                                 @endforeach
+
+                                @if(!empty($pricing['is_member']) || (!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0))
+                                    <div
+                                        class="pt-2 border-t border-slate-200/60 dark:border-gray-800 flex justify-between items-center text-blue-600 dark:text-blue-400 font-medium">
+                                        <span class="flex items-center gap-1.5">
+                                            <span>Potongan Member ({{ count($itemsPricing) }}x):</span>
+                                        </span>
+                                        <span class="font-mono font-bold">-Rp
+                                            {{ number_format($pricing['discount_amount'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
 
                                 <div
                                     class="pt-2 border-t border-slate-200 dark:border-gray-800 flex justify-between items-baseline">

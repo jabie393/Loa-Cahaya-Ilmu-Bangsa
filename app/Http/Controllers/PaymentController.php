@@ -42,7 +42,7 @@ class PaymentController extends Controller
         $errorMessage = null;
 
         if (!$isExtracting) {
-            $pricing = $this->pricingService->calculate($submission);
+            $pricing = $this->pricingService->calculate($submission, $currentUser);
 
             try {
                 $payment = $this->qrisService->getOrCreatePayment($submission);
@@ -161,7 +161,7 @@ class PaymentController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
-        $pricing = $this->pricingService->calculateDoiAddon();
+        $pricing = $this->pricingService->calculateDoiAddon($currentUser);
         $payment = null;
         $errorMessage = null;
 

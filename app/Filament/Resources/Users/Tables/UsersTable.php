@@ -6,6 +6,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
@@ -27,6 +29,10 @@ class UsersTable
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                ToggleColumn::make('is_member')
+                    ->label('Member CIB')
+                    ->sortable(),
 
                 TextColumn::make('roles.name')
                     ->label('Role')
@@ -81,7 +87,11 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('is_member')
+                    ->label('Status Member CIB')
+                    ->placeholder('Semua User')
+                    ->trueLabel('Hanya Member')
+                    ->falseLabel('Non-Member'),
             ])
             ->recordActions([
                 EditAction::make(),

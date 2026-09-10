@@ -33,7 +33,8 @@ class PaymentReplacePdfSubmission extends Page
         $pricingService = app(SubmissionPricingService::class);
         $qrisService = app(MidtransQrisService::class);
 
-        $pricing = $pricingService->calculateReplacePdf();
+        $user = $this->record->user ?? Auth::user();
+        $pricing = $pricingService->calculateReplacePdf($user);
         $payment = null;
         $errorMessage = null;
 

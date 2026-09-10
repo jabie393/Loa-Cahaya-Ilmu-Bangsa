@@ -29,7 +29,9 @@
         }
 
         @media print {
-            html, body {
+
+            html,
+            body {
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -154,10 +156,10 @@
             <div class="mb-6 overflow-hidden rounded-xl border border-slate-200/90 shadow-sm">
                 <table class="w-full text-left text-xs table-fixed">
                     <colgroup>
-                        <col style="width: 6%;">
-                        <col style="width: 52%;">
+                        <col style="width: 5%;">
+                        <col style="width: 49%;">
                         <col style="width: 24%;">
-                        <col style="width: 18%;">
+                        <col style="width: 22%;">
                     </colgroup>
                     <thead
                         class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
@@ -218,8 +220,13 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="py-3 px-3.5 text-right font-mono font-bold text-slate-900 text-sm">
-                                    Rp {{ number_format($item->gross_amount, 0, ',', '.') }}
+                                <td class="py-3 px-3.5 text-right font-mono text-slate-900 text-sm">
+                                    @if(!empty($item->discount_amount) && $item->discount_amount > 0)
+                                        <div class="text-[10px] text-slate-400 line-through whitespace-nowrap">Rp {{ number_format($item->original_amount, 0, ',', '.') }}</div>
+                                        <div class="text-[9.5px] text-blue-600 font-bold mb-0.5 whitespace-nowrap">Potongan: -Rp {{ number_format($item->discount_amount, 0, ',', '.') }}</div>
+                                    @endif
+                                    <span class="font-bold block whitespace-nowrap">Rp
+                                        {{ number_format($item->gross_amount, 0, ',', '.') }}</span>
                                 </td>
                             </tr>
                         @endforeach
@@ -228,6 +235,10 @@
             </div>
 
             <!-- Summary Total Breakdown -->
+            @php
+                $bulkOriginal = $payment->original_amount ?? $items->sum(fn($it) => $it->original_amount ?? $it->gross_amount);
+                $bulkDiscount = $payment->discount_amount ?? $items->sum('discount_amount');
+            @endphp
             <div class="flex justify-end mb-6">
                 <div class="w-80 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
                     <div class="flex justify-between text-slate-600">
@@ -237,9 +248,18 @@
                     <div class="flex justify-between text-slate-600">
                         <span class="font-medium">Subtotal Biaya:</span>
                         <span class="font-bold text-slate-800 font-mono">
-                            Rp {{ number_format($payment->gross_amount, 0, ',', '.') }}
+                            Rp
+                            {{ number_format($bulkOriginal > 0 ? $bulkOriginal : $payment->gross_amount, 0, ',', '.') }}
                         </span>
                     </div>
+                    @if($bulkDiscount > 0)
+                        <div class="flex justify-between text-blue-600 font-medium">
+                            <span class="flex items-center gap-1">
+                                <span>Potongan Member ({{ count($items) }}x):</span>
+                            </span>
+                            <span class="font-bold font-mono">-Rp {{ number_format($bulkDiscount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
                     <div class="pt-2.5 border-t border-slate-300 flex justify-between items-baseline">
                         <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Total Lunas:</span>
                         <span class="text-2xl font-black text-blue-600 heading-font tracking-tight">

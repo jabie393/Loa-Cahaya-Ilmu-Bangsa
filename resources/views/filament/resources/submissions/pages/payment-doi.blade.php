@@ -34,7 +34,8 @@
                 </div>
                 <div>
                     <h2 class="text-base font-bold text-gray-900 dark:text-white">Pembayaran Add-on DOI Submission
-                        {{ $record->id }}</h2>
+                        {{ $record->id }}
+                    </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Pemberian pengenal unik Repository Identifier
                         (DOI) resmi untuk artikel ilmiah Anda.</p>
                 </div>
@@ -102,7 +103,8 @@
                                     Ini:</span>
                                 <template x-if="status === 'paid' && doiIdentifier">
                                     <div class="flex items-center gap-2">
-                                        <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)" target="_blank"
+                                        <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)"
+                                            target="_blank"
                                             class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 font-bold text-xs rounded-lg border border-blue-300 dark:border-blue-700 hover:underline">
                                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                                             <span x-text="doiIdentifier"></span>
@@ -159,7 +161,8 @@
                                     <span
                                         class="block text-[11px] uppercase tracking-wider text-blue-600 dark:text-blue-400 font-semibold">Repository
                                         Identifier (DOI):</span>
-                                    <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)" target="_blank"
+                                    <a :href="doiUrl || ('{{ rtrim(config('services.repo_url', 'http://127.0.0.1:8001'), '/') }}/' + doiIdentifier)"
+                                        target="_blank"
                                         class="font-mono font-bold text-sm text-blue-700 dark:text-blue-300 hover:underline block"
                                         x-text="doiIdentifier">
                                     </a>
@@ -226,21 +229,31 @@
                                     </div>
                                 </template>
                                 <template x-if="errorMessage">
-                                    <div class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
-                                        <div class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
-                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                    <div
+                                        class="w-full p-4 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-800 text-center space-y-2.5">
+                                        <div
+                                            class="inline-flex p-2 bg-rose-100 dark:bg-rose-900/50 rounded-full text-rose-600 dark:text-rose-400">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                                             </svg>
                                         </div>
-                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug" x-text="errorMessage"></h4>
+                                        <h4 class="text-xs font-bold text-rose-800 dark:text-rose-200 leading-snug"
+                                            x-text="errorMessage"></h4>
                                         <div class="pt-1">
                                             <button type="button" @click="regenerateQris()" :disabled="isRegenerating"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-sm transition-colors">
-                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                <svg x-show="isRegenerating" class="w-3.5 h-3.5 animate-spin"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
                                                 </svg>
-                                                <span x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
+                                                <span
+                                                    x-text="isRegenerating ? 'Menghubungkan...' : 'Coba Hubungkan Ulang'"></span>
                                             </button>
                                         </div>
                                     </div>
@@ -301,20 +314,31 @@
                                 <div class="space-y-2 text-xs">
                                     <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
                                         <span>Layanan:</span>
-                                        <span class="font-semibold text-gray-800 dark:text-gray-200">Add-on DOI
-                                            Repository</span>
+                                        <span
+                                            class="font-semibold text-gray-800 dark:text-gray-200">{{ $pricing['tier_name'] ?? 'Add-on DOI Repository' }}</span>
                                     </div>
                                     <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
-                                        <span>Biaya:</span>
-                                        <span class="font-semibold text-gray-800 dark:text-gray-200">Rp 20.000</span>
+                                        <span>Biaya Layanan:</span>
+                                        <span class="font-semibold text-gray-800 dark:text-gray-200">Rp
+                                            {{ number_format(($pricing['original_amount'] ?? 20000), 0, ',', '.') }}</span>
                                     </div>
+                                    @if(!empty($pricing['is_member']) || (!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0))
+                                        <div
+                                            class="flex justify-between items-center text-blue-600 dark:text-blue-400 font-medium">
+                                            <span class="flex items-center gap-1.5">
+                                                <span>Potongan Member CIB:</span>
+                                            </span>
+                                            <span class="font-bold">-Rp
+                                                {{ number_format($pricing['discount_amount'] ?? 10000, 0, ',', '.') }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div
                                     class="pt-2.5 mt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-baseline">
                                     <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Total
                                         Tagihan:</span>
                                     <span class="text-xl font-black text-blue-600 dark:text-blue-400">
-                                        Rp 20.000
+                                        Rp {{ number_format($pricing['gross_amount'] ?? 20000, 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>

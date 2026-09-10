@@ -700,7 +700,7 @@ Route::get('/invoice/preview/{record}', function (App\Models\Submission $record)
     }
 
     $pricingService = app(App\Services\SubmissionPricingService::class);
-    $pricing = $pricingService->calculate($record);
+    $pricing = $pricingService->calculate($record, $submissionPayment?->user ?? $record->user);
 
     $publicationAmount = 0;
     if ($submissionPayment) {
@@ -747,7 +747,7 @@ Route::get('/invoice/bulk/{payment}', function (App\Models\Payment $payment) {
         $subIds = $payment->submission_ids ?: ($payment->submission_id ? [$payment->submission_id] : []);
         $submissions = App\Models\Submission::with(['journal', 'user'])->whereIn('id', $subIds)->get();
         $pricingService = app(App\Services\SubmissionPricingService::class);
-        $bulkPricing = $pricingService->calculateBulk($submissions);
+        $bulkPricing = $pricingService->calculateBulk($submissions, $payment->user);
         foreach ($bulkPricing['items'] as $itemData) {
             $sub = $itemData['submission'];
             $pr = $itemData['pricing'];
@@ -756,6 +756,8 @@ Route::get('/invoice/bulk/{payment}', function (App\Models\Payment $payment) {
                 'submission_id' => $sub->id,
                 'item_type' => 'publication',
                 'item_name' => 'Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel'),
+                'original_amount' => $pr['original_amount'] ?? $pr['gross_amount'],
+                'discount_amount' => $pr['discount_amount'] ?? 0,
                 'gross_amount' => $pr['gross_amount'],
                 'journal_share' => $pr['journal_share'],
                 'developer_gross_share' => $pr['developer_gross_share'],

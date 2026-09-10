@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Submission;
+use App\Models\User;
 
 class SubmissionPricingService
 {
@@ -12,22 +13,31 @@ class SubmissionPricingService
     public const MDR_RATE = 0.007;
 
     /**
+     * Member discount per item / submission (Rp 10,000)
+     */
+    public const MEMBER_DISCOUNT = 10000.0;
+
+    /**
      * Calculate exact pricing and revenue sharing for a submission.
      *
      * @param Submission $submission
+     * @param User|null $user
      * @return array{
      *     tier_name: string,
      *     author_count: int,
      *     is_international: bool,
      *     with_doi: bool,
+     *     original_amount: float,
+     *     discount_amount: float,
      *     gross_amount: float,
      *     journal_share: float,
      *     developer_gross_share: float,
      *     mdr_amount: float,
-     *     developer_net_share: float
+     *     developer_net_share: float,
+     *     is_member: bool
      * }
      */
-    public function calculate(Submission $submission): array
+    public function calculate(Submission $submission, ?User $user = null): array
     {
         $authorCount = $this->getAuthorCount($submission);
         $isInternational = $submission->isExternal();
@@ -35,12 +45,18 @@ class SubmissionPricingService
 
         $pricing = $this->determinePricing($isInternational, $withDoi, $authorCount);
 
-        $grossAmount = $pricing['gross_amount'];
+        $targetUser = $user ?? $submission->user ?? auth()->user();
+        $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+
+        $originalGross = $pricing['gross_amount'];
+        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
+        $grossAmount = max(0.0, $originalGross - $discountAmount);
         $devGross = $pricing['developer_gross_share'];
 
-        // MDR is 0.7% of gross_amount, rounded to 2 decimals or whole integer
+        // MDR is 0.7% of gross_amount, rounded
         $mdr = round($grossAmount * self::MDR_RATE);
         $devNet = $devGross - $mdr;
+        // Discount is fully absorbed by the journal share
         $journalShare = $grossAmount - $devGross;
 
         return [
@@ -48,11 +64,14 @@ class SubmissionPricingService
             'author_count' => $authorCount,
             'is_international' => $isInternational,
             'with_doi' => $withDoi,
+            'original_amount' => $originalGross,
+            'discount_amount' => $discountAmount,
             'gross_amount' => $grossAmount,
             'journal_share' => $journalShare,
             'developer_gross_share' => $devGross,
             'mdr_amount' => $mdr,
             'developer_net_share' => $devNet,
+            'is_member' => $isMember,
         ];
     }
 
@@ -173,60 +192,91 @@ class SubmissionPricingService
 
     /**
      * Calculate pricing specifically for DOI Addon.
-     * Price: Rp 20,000 | Dev: Rp 5,000 | MDR (0.7%): Rp 140 | Dev Net: Rp 4,860 | Journal Share: Rp 15,000
+     * Price: Rp 20,000 | Dev: Rp 5,000 | MDR (0.7%) | Member discount: Rp 10,000
+     *
+     * @param User|null $user
+     * @return array
      */
-    public function calculateDoiAddon(): array
+    public function calculateDoiAddon(?User $user = null): array
     {
-        $grossAmount = 20000.0;
+        $targetUser = $user ?? auth()->user();
+        $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+
+        $originalGross = 20000.0;
+        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
+        $grossAmount = max(0.0, $originalGross - $discountAmount);
         $devGross = 5000.0;
-        $mdr = round($grossAmount * self::MDR_RATE); // 140
-        $devNet = $devGross - $mdr; // 4860
-        $journalShare = $grossAmount - $devGross; // 15000
+        $mdr = round($grossAmount * self::MDR_RATE);
+        $devNet = $devGross - $mdr;
+        $journalShare = $grossAmount - $devGross;
 
         return [
             'tier_name' => 'Add-on DOI Repository Identifier',
             'author_count' => 0,
             'is_international' => false,
             'with_doi' => true,
+            'original_amount' => $originalGross,
+            'discount_amount' => $discountAmount,
             'gross_amount' => $grossAmount,
             'journal_share' => $journalShare,
             'developer_gross_share' => $devGross,
             'mdr_amount' => $mdr,
             'developer_net_share' => $devNet,
+            'is_member' => $isMember,
         ];
     }
 
     /**
      * Calculate pricing specifically for Replace PDF service.
-     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%): Rp 175 | Dev Net: Rp 4,825 | Journal Share: Rp 20,000
+     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%) | Member discount: Rp 10,000
+     *
+     * @param User|null $user
+     * @return array
      */
-    public function calculateReplacePdf(): array
+    public function calculateReplacePdf(?User $user = null): array
     {
-        $grossAmount = 25000.0;
+        $targetUser = $user ?? auth()->user();
+        $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+
+        $originalGross = 25000.0;
+        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
+        $grossAmount = max(0.0, $originalGross - $discountAmount);
         $devGross = 5000.0;
-        $mdr = round($grossAmount * self::MDR_RATE); // 175
-        $devNet = $devGross - $mdr; // 4825
-        $journalShare = $grossAmount - $devGross; // 20000
+        $mdr = round($grossAmount * self::MDR_RATE);
+        $devNet = $devGross - $mdr;
+        $journalShare = $grossAmount - $devGross;
 
         return [
             'tier_name' => 'Ganti PDF Naskah',
             'author_count' => 0,
             'is_international' => false,
             'with_doi' => false,
+            'original_amount' => $originalGross,
+            'discount_amount' => $discountAmount,
             'gross_amount' => $grossAmount,
             'journal_share' => $journalShare,
             'developer_gross_share' => $devGross,
             'mdr_amount' => $mdr,
             'developer_net_share' => $devNet,
+            'is_member' => $isMember,
         ];
     }
 
     /**
      * Calculate cumulative pricing breakdown for multiple submissions.
+     *
+     * @param iterable $submissions
+     * @param User|null $user
+     * @return array
      */
-    public function calculateBulk($submissions): array
+    public function calculateBulk($submissions, ?User $user = null): array
     {
+        $targetUser = $user ?? auth()->user();
+        $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+
         $items = [];
+        $totalOriginal = 0;
+        $totalDiscount = 0;
         $totalGross = 0;
         $totalJournal = 0;
         $totalDevGross = 0;
@@ -234,12 +284,15 @@ class SubmissionPricingService
         $totalDevNet = 0;
 
         foreach ($submissions as $submission) {
-            $pricing = $this->calculate($submission);
+            $subUser = $targetUser ?? $submission->user;
+            $pricing = $this->calculate($submission, $subUser);
             $items[] = [
                 'submission' => $submission,
                 'pricing' => $pricing,
             ];
 
+            $totalOriginal += $pricing['original_amount'];
+            $totalDiscount += $pricing['discount_amount'];
             $totalGross += $pricing['gross_amount'];
             $totalJournal += $pricing['journal_share'];
             $totalDevGross += $pricing['developer_gross_share'];
@@ -250,12 +303,14 @@ class SubmissionPricingService
         return [
             'items' => $items,
             'count' => count($items),
+            'original_amount' => $totalOriginal,
+            'discount_amount' => $totalDiscount,
             'gross_amount' => $totalGross,
             'journal_share' => $totalJournal,
             'developer_gross_share' => $totalDevGross,
             'mdr_amount' => $totalMdr,
             'developer_net_share' => $totalDevNet,
+            'is_member' => $isMember,
         ];
     }
-
 }

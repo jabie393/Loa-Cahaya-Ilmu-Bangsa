@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
@@ -44,6 +45,11 @@ class UsersForm
                                     TextInput::make('phone')
                                         ->label('Nomor Telepon'),
 
+                                    Toggle::make('is_member')
+                                        ->label('Status Member CIB')
+                                        ->helperText('Aktifkan untuk memberikan potongan Rp 10.000 pada setiap transaksi.')
+                                        ->default(false),
+
                                     Select::make('roles')
                                         ->label('Role')
                                         ->relationship(
@@ -52,9 +58,9 @@ class UsersForm
                                             modifyQueryUsing: fn(Builder $query) => $query->where('name', '!=', 'ryu_dev'),
                                         )
                                         ->getOptionLabelFromRecordUsing(fn($record) => match ($record->name) {
-                                            'panel_user' => 'User',
-                                            'ryu_dev' => 'Developer',
-                                            default => Str::headline($record->name),
+                                             'panel_user' => 'User',
+                                             'ryu_dev' => 'Developer',
+                                             default => Str::headline($record->name),
                                         })
                                         ->preload()
                                         ->required()

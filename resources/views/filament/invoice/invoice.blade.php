@@ -29,7 +29,9 @@
         }
 
         @media print {
-            html, body {
+
+            html,
+            body {
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -188,10 +190,10 @@
             <div class="mb-6 overflow-hidden rounded-xl border border-slate-200/90 shadow-sm">
                 <table class="w-full text-left text-xs table-fixed">
                     <colgroup>
-                        <col style="width: 6%;">
-                        <col style="width: 52%;">
+                        <col style="width: 5%;">
+                        <col style="width: 49%;">
                         <col style="width: 24%;">
-                        <col style="width: 18%;">
+                        <col style="width: 22%;">
                     </colgroup>
                     <thead
                         class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
@@ -250,9 +252,26 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 text-right">
-                                    <span class="font-bold text-slate-900 text-sm font-mono block">
-                                        Rp
-                                        {{ number_format($publicationAmount ?? $submissionPayment->gross_amount, 0, ',', '.') }}
+                                    @php
+                                        $pubDisc = 0;
+                                        $pubOrig = $publicationAmount ?? $submissionPayment->gross_amount;
+                                        if ($submissionPayment) {
+                                            if ($submissionPayment->type === 'bulk_submission') {
+                                                $bItem = \App\Models\PaymentItem::where('payment_id', $submissionPayment->id)->where('submission_id', $submission->id)->first();
+                                                $pubDisc = $bItem?->discount_amount ?? 0;
+                                                $pubOrig = $bItem?->original_amount ?? $pubOrig;
+                                            } else {
+                                                $pubDisc = $submissionPayment->discount_amount ?? 0;
+                                                $pubOrig = $submissionPayment->original_amount ?? $pubOrig;
+                                            }
+                                        }
+                                    @endphp
+                                    @if($pubDisc > 0)
+                                        <div class="text-[10px] text-slate-400 line-through whitespace-nowrap">Rp {{ number_format($pubOrig, 0, ',', '.') }}</div>
+                                        <div class="text-[9.5px] text-blue-600 font-bold mb-0.5 whitespace-nowrap">Potongan: -Rp {{ number_format($pubDisc, 0, ',', '.') }}</div>
+                                    @endif
+                                    <span class="font-bold text-slate-900 text-sm font-mono block whitespace-nowrap">
+                                        Rp {{ number_format($publicationAmount ?? $submissionPayment->gross_amount, 0, ',', '.') }}
                                     </span>
                                 </td>
                             </tr>
@@ -297,7 +316,11 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-4 text-right">
-                                    <span class="font-bold text-slate-900 text-sm font-mono block">
+                                    @if(($doiPayment->discount_amount ?? 0) > 0)
+                                        <div class="text-[10px] text-slate-400 line-through whitespace-nowrap">Rp {{ number_format($doiPayment->original_amount ?? 20000, 0, ',', '.') }}</div>
+                                        <div class="text-[9.5px] text-blue-600 font-bold mb-0.5 whitespace-nowrap">Potongan: -Rp {{ number_format($doiPayment->discount_amount, 0, ',', '.') }}</div>
+                                    @endif
+                                    <span class="font-bold text-slate-900 text-sm font-mono block whitespace-nowrap">
                                         Rp {{ number_format($doiPayment->gross_amount, 0, ',', '.') }}
                                     </span>
                                 </td>
@@ -344,7 +367,11 @@
                                         </div>
                                     </td>
                                     <td class="py-4 px-4 text-right">
-                                        <span class="font-bold text-slate-900 text-sm font-mono block">
+                                        @if(($rpp->discount_amount ?? 0) > 0)
+                                            <div class="text-[10px] text-slate-400 line-through whitespace-nowrap">Rp {{ number_format($rpp->original_amount ?? 25000, 0, ',', '.') }}</div>
+                                            <div class="text-[9.5px] text-blue-600 font-bold mb-0.5 whitespace-nowrap">Potongan: -Rp {{ number_format($rpp->discount_amount, 0, ',', '.') }}</div>
+                                        @endif
+                                        <span class="font-bold text-slate-900 text-sm font-mono block whitespace-nowrap">
                                             Rp {{ number_format($rpp->gross_amount, 0, ',', '.') }}
                                         </span>
                                     </td>
@@ -356,13 +383,54 @@
             </div>
 
             <!-- Summary Total Breakdown -->
+            @php
+                $invTotalDiscount = 0;
+                $invTotalOriginal = 0;
+
+                if ($submissionPayment) {
+                    if ($submissionPayment->type === 'bulk_submission') {
+                        $bItem = \App\Models\PaymentItem::where('payment_id', $submissionPayment->id)->where('submission_id', $submission->id)->first();
+                        $d = $bItem?->discount_amount ?? 0;
+                        $o = $bItem?->original_amount ?? ($bItem?->gross_amount ?? $publicationAmount);
+                    } else {
+                        $d = $submissionPayment->discount_amount ?? 0;
+                        $o = $submissionPayment->original_amount ?? $submissionPayment->gross_amount;
+                    }
+                    $invTotalDiscount += $d;
+                    $invTotalOriginal += ($o > 0 ? $o : $publicationAmount);
+                }
+
+                if ($doiPayment) {
+                    $d = $doiPayment->discount_amount ?? 0;
+                    $o = $doiPayment->original_amount ?? $doiPayment->gross_amount;
+                    $invTotalDiscount += $d;
+                    $invTotalOriginal += ($o > 0 ? $o : $doiPayment->gross_amount);
+                }
+
+                if (isset($replacePdfPayments)) {
+                    foreach ($replacePdfPayments as $rpp) {
+                        $d = $rpp->discount_amount ?? 0;
+                        $o = $rpp->original_amount ?? $rpp->gross_amount;
+                        $invTotalDiscount += $d;
+                        $invTotalOriginal += ($o > 0 ? $o : $rpp->gross_amount);
+                    }
+                }
+            @endphp
             <div class="flex justify-end mb-6">
-                <div class="w-80 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
+                <div class="w-80 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
                     <div class="flex justify-between text-slate-600">
                         <span class="font-medium">Subtotal Biaya:</span>
                         <span class="font-bold text-slate-800 font-mono">Rp
-                            {{ number_format($totalPaid, 0, ',', '.') }}</span>
+                            {{ number_format($invTotalOriginal > 0 ? $invTotalOriginal : $totalPaid, 0, ',', '.') }}</span>
                     </div>
+                    @if($invTotalDiscount > 0)
+                        <div class="flex justify-between text-blue-600 font-medium">
+                            <span class="flex items-center gap-1">
+                                <span>Potongan Member CIB:</span>
+                            </span>
+                            <span class="font-bold font-mono">-Rp {{ number_format($invTotalDiscount, 0, ',', '.') }}</span>
+                        </div>
+                    @endif
                     <div class="pt-2.5 border-t border-slate-300 flex justify-between items-baseline">
                         <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Total Lunas:</span>
                         <span class="text-2xl font-black text-blue-600 heading-font tracking-tight">

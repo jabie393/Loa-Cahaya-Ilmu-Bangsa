@@ -18,7 +18,7 @@ use App\Models\PlagiarismCheck;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'is_member'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -35,7 +35,13 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_member' => 'boolean',
         ];
+    }
+
+    public function isMember(): bool
+    {
+        return (bool) $this->is_member;
     }
 
     protected static function booted(): void
