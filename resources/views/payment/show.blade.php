@@ -24,10 +24,10 @@
           initialStatus: '{{ $payment ? $payment->payment_status : ($submission->payment_status === 'paid' ? 'paid' : 'pending') }}',
           initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
           isExtracting: {{ $isExtracting ? 'true' : 'false' }},
-          initialQrisUrl: '{{ $payment ? $payment->qris_url : '' }}',
-          initialQrString: '{{ $payment ? $payment->qr_string : '' }}',
+          initialQrisUrl: @js($payment ? $payment->qris_url : ''),
+          initialQrString: @js($payment ? $payment->qr_string : ''),
           initialOrderId: '{{ $payment ? $payment->order_id : '' }}',
-          errorMessage: '{{ $errorMessage ? addslashes($errorMessage) : '' }}'
+          errorMessage: @js($errorMessage ?? null)
       })"
       x-init="initPayment()">
 
@@ -509,13 +509,14 @@
                             this.orderId = data.order_id;
                             this.qrisUrl = data.qris_url;
                             this.qrString = data.qr_string;
+                            this.errorMessage = null;
                             this.expiresAt = data.expired_at ? new Date(data.expired_at) : new Date(Date.now() + 15 * 60000);
                             this.updateCountdown();
                         } else {
-                            alert(data.message || 'Gagal membuat QRIS baru.');
+                            this.errorMessage = data.message || 'Gagal membuat QRIS baru.';
                         }
                     } catch (e) {
-                        alert('Terjadi kesalahan jaringan.');
+                        this.errorMessage = 'Terjadi kesalahan saat menghubungi payment gateway.';
                     } finally {
                         this.isRegenerating = false;
                     }

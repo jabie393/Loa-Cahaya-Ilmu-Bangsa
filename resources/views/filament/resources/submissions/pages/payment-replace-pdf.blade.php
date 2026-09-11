@@ -16,9 +16,9 @@
             initialStatus: '{{ $payment && $payment->payment_status === 'paid' ? 'paid' : ($payment ? $payment->payment_status : 'pending') }}',
             initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
             isExtracting: false,
-            initialQrisUrl: '{{ $payment ? $payment->qris_url : '' }}',
+            initialQrisUrl: @js($payment ? $payment->qris_url : ''),
             initialOrderId: '{{ $payment ? $payment->order_id : '' }}',
-            errorMessage: '{{ $errorMessage ? addslashes($errorMessage) : '' }}'
+            errorMessage: @js($errorMessage ?? null)
          })" x-init="initPayment()" class="space-y-6">
 
         <!-- Top Notification Banner for Status -->
@@ -537,13 +537,14 @@
                             this.isExpired = false;
                             this.orderId = data.order_id;
                             this.qrisUrl = data.qris_url;
+                            this.errorMessage = null;
                             this.expiresAt = data.expired_at ? new Date(data.expired_at) : new Date(Date.now() + 15 * 60000);
                             this.updateCountdown();
                         } else {
-                            alert(data.message || 'Gagal membuat QRIS baru.');
+                            this.errorMessage = data.message || 'Gagal membuat QRIS baru.';
                         }
                     } catch (e) {
-                        alert('Terjadi kesalahan jaringan.');
+                        this.errorMessage = 'Terjadi kesalahan saat menghubungi payment gateway.';
                     } finally {
                         this.isRegenerating = false;
                     }

@@ -28,11 +28,10 @@
             checkUrl: '{{ route('payments.check.bulk', ['paymentId' => $paymentId]) }}',
             regenerateUrl: '{{ route('payments.regenerate.bulk', ['paymentId' => $paymentId]) }}',
             initialStatus: '{{ $isPaid ? 'paid' : ($isExpired ? 'expired' : 'pending') }}',
-            initialExpiresAt: '{{ $expiresAtStr }}',
-            initialQrisUrl: '{{ $qrisUrl }}',
-            initialQrString: '{{ $payment ? $payment->qr_string : '' }}',
+            initialQrisUrl: @js($qrisUrl ?? ''),
+            initialQrString: @js($payment ? $payment->qr_string : ''),
             initialOrderId: '{{ $orderId }}',
-            errorMessage: '{{ $errorMessage ?? '' ? addslashes($errorMessage) : '' }}'
+            errorMessage: @js($errorMessage ?? null)
         })" x-init="initPayment()" class="space-y-6">
 
         <!-- Top Notification Banner for Status -->
@@ -519,13 +518,14 @@
                             this.regenerateUrl = data.regenerate_url;
                             this.expiresAt = data.expired_at ? new Date(data.expired_at) : new Date(Date.now() + 15 * 60000);
 
+                            this.errorMessage = null;
                             this.updateCountdown();
                         } else {
-                            alert(data.message || 'Gagal membuat QRIS Baru.');
+                            this.errorMessage = data.message || 'Gagal membuat QRIS Baru.';
                         }
                     } catch (e) {
                         console.error('Regenerate error:', e);
-                        alert('Terjadi kesalahan koneksi saat membuat QRIS baru.');
+                        this.errorMessage = 'Terjadi kesalahan koneksi saat membuat QRIS baru.';
                     } finally {
                         this.isRegenerating = false;
                     }

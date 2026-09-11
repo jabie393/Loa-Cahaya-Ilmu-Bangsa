@@ -66,6 +66,31 @@ class BelibayarQrisService implements PaymentGatewayInterface
     }
 
     /**
+     * Sanitize customer name to meet Belibayar requirement:
+     * 5-25 chars alphanumeric, space, underscore, dash (without PT/CV prefix).
+     */
+    public function sanitizeCustomerName(?string $name): string
+    {
+        $name = $name ?: 'Author CIB';
+        // Remove accents and any characters other than alphanumeric, space, underscore, dash
+        $name = preg_replace('/[^a-zA-Z0-9\s_-]/', '', $name);
+        // Collapse multiple whitespace
+        $name = preg_replace('/\s+/', ' ', trim($name));
+        // Strip PT / CV prefix
+        $name = preg_replace('/^(pt|cv)\.?\s+/i', '', $name);
+
+        if (strlen($name) < 5) {
+            $name = str_pad($name, 5, ' User');
+        }
+
+        if (strlen($name) > 25) {
+            $name = substr($name, 0, 25);
+        }
+
+        return trim($name);
+    }
+
+    /**
      * Send signed POST request to Belibayar API.
      */
     protected function postRequest(string $endpoint, array $payload): array
@@ -82,6 +107,10 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'X-Signature' => $signature,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
+        ])->withOptions([
+            'curl' => [
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            ],
         ])->withBody($rawBody, 'application/json')->timeout(25)->post($url);
 
         $responseData = $response->json();
@@ -90,6 +119,13 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         if (!$response->successful() || empty($responseData)) {
             $errorMessage = $responseData['messages'] ?? ($responseData['message'] ?? 'Gagal menghubungi server Belibayar.id');
+            if (!empty($responseData['data']['fields']) && is_array($responseData['data']['fields'])) {
+                $fields = [];
+                foreach ($responseData['data']['fields'] as $fKey => $fVal) {
+                    $fields[] = "{$fKey}: {$fVal}";
+                }
+                $errorMessage .= ' (' . implode(', ', $fields) . ')';
+            }
             throw new \Exception("Belibayar Error ({$response->status()}): {$errorMessage}");
         }
 
@@ -113,12 +149,23 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'X-Timestamp' => $ts,
             'X-Signature' => $signature,
             'Accept' => 'application/json',
+        ])->withOptions([
+            'curl' => [
+                CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+            ],
         ])->timeout(20)->get($url);
 
         $responseData = $response->json();
 
         if (!$response->successful() || empty($responseData)) {
             $errorMessage = $responseData['messages'] ?? ($responseData['message'] ?? 'Gagal memverifikasi status Belibayar.id');
+            if (!empty($responseData['data']['fields']) && is_array($responseData['data']['fields'])) {
+                $fields = [];
+                foreach ($responseData['data']['fields'] as $fKey => $fVal) {
+                    $fields[] = "{$fKey}: {$fVal}";
+                }
+                $errorMessage .= ' (' . implode(', ', $fields) . ')';
+            }
             throw new \Exception("Belibayar Error ({$response->status()}): {$errorMessage}");
         }
 
@@ -198,7 +245,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $orderId = 'BYR-SUB-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
 
         $userId = $submission->user_id ?? Auth::id();
-        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $rawName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerName = $this->sanitizeCustomerName($rawName);
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
         $itemName = $pricing['tier_name'] . ' - ' . ($submission->journal?->name ?? 'Jurnal CIB');
 
@@ -211,7 +259,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 'method' => 'qris',
             ],
             'static_qr' => false,
-            'customer_name' => Str::limit($customerName, 50, ''),
+            'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
             'callback_url' => url('/api/belibayar/webhook'),
@@ -220,8 +268,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrContent = $data['qr_content'] ?? null;
-        $qrUrl = $data['qr_url'] ?? null;
+        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
         if (empty($qrUrl) && !empty($qrContent)) {
             $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
         }
@@ -248,7 +296,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'transaction_status' => $data['status'] ?? 'pending',
             'payment_status' => 'pending',
             'qris_url' => $qrUrl,
-            'qr_string' => $qrContent,
+            'qr_string' => $qrContent ?? $qrUrl,
             'expired_at' => $expiredAt,
             'raw_response' => $response,
         ]);
@@ -335,7 +383,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         $orderId = 'BYR-DOI-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
 
-        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $rawName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerName = $this->sanitizeCustomerName($rawName);
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
         $itemName = 'Aktivasi DOI Resmi CIB - ' . ($submission->journal?->name ?? 'Jurnal CIB');
 
@@ -346,7 +395,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'amount' => $grossAmount,
             'pay_method' => ['method' => 'qris'],
             'static_qr' => false,
-            'customer_name' => Str::limit($customerName, 50, ''),
+            'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
             'callback_url' => url('/api/belibayar/webhook'),
@@ -355,8 +404,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrContent = $data['qr_content'] ?? null;
-        $qrUrl = $data['qr_url'] ?? null;
+        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
         if (empty($qrUrl) && !empty($qrContent)) {
             $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
         }
@@ -383,7 +432,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'transaction_status' => $data['status'] ?? 'pending',
             'payment_status' => 'pending',
             'qris_url' => $qrUrl,
-            'qr_string' => $qrContent,
+            'qr_string' => $qrContent ?? $qrUrl,
             'expired_at' => $expiredAt,
             'raw_response' => $response,
         ]);
@@ -474,7 +523,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         $orderId = 'BYR-REPLACE-PDF-' . $submission->id . '-' . time() . '-' . Str::upper(Str::random(4));
 
-        $customerName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $rawName = !empty($submission->author_name) ? $submission->author_name : ($submission->user?->name ?? 'Author');
+        $customerName = $this->sanitizeCustomerName($rawName);
         $customerEmail = !empty($submission->email) ? $submission->email : ($submission->user?->email ?? 'author@cib.institute');
         $itemName = 'Ganti PDF Naskah - ' . ($submission->journal?->name ?? 'Jurnal CIB');
 
@@ -485,7 +535,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'amount' => $grossAmount,
             'pay_method' => ['method' => 'qris'],
             'static_qr' => false,
-            'customer_name' => Str::limit($customerName, 50, ''),
+            'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
             'callback_url' => url('/api/belibayar/webhook'),
@@ -494,8 +544,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrContent = $data['qr_content'] ?? null;
-        $qrUrl = $data['qr_url'] ?? null;
+        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
         if (empty($qrUrl) && !empty($qrContent)) {
             $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
         }
@@ -524,7 +574,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'transaction_status' => $data['status'] ?? 'pending',
             'payment_status' => 'pending',
             'qris_url' => $qrUrl,
-            'qr_string' => $qrContent,
+            'qr_string' => $qrContent ?? $qrUrl,
             'expired_at' => $expiredAt,
             'raw_response' => $response,
         ]);
@@ -645,7 +695,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $firstId = $submissionIds[0] ?? 0;
 
         $orderId = 'BYR-BULK-' . count($submissionIds) . 'SUB-' . $firstId . '-' . time() . '-' . Str::upper(Str::random(4));
-        $payerName = $payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif');
+        $payerName = $this->sanitizeCustomerName($payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif'));
         $payerEmail = $payerUser?->email ?? ($submissions->first()->email ?: 'author@example.com');
 
         $grossAmount = (int) round($pricingData['gross_amount']);
@@ -656,7 +706,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'amount' => $grossAmount,
             'pay_method' => ['method' => 'qris'],
             'static_qr' => false,
-            'customer_name' => Str::limit($payerName, 50, ''),
+            'customer_name' => $payerName,
             'customer_email' => $payerEmail,
             'expired_time' => $expiredTime,
             'callback_url' => url('/api/belibayar/webhook'),
@@ -665,8 +715,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrContent = $data['qr_content'] ?? null;
-        $qrUrl = $data['qr_url'] ?? null;
+        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
         if (empty($qrUrl) && !empty($qrContent)) {
             $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
         }
@@ -694,7 +744,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'transaction_status' => $data['status'] ?? 'pending',
             'payment_status' => 'pending',
             'qris_url' => $qrUrl,
-            'qr_string' => $qrContent,
+            'qr_string' => $qrContent ?? $qrUrl,
             'expired_at' => $expiredAt,
             'raw_response' => $response,
         ]);
