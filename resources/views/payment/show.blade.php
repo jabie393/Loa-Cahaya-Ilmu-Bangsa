@@ -304,20 +304,26 @@
                                         Mendukung GoPay, OVO, DANA, BCA, Mandiri & Seluruh M-Banking
                                     </div>
 
-                                    @if(!config('services.midtrans.is_production', false))
+                                    @php
+                                        $isBelibayar = ($payment && $payment->gateway === 'belibayar') || (!$payment && config('services.payment_gateway') === 'belibayar');
+                                        $isSandbox = $isBelibayar ? !config('services.belibayar.is_production', false) : !config('services.midtrans.is_production', false);
+                                    @endphp
+
+                                    @if($isSandbox)
                                     <div class="mt-3 w-full p-2.5 bg-amber-50/90 rounded-xl border border-amber-200 text-[11px] text-amber-900 text-left space-y-1.5 shadow-sm">
                                         <div class="font-bold flex items-center gap-1.5 text-amber-800">
                                             <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 1-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                                             </svg>
-                                            <span>Petunjuk Simulasi Sandbox:</span>
+                                            <span>Petunjuk Simulasi Sandbox ({{ $isBelibayar ? 'Belibayar.id' : 'Midtrans' }}):</span>
                                         </div>
+                                        @if(!$isBelibayar)
                                         <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
                                             <button type="button" @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
                                                 class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded-md border border-amber-300 text-[10px] transition-colors">
                                                 Salin URL
                                             </button>
-                                            <a href="https://simulator.sandbox.midtrans.com/qris/index" target="_blank"
+                                            <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
                                                 class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
                                                 <span>Buka Simulator</span>
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -325,6 +331,7 @@
                                                 </svg>
                                             </a>
                                         </div>
+                                        @endif
                                     </div>
                                     @endif
                                 </div>

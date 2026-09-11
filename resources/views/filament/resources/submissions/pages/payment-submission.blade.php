@@ -333,11 +333,13 @@
                                                 <span>Petunjuk Simulasi Sandbox ({{ $isBelibayar ? 'Belibayar.id' : 'Midtrans' }}):</span>
                                             </div>
                                             <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                                <button type="button"
-                                                    @click="navigator.clipboard.writeText(qrisUrl); alert('URL / Data QRIS disalin!')"
-                                                    class="px-2.5 py-1 bg-white dark:bg-gray-800 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-semibold rounded-md border border-amber-300 dark:border-amber-700 text-[10px] transition-colors">
-                                                    Salin QR
-                                                </button>
+                                                @if(!$isBelibayar)
+                                                    <button type="button"
+                                                        @click="navigator.clipboard.writeText(qrisUrl); alert('URL / Data QRIS disalin!')"
+                                                        class="px-2.5 py-1 bg-white dark:bg-gray-800 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-semibold rounded-md border border-amber-300 dark:border-amber-700 text-[10px] transition-colors">
+                                                        Salin QR
+                                                    </button>
+                                                @endif
                                                 <button type="button"
                                                     @click="simulateSandbox()"
                                                     class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 shadow-sm">
