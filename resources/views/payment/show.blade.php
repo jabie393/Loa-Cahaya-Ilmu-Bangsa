@@ -21,6 +21,7 @@
       x-data="paymentApp({
           checkUrl: '{{ route('submissions.payment.check', $submission->id) }}',
           regenerateUrl: '{{ route('submissions.payment.regenerate', $submission->id) }}',
+          simulateUrl: '{{ route('submissions.payment.simulate-sandbox', $submission->id) }}',
           initialStatus: '{{ $payment ? $payment->payment_status : ($submission->payment_status === 'paid' ? 'paid' : 'pending') }}',
           initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
           isExtracting: {{ $isExtracting ? 'true' : 'false' }},
@@ -317,21 +318,31 @@
                                             </svg>
                                             <span>Petunjuk Simulasi Sandbox ({{ $isBelibayar ? 'Belibayar.id' : 'Midtrans' }}):</span>
                                         </div>
-                                        @if(!$isBelibayar)
                                         <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                            <button type="button" @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
-                                                class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded-md border border-amber-300 text-[10px] transition-colors">
-                                                Salin URL
-                                            </button>
-                                            <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
-                                                class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
-                                                <span>Buka Simulator</span>
+                                            @if(!$isBelibayar)
+                                                <button type="button" @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
+                                                    class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded-md border border-amber-300 text-[10px] transition-colors">
+                                                    Salin URL
+                                                </button>
+                                            @endif
+                                            <button type="button"
+                                                @click="simulateSandbox()"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 shadow-sm">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
-                                            </a>
+                                                <span>Simulasi Bayar Sukses</span>
+                                            </button>
+                                            @if(!$isBelibayar)
+                                                <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
+                                                    <span>Buka Simulator</span>
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    </svg>
+                                                </a>
+                                            @endif
                                         </div>
-                                        @endif
                                     </div>
                                     @endif
                                 </div>
@@ -410,6 +421,7 @@
             return {
                 checkUrl: config.checkUrl,
                 regenerateUrl: config.regenerateUrl,
+                simulateUrl: config.simulateUrl,
                 status: config.initialStatus,
                 expiresAt: config.initialExpiresAt ? new Date(config.initialExpiresAt) : null,
                 isExtracting: config.isExtracting,
@@ -531,6 +543,35 @@
                         this.errorMessage = 'Terjadi kesalahan saat menghubungi payment gateway.';
                     } finally {
                         this.isRegenerating = false;
+                    }
+                },
+
+                async simulateSandbox() {
+                    if (!confirm('Simulasikan pembayaran QRIS sebagai LUNAS sekarang (khusus Sandbox)?')) return;
+                    this.isChecking = true;
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                        const res = await fetch(this.simulateUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.status = 'paid';
+                            alert(data.message || 'Pembayaran berhasil disimulasikan lunas!');
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Gagal melakukan simulasi pembayaran.');
+                        }
+                    } catch (e) {
+                        alert('Gagal menghubungi server untuk simulasi pembayaran.');
+                    } finally {
+                        this.isChecking = false;
                     }
                 }
             };
