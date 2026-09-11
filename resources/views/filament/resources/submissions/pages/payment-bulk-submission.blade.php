@@ -239,7 +239,7 @@
                                 class="bg-gray-50 dark:bg-gray-950 p-4 rounded-xl border border-gray-200 dark:border-gray-800 flex flex-col items-center justify-center min-h-[220px]">
                                 <template x-if="qrisUrl && !errorMessage">
                                     <img :src="qrisUrl" alt="QRIS Kolektif"
-                                        @error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
+                                        x-on:error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
                                         class="w-52 h-52 object-contain rounded-lg shadow-sm border border-white">
                                 </template>
                                 <template x-if="errorMessage">

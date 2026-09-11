@@ -225,7 +225,7 @@
                                 <template x-if="qrisUrl && !errorMessage">
                                     <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                                         <img :src="qrisUrl" alt="QRIS Code"
-                                            @error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
+                                            x-on:error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
                                             class="w-56 h-56 object-contain rounded-lg">
                                     </div>
                                 </template>
