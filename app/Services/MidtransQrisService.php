@@ -398,7 +398,7 @@ class MidtransQrisService
         $latestDoi = $submission->payments()->where('type', 'doi_addon')->latest()->first();
 
         if ($latestDoi && $latestDoi->payment_status === 'pending') {
-            if ($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) {
+            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== 20000) {
                 $latestDoi->update([
                     'payment_status' => 'expired',
                     'transaction_status' => 'expire',
@@ -584,7 +584,7 @@ class MidtransQrisService
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if ($latest && $latest->payment_status === 'pending') {
-            if ($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) {
+            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== 25000) {
                 $latest->update([
                     'payment_status' => 'expired',
                     'transaction_status' => 'expire',

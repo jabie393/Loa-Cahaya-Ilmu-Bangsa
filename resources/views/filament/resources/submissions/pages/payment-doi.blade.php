@@ -322,14 +322,14 @@
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">Rp
                                             {{ number_format(($pricing['original_amount'] ?? 20000), 0, ',', '.') }}</span>
                                     </div>
-                                    @if(!empty($pricing['is_member']) || (!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0))
+                                    @if(!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0)
                                         <div
                                             class="flex justify-between items-center text-blue-600 dark:text-blue-400 font-medium">
                                             <span class="flex items-center gap-1.5">
                                                 <span>Potongan Member CIB:</span>
                                             </span>
                                             <span class="font-bold">-Rp
-                                                {{ number_format($pricing['discount_amount'] ?? 10000, 0, ',', '.') }}</span>
+                                                {{ number_format($pricing['discount_amount'], 0, ',', '.') }}</span>
                                         </div>
                                     @endif
                                 </div>

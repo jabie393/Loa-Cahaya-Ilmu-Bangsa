@@ -123,7 +123,7 @@ class SubmissionsTable
                     })
                     ->sortable(
                         query: fn(\Illuminate\Database\Eloquent\Builder $query, string $direction): \Illuminate\Database\Eloquent\Builder =>
-                        $query->orderBy('status', $direction)->orderBy('created_at', 'desc')
+                            $query->orderBy('status', $direction)->orderBy('created_at', 'desc')
                     ),
 
                 TextColumn::make('author_name')
@@ -448,14 +448,14 @@ class SubmissionsTable
                     EditAction::make()
                         ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
                         ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
-                    Action::make('Konfirmasi LOA ke Admin')
-                        ->label('Konfirmasi LOA ke Admin')
+                    Action::make('Troubleshoot Call Center')
+                        ->label('Troubleshoot Call Center')
                         ->icon('heroicon-o-chat-bubble-left-right')
                         ->color('primary')
                         ->url(fn(Submission $record) => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $record->id)
                         ->openUrlInNewTab()
                         ->requiresConfirmation()
-                        ->modalHeading('Konfirmasi LOA ke Admin')
+                        ->modalHeading('Troubleshoot Call Center')
                         ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
                         ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
                         ->modalCancelActionLabel('Periksa Kembali'),
@@ -531,7 +531,9 @@ class SubmissionsTable
                     ->label('')
                     ->button()
                     ->color('primary')
-                    ->icon('heroicon-o-eye'),
+                    ->icon('heroicon-o-eye')
+                    ->dropdownPlacement('bottom-start')
+                    ->dropdownMaxHeight('380px'),
             ], position: RecordActionsPosition::BeforeColumns)
 
             ->toolbarActions([

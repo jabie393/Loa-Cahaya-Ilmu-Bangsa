@@ -192,7 +192,8 @@ class SubmissionPricingService
 
     /**
      * Calculate pricing specifically for DOI Addon.
-     * Price: Rp 20,000 | Dev: Rp 5,000 | MDR (0.7%) | Member discount: Rp 10,000
+     * Price: Rp 20,000 | Dev: Rp 5,000 | MDR (0.7%)
+     * Note: Diskon membership tidak berlaku pada transaksi tambah DOI.
      *
      * @param User|null $user
      * @return array
@@ -203,8 +204,8 @@ class SubmissionPricingService
         $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
 
         $originalGross = 20000.0;
-        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
-        $grossAmount = max(0.0, $originalGross - $discountAmount);
+        $discountAmount = 0.0;
+        $grossAmount = $originalGross;
         $devGross = 5000.0;
         $mdr = round($grossAmount * self::MDR_RATE);
         $devNet = $devGross - $mdr;
@@ -228,7 +229,8 @@ class SubmissionPricingService
 
     /**
      * Calculate pricing specifically for Replace PDF service.
-     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%) | Member discount: Rp 10,000
+     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%)
+     * Note: Diskon membership tidak berlaku pada transaksi ganti PDF.
      *
      * @param User|null $user
      * @return array
@@ -239,8 +241,8 @@ class SubmissionPricingService
         $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
 
         $originalGross = 25000.0;
-        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
-        $grossAmount = max(0.0, $originalGross - $discountAmount);
+        $discountAmount = 0.0;
+        $grossAmount = $originalGross;
         $devGross = 5000.0;
         $mdr = round($grossAmount * self::MDR_RATE);
         $devNet = $devGross - $mdr;

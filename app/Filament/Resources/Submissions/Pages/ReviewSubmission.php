@@ -179,14 +179,14 @@ class ReviewSubmission extends Page
                         $this->redirect(static::$resource::getUrl('view', ['record' => $this->record]));
                     })
                     ->visible(fn() => $this->record->review_status === 'failed' && $this->record->status !== 'Approved'),
-                Action::make('Konfirmasi LOA ke Admin')
-                    ->label('Konfirmasi LOA ke Admin')
+                Action::make('Troubleshoot Call Center')
+                    ->label('Troubleshoot Call Center')
                     ->icon('heroicon-m-chat-bubble-left-right')
                     ->color('success')
                     ->url(fn() => 'https://wa.me/' . (\App\Models\User::find(1)?->phone ?? '') . '?text=Halo%20Admin%20LOA%2C%20Saya%20ingin%20bertanya%20tentang%20pengajuan%20LOA%20saya%20dengan%20nomor%20registrasi%20' . $this->record->id)
                     ->openUrlInNewTab()
                     ->requiresConfirmation()
-                    ->modalHeading('Konfirmasi LOA ke Admin')
+                    ->modalHeading('Troubleshoot Call Center')
                     ->modalDescription('PENTING: Harap pastikan data naskah Anda (Judul, Abstrak, dan Penulis) sudah sesuai dan benar sebelum menghubungi Admin. Jika Anda menggunakan sistem ekstraksi otomatis, pastikan hasil ekstraksi di tabel sudah benar. Jika ada kesalahan, Anda dapat memperbaikinya terlebih dahulu melalui tombol Edit.')
                     ->modalSubmitActionLabel('Lanjutkan ke WhatsApp')
                     ->modalCancelActionLabel('Periksa Kembali'),

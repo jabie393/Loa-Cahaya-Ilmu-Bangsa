@@ -224,3 +224,13 @@ body:has(.custom-auth-wrapper) main {
 .auth-hero-gradient {
     background: var(--auth-hero-gradient);
 }
+
+/* Ensure dropdown panels sit comfortably above the sticky topbar (z-30) */
+.fi-dropdown-panel {
+    z-index: 50 !important;
+}
+
+/* Ensure table container has sufficient height so row action dropdowns do not get clipped by container overflow */
+.fi-ta-content-ctn {
+    min-height: 480px;
+}

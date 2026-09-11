@@ -633,7 +633,9 @@ class PlagiarismCheckResource extends Resource
                     ->label('')
                     ->icon('heroicon-o-eye')
                     ->color('primary')
-                    ->button(),
+                    ->button()
+                    ->dropdownPlacement('bottom-start')
+                    ->dropdownMaxHeight('380px'),
             ], position: RecordActionsPosition::BeforeColumns)
             ->bulkActions([
                 BulkActionGroup::make([
