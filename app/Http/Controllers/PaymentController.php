@@ -489,4 +489,35 @@ class PaymentController extends Controller
         }
     }
 
+    public function simulateBulk(int $paymentId): JsonResponse
+    {
+        $payment = \App\Models\Payment::findOrFail($paymentId);
+
+        $currentUser = Auth::user();
+        if ($payment->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Prohibit in production
+        if (config('services.belibayar.is_production', false) && config('services.midtrans.is_production', false)) {
+            return response()->json(['message' => 'Simulasi hanya diperbolehkan pada mode Sandbox.'], 403);
+        }
+
+        if ($payment->isPaid()) {
+            return response()->json(['message' => 'Pembayaran sudah lunas.'], 400);
+        }
+
+        $this->qrisService->fulfillment()->markAsPaid($payment, 'settlement', [
+            'simulated' => true,
+            'source' => 'sandbox_bulk_button',
+            'simulated_at' => now()->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => 'paid',
+            'message' => 'Pembayaran kolektif berhasil disimulasikan sebagai LUNAS!',
+        ]);
+    }
+
 }

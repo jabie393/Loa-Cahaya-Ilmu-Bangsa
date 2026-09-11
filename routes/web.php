@@ -782,3 +782,4 @@ Route::get('/invoice/bulk/{payment}', function (App\Models\Payment $payment) {
 // Bulk Payment status check
 Route::get('/payments/{paymentId}/check-bulk', [App\Http\Controllers\PaymentController::class, 'checkBulkStatus'])->name('payments.check.bulk');
 Route::post('/payments/{paymentId}/regenerate-bulk', [App\Http\Controllers\PaymentController::class, 'regenerateBulk'])->name('payments.regenerate.bulk');
+Route::post('/payments/{paymentId}/simulate-sandbox-bulk', [App\Http\Controllers\PaymentController::class, 'simulateBulk'])->name('payments.simulate.bulk');

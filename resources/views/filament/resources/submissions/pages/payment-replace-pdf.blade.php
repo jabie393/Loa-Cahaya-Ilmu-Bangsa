@@ -13,6 +13,7 @@
     <div x-data="paymentApp({
             checkUrl: '{{ route('submissions.payment.replace-pdf.check', $record->id) }}',
             regenerateUrl: '{{ route('submissions.payment.replace-pdf.regenerate', $record->id) }}',
+            simulateUrl: '{{ route('submissions.payment.simulate-sandbox', $record->id) }}',
             initialStatus: '{{ $payment && $payment->payment_status === 'paid' ? 'paid' : ($payment ? $payment->payment_status : 'pending') }}',
             initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
             isExtracting: false,
@@ -318,24 +319,35 @@
                                             </svg>
                                             <span>Petunjuk Simulasi Sandbox ({{ $isBelibayar ? 'Belibayar.id' : 'Midtrans' }}):</span>
                                         </div>
-                                        @if(!$isBelibayar)
                                         <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                            @if(!$isBelibayar)
+                                                <button type="button"
+                                                    @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
+                                                    class="px-2.5 py-1 bg-white dark:bg-gray-800 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-semibold rounded-md border border-amber-300 dark:border-amber-700 text-[10px] transition-colors">
+                                                    Salin URL
+                                                </button>
+                                            @endif
                                             <button type="button"
-                                                @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
-                                                class="px-2.5 py-1 bg-white dark:bg-gray-800 hover:bg-amber-100 text-amber-800 dark:text-amber-200 font-semibold rounded-md border border-amber-300 dark:border-amber-700 text-[10px] transition-colors">
-                                                Salin URL
-                                            </button>
-                                            <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
-                                                class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
-                                                <span>Buka Simulator</span>
-                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                @click="simulateSandbox()"
+                                                :disabled="isSimulating"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 shadow-sm disabled:opacity-50">
+                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
-                                            </a>
+                                                <span x-text="isSimulating ? 'Memproses...' : 'Simulasi Bayar Sukses'"></span>
+                                            </button>
+                                            @if(!$isBelibayar)
+                                                <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
+                                                    <span>Buka Simulator</span>
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    </svg>
+                                                </a>
+                                            @endif
                                         </div>
-                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -441,6 +453,7 @@
             return {
                 checkUrl: config.checkUrl,
                 regenerateUrl: config.regenerateUrl,
+                simulateUrl: config.simulateUrl,
                 status: config.initialStatus,
                 expiresAt: config.initialExpiresAt ? new Date(config.initialExpiresAt) : null,
                 isExtracting: config.isExtracting,
@@ -450,6 +463,7 @@
                 isExpired: false,
                 isChecking: false,
                 isRegenerating: false,
+                isSimulating: false,
                 countdownText: '15:00',
                 pollTimer: null,
                 countdownTimer: null,
@@ -465,6 +479,36 @@
                             this.checkStatus(true);
                         }
                     }, 5000);
+                },
+
+                async simulateSandbox() {
+                    if (this.isSimulating) return;
+                    if (!confirm('Simulasikan pembayaran sukses via Sandbox?')) return;
+                    this.isSimulating = true;
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                        const res = await fetch(this.simulateUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            await this.checkStatus(false);
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Gagal simulasi pembayaran.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        alert('Terjadi kesalahan saat memproses simulasi.');
+                    } finally {
+                        this.isSimulating = false;
+                    }
                 },
 
                 updateCountdown() {
