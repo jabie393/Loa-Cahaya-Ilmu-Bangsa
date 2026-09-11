@@ -248,7 +248,8 @@
                                 class="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-800 mb-4 flex flex-col items-center justify-center">
                                 <template x-if="qrisUrl && !errorMessage">
                                     <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                                        <img :src="qrisUrl" alt="QRIS Midtrans"
+                                        <img :src="qrisUrl" alt="QRIS Code"
+                                            @error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
                                             class="w-56 h-56 object-contain rounded-lg">
                                     </div>
                                 </template>

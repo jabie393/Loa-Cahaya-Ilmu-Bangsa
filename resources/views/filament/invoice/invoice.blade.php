@@ -167,7 +167,7 @@
                     <p class="text-slate-700 whitespace-nowrap">
                         <span class="font-semibold text-slate-500">Metode Bayar:</span>
                         <span class="font-semibold text-slate-900 uppercase">
-                            {{ $submissionPayment && $submissionPayment->type === 'bulk_submission' ? 'QRIS Kolektif' : 'QRIS Midtrans Dinamis' }}
+                            {{ $submissionPayment && $submissionPayment->type === 'bulk_submission' ? 'QRIS Kolektif' : ($submissionPayment && $submissionPayment->gateway === 'belibayar' ? 'QRIS Belibayar Dinamis' : 'QRIS Dinamis') }}
                         </span>
                     </p>
                     @if($submissionPayment && $submissionPayment->type === 'bulk_submission')

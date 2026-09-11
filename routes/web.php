@@ -648,6 +648,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/payment', [\App\Http\Controllers\PaymentController::class, 'show'])->name('submissions.payment');
     Route::get('/submissions/{id}/payment/check', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('submissions.payment.check');
     Route::post('/submissions/{id}/payment/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerate'])->name('submissions.payment.regenerate');
+    Route::post('/submissions/{id}/payment/simulate-sandbox', [\App\Http\Controllers\PaymentController::class, 'simulateSandbox'])->name('submissions.payment.simulate-sandbox');
     Route::get('/submissions/{id}/payment-doi', [\App\Http\Controllers\PaymentController::class, 'showDoi'])->name('submissions.payment.doi');
     Route::get('/submissions/{id}/payment-doi/check', [\App\Http\Controllers\PaymentController::class, 'checkDoiStatus'])->name('submissions.payment.doi.check');
     Route::post('/submissions/{id}/payment-doi/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateDoi'])->name('submissions.payment.doi.regenerate');

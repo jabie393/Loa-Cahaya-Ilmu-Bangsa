@@ -152,6 +152,41 @@ class PaymentController extends Controller
     }
 
     /**
+     * Simulate successful payment in Sandbox environment.
+     */
+    public function simulateSandbox(int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Prohibit in production
+        if (config('services.belibayar.is_production', false) && config('services.midtrans.is_production', false)) {
+            return response()->json(['message' => 'Simulasi hanya diperbolehkan pada mode Sandbox.'], 403);
+        }
+
+        $latestPayment = $submission->payments()->where('payment_status', 'pending')->latest()->first();
+        if (!$latestPayment) {
+            return response()->json(['message' => 'Tidak ada transaksi pending yang dapat disimulasikan.'], 400);
+        }
+
+        $this->qrisService->fulfillment()->markAsPaid($latestPayment, 'settlement', [
+            'simulated' => true,
+            'source' => 'sandbox_button',
+            'simulated_at' => now()->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => 'paid',
+            'message' => 'Pembayaran berhasil disimulasikan sebagai LUNAS!',
+        ]);
+    }
+
+    /**
      * Show DOI Add-on payment page.
      */
     public function showDoi(int $id): View

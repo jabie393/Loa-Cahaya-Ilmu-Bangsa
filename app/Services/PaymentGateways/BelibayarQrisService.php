@@ -91,6 +91,39 @@ class BelibayarQrisService implements PaymentGatewayInterface
     }
 
     /**
+     * Check if a given QR URL or SVG string is an empty/dummy stub.
+     * Belibayar Sandbox returns: data:image/svg+xml;base64,PHN2Zy8+ (<svg/>).
+     */
+    public function isDummyQr(?string $qr): bool
+    {
+        if (empty($qr)) {
+            return true;
+        }
+        if (str_starts_with($qr, 'data:image/svg+xml;base64,')) {
+            $decoded = base64_decode(substr($qr, strlen('data:image/svg+xml;base64,')));
+            $cleaned = trim(strtolower($decoded));
+            if ($cleaned === '<svg/>' || $cleaned === '<svg></svg>' || strlen($cleaned) < 20 || !str_contains($cleaned, 'path')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resolve a valid, renderable QR URL or QR content.
+     * If an empty/dummy SVG is received from Sandbox, generate a clean QR code image URL.
+     */
+    public function resolveQrUrl(?string $rawQr, ?string $rawContent, string $fallbackData): string
+    {
+        if (!empty($rawQr) && !$this->isDummyQr($rawQr)) {
+            return $rawQr;
+        }
+
+        $content = !empty($rawContent) ? $rawContent : $fallbackData;
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($content);
+    }
+
+    /**
      * Send signed POST request to Belibayar API.
      */
     protected function postRequest(string $endpoint, array $payload): array
@@ -202,10 +235,10 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
             // If gateway matches and amount matches and not expired
             if ($latestPayment->gateway === 'belibayar' && !$latestPayment->isExpired() && $paymentGross === $currentGross) {
-                if (empty($latestPayment->qris_url)) {
+                if ($this->isDummyQr($latestPayment->qris_url)) {
                     $latestPayment = $this->checkStatus($latestPayment);
                 }
-                if (!empty($latestPayment->qris_url)) {
+                if (!$this->isDummyQr($latestPayment->qris_url)) {
                     return $latestPayment;
                 }
             }
@@ -269,11 +302,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $rawQr = $data['qr_code'] ?? ($data['qr_url'] ?? null);
         $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
-        if (empty($qrUrl) && !empty($qrContent)) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
-        }
+        $qrUrl = $this->resolveQrUrl($rawQr, $qrContent, $orderId);
 
         $expiredAt = !empty($data['expired_at']) ? Carbon::createFromTimestamp($data['expired_at']) : Carbon::createFromTimestamp($expiredTime);
 
@@ -338,10 +369,10 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $latest = $submission->payments()->where('type', 'doi_addon')->latest()->first();
         if ($latest && $latest->payment_status === 'pending') {
             if ($latest->gateway === 'belibayar' && !$latest->isExpired()) {
-                if (empty($latest->qris_url)) {
+                if ($this->isDummyQr($latest->qris_url)) {
                     $latest = $this->checkStatus($latest);
                 }
-                if (!empty($latest->qris_url)) {
+                if (!$this->isDummyQr($latest->qris_url)) {
                     return $latest;
                 }
             }
@@ -406,11 +437,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $rawQr = $data['qr_code'] ?? ($data['qr_url'] ?? null);
         $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
-        if (empty($qrUrl) && !empty($qrContent)) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
-        }
+        $qrUrl = $this->resolveQrUrl($rawQr, $qrContent, $orderId);
 
         $expiredAt = !empty($data['expired_at']) ? Carbon::createFromTimestamp($data['expired_at']) : Carbon::createFromTimestamp($expiredTime);
 
@@ -479,10 +508,10 @@ class BelibayarQrisService implements PaymentGatewayInterface
                     $latest->save();
                 }
 
-                if (empty($latest->qris_url)) {
+                if ($this->isDummyQr($latest->qris_url)) {
                     $latest = $this->checkStatus($latest);
                 }
-                if (!empty($latest->qris_url)) {
+                if (!$this->isDummyQr($latest->qris_url)) {
                     return $latest;
                 }
             }
@@ -547,11 +576,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $rawQr = $data['qr_code'] ?? ($data['qr_url'] ?? null);
         $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
-        if (empty($qrUrl) && !empty($qrContent)) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
-        }
+        $qrUrl = $this->resolveQrUrl($rawQr, $qrContent, $orderId);
 
         $expiredAt = !empty($data['expired_at']) ? Carbon::createFromTimestamp($data['expired_at']) : Carbon::createFromTimestamp($expiredTime);
 
@@ -723,11 +750,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $response = $this->postRequest('/payment/charge', $payload);
         $data = $response['data'] ?? [];
 
-        $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+        $rawQr = $data['qr_code'] ?? ($data['qr_url'] ?? null);
         $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
-        if (empty($qrUrl) && !empty($qrContent)) {
-            $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
-        }
+        $qrUrl = $this->resolveQrUrl($rawQr, $qrContent, $orderId);
 
         $expiredAt = !empty($data['expired_at']) ? Carbon::createFromTimestamp($data['expired_at']) : Carbon::createFromTimestamp($expiredTime);
 
@@ -764,7 +789,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 'payment_id' => $payment->id,
                 'submission_id' => $sub->id,
                 'item_type' => 'publication',
-                'item_name' => 'Naskah #' . $sub->id . ' - ' . ($sub->title ?: 'Artikel') . ' (' . ($sub->journal?->name ?? 'Jurnal') . ')',
+                'item_name' => $pr['tier_name'] . ' - ' . ($sub->journal?->name ?? 'Jurnal CIB'),
                 'original_amount' => $pr['original_amount'] ?? $pr['gross_amount'],
                 'discount_amount' => $pr['discount_amount'] ?? 0,
                 'gross_amount' => $pr['gross_amount'],
@@ -804,13 +829,12 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 $this->fulfillmentService->markAsFailed($payment, $status, $response);
             }
 
-            // If transaction is still pending and QRIS was missing, populate from status response
-            if (empty($payment->qris_url)) {
-                $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+            // If transaction is still pending and QRIS was missing or dummy SVG, heal and populate
+            if ($this->isDummyQr($payment->qris_url)) {
+                $rawQr = $data['qr_code'] ?? ($data['qr_url'] ?? null);
                 $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
-                if (empty($qrUrl) && !empty($qrContent)) {
-                    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
-                }
+                $qrUrl = $this->resolveQrUrl($rawQr, $qrContent, $payment->order_id);
+
                 if (!empty($qrUrl)) {
                     $payment->update([
                         'qris_url' => $qrUrl,
@@ -820,6 +844,15 @@ class BelibayarQrisService implements PaymentGatewayInterface
             }
         } catch (\Exception $e) {
             Log::warning("Belibayar checkStatus failed for {$payment->order_id}: " . $e->getMessage());
+
+            // If API failed or timed out, but local payment record has dummy/missing QR, at least self-heal the QR
+            if ($this->isDummyQr($payment->qris_url)) {
+                $qrUrl = $this->resolveQrUrl(null, $payment->qr_string, $payment->order_id);
+                $payment->update([
+                    'qris_url' => $qrUrl,
+                    'qr_string' => $payment->qr_string ?? $qrUrl,
+                ]);
+            }
         }
 
         return $payment->fresh();
