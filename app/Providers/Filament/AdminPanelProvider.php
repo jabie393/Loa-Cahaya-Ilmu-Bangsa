@@ -83,6 +83,10 @@ class AdminPanelProvider extends PanelProvider
                     ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg'),
             ])
             ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): string => Blade::render('@include("filament.partials.topbar-tutorial-button")'),
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn(): string => Blade::render('
                     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
