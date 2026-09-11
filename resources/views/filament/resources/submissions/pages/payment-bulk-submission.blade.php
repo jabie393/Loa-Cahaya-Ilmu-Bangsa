@@ -284,7 +284,8 @@
                                 </p>
 
                                 @php
-                                    $isBelibayar = ($payment && $payment->gateway === 'belibayar') || (!$payment && config('services.payment_gateway') === 'belibayar');
+                                    $activeGatewayName = app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->getActiveGatewayName();
+                                    $isBelibayar = ($payment && $payment->gateway === 'belibayar') || (!$payment && $activeGatewayName === 'belibayar');
                                     $isSandbox = $isBelibayar ? !config('services.belibayar.is_production', false) : !config('services.midtrans.is_production', false);
                                 @endphp
 

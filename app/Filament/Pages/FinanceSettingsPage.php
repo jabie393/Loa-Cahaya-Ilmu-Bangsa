@@ -47,9 +47,6 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     // Active Tab: 'transactions', 'payouts'
     public string $activeTab = 'transactions';
 
-    // Active Payment Gateway
-    public string $activeGateway = 'midtrans';
-
     // Dev balance tracking
     public float $devTotalEarned = 0;
     public float $devTotalPaid = 0;
@@ -64,28 +61,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
 
     public function mount(): void
     {
-        $this->activeGateway = app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->getActiveGatewayName();
         $this->refreshBalances();
-    }
-
-    public function switchGateway(string $gateway): void
-    {
-        try {
-            app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->setActiveGateway($gateway);
-            $this->activeGateway = $gateway;
-
-            Notification::make()
-                ->title('Platform Pembayaran Berhasil Dialihkan')
-                ->body('Gateway aktif sekarang: ' . ($gateway === 'belibayar' ? 'Belibayar.id' : 'Midtrans'))
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Notification::make()
-                ->title('Gagal Mengalihkan Platform')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
     }
 
     public function refreshBalances(): void
