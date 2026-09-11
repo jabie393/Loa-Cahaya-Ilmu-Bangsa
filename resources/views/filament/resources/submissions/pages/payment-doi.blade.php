@@ -475,6 +475,12 @@
                         } else if (data.status === 'expired' || data.is_expired) {
                             this.isExpired = true;
                             this.status = 'expired';
+                        } else if (data.status === 'pending') {
+                            this.status = 'pending';
+                            this.isExpired = false;
+                            if (data.qris_url && !this.qrisUrl) {
+                                this.qrisUrl = data.qris_url;
+                            }
                         }
                     } catch (e) {
                         console.error('Check status error:', e);

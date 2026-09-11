@@ -480,6 +480,9 @@
                             this.status = 'pending';
                             this.isExpired = false;
                             this.isExtracting = false;
+                            if (data.qris_url && !this.qrisUrl) {
+                                this.qrisUrl = data.qris_url;
+                            }
                         }
                     } catch (e) {
                         console.error('Check status error:', e);

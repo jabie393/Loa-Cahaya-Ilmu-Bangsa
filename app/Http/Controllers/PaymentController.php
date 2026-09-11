@@ -106,6 +106,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'paid_at' => $payment->paid_at ? $payment->paid_at->format('d M Y H:i:s') : null,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
@@ -229,6 +231,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $payment->isPaid() ? 'Pembayaran DOI berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -313,6 +317,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -385,6 +391,8 @@ class PaymentController extends Controller
             'payment_id' => $payment->id,
             'is_paid' => $isPaid,
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $isPaid ? 'Pembayaran kolektif berhasil diverifikasi!' : ($payment->isExpired() ? 'QRIS Kedaluwarsa' : 'Menunggu pembayaran...'),
         ]);
     }

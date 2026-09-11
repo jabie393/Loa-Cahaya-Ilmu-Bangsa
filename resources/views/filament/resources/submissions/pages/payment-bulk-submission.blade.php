@@ -486,6 +486,10 @@
                             if (this.pollTimer) clearInterval(this.pollTimer);
                             if (this.countdownTimer) clearInterval(this.countdownTimer);
                         }
+
+                        if (data.qris_url && !this.qrisUrl) {
+                            this.qrisUrl = data.qris_url;
+                        }
                     } catch (e) {
                         console.error('Check status error:', e);
                     } finally {

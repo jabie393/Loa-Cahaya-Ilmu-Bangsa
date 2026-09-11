@@ -202,11 +202,12 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
             // If gateway matches and amount matches and not expired
             if ($latestPayment->gateway === 'belibayar' && !$latestPayment->isExpired() && $paymentGross === $currentGross) {
-                if (empty($latestPayment->qris_url) && !empty($latestPayment->qr_string)) {
-                    $latestPayment->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latestPayment->qr_string);
-                    $latestPayment->save();
+                if (empty($latestPayment->qris_url)) {
+                    $latestPayment = $this->checkStatus($latestPayment);
                 }
-                return $latestPayment;
+                if (!empty($latestPayment->qris_url)) {
+                    return $latestPayment;
+                }
             }
 
             // Otherwise expire current pending and generate new
@@ -337,11 +338,12 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $latest = $submission->payments()->where('type', 'doi_addon')->latest()->first();
         if ($latest && $latest->payment_status === 'pending') {
             if ($latest->gateway === 'belibayar' && !$latest->isExpired()) {
-                if (empty($latest->qris_url) && !empty($latest->qr_string)) {
-                    $latest->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latest->qr_string);
-                    $latest->save();
+                if (empty($latest->qris_url)) {
+                    $latest = $this->checkStatus($latest);
                 }
-                return $latest;
+                if (!empty($latest->qris_url)) {
+                    return $latest;
+                }
             }
 
             $latest->update([
@@ -477,11 +479,12 @@ class BelibayarQrisService implements PaymentGatewayInterface
                     $latest->save();
                 }
 
-                if (empty($latest->qris_url) && !empty($latest->qr_string)) {
-                    $latest->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latest->qr_string);
-                    $latest->save();
+                if (empty($latest->qris_url)) {
+                    $latest = $this->checkStatus($latest);
                 }
-                return $latest;
+                if (!empty($latest->qris_url)) {
+                    return $latest;
+                }
             }
 
             $latest->update([
@@ -639,8 +642,13 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         if ($pendingPayment) {
             $paymentGross = (int) round($pendingPayment->gross_amount);
-            if ($pendingPayment->gateway === 'belibayar' && $paymentGross === $currentGross) {
-                return $pendingPayment;
+            if ($pendingPayment->gateway === 'belibayar' && !$pendingPayment->isExpired() && $paymentGross === $currentGross) {
+                if (empty($pendingPayment->qris_url)) {
+                    $pendingPayment = $this->checkStatus($pendingPayment);
+                }
+                if (!empty($pendingPayment->qris_url)) {
+                    return $pendingPayment;
+                }
             }
 
             $pendingPayment->update([
@@ -794,6 +802,21 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 $this->fulfillmentService->markAsExpired($payment, $response);
             } elseif (in_array($status, ['cancelled', 'failed', 'rejected'])) {
                 $this->fulfillmentService->markAsFailed($payment, $status, $response);
+            }
+
+            // If transaction is still pending and QRIS was missing, populate from status response
+            if (empty($payment->qris_url)) {
+                $qrUrl = $data['qr_code'] ?? ($data['qr_url'] ?? null);
+                $qrContent = $data['qr_content'] ?? ($data['qr_string'] ?? null);
+                if (empty($qrUrl) && !empty($qrContent)) {
+                    $qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($qrContent);
+                }
+                if (!empty($qrUrl)) {
+                    $payment->update([
+                        'qris_url' => $qrUrl,
+                        'qr_string' => $qrContent ?? $qrUrl,
+                    ]);
+                }
             }
         } catch (\Exception $e) {
             Log::warning("Belibayar checkStatus failed for {$payment->order_id}: " . $e->getMessage());
