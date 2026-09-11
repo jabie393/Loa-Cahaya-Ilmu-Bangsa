@@ -3,11 +3,14 @@
         @php
             $devTotalEarned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
             $devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-            $devUnpaidBalance = max(0, $devTotalEarned - $devTotalPaid);
+            $devTotalCommitted = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+            $devUnpaidBalance = max(0, $devTotalEarned - $devTotalCommitted);
+            $unpaidPayoutCount = \App\Models\DevPayout::where('status', 'waiting_payout')->count();
+            $unpaidPayoutTotal = (float) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
         @endphp
 
-        {{-- DEVELOPER BALANCE CARDS --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {{-- DEVELOPER BALANCE WIDGET CARDS --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold uppercase tracking-wider text-gray-400">Total Hak Dev Terkumpul</span>
@@ -35,6 +38,23 @@
                         Rp {{ number_format($devTotalPaid, 0, ',', '.') }}
                     </div>
                     <span class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1 block">{{ \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->count() }} Kali Pencairan Berhasil</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-900 border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Menunggu Payout</span>
+                    <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                        <x-filament::icon icon="heroicon-o-clock" class="w-5 h-5" />
+                    </span>
+                </div>
+                <div class="mt-3">
+                    <div class="text-2xl font-black font-mono text-amber-600 dark:text-amber-400">
+                        {{ $unpaidPayoutCount }} Tagihan
+                    </div>
+                    <span class="text-xs text-amber-600/80 dark:text-amber-400/80 mt-1 block">
+                        Rp {{ number_format($unpaidPayoutTotal, 0, ',', '.') }} siap dibayar via QRIS
+                    </span>
                 </div>
             </div>
 

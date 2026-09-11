@@ -40,68 +40,35 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
             ->headerActions([
                 Action::make('create_payout')
                     ->visible(fn () => (bool) Auth::user()?->hasRole('super_admin'))
-                    ->label('Bayar Developer (Payout Baru)')
+                    ->label('Buat Payout Manual (Draf)')
                     ->icon('heroicon-o-banknotes')
                     ->color('info')
-                    ->modalHeading('Formulir Transfer / Bayar Developer')
-                    ->modalDescription('Catat pengiriman bagi hasil ke Developer dan kurangi saldo hak dev secara real-time.')
-                    ->modalSubmitActionLabel('Konfirmasi Transfer & Catat Payout')
-                    ->modalWidth('5xl')
+                    ->modalHeading('Buat Draf Payout Developer')
+                    ->modalDescription('Tentukan nominal hak dev yang ingin dicairkan. Status akan menjadi "Menunggu Payout" dan siap dibayar via QRIS.')
+                    ->modalSubmitActionLabel('Buat Draf Payout')
+                    ->modalWidth('lg')
                     ->schema([
-                        Grid::make(12)
-                            ->schema([
-                                // Left Column: Reference No, Proof File, Notes
-                                Group::make([
-                                    TextInput::make('reference_no')
-                                        ->label('Nomor Referensi Mutasi Bank')
-                                        ->placeholder('Contoh: TRF-BCA-98127391 (Opsional)'),
-                                    FileUpload::make('proof_file')
-                                        ->label('Upload Slip Bukti Transfer')
-                                        ->disk('public')
-                                        ->directory('payouts')
-                                        ->image()
-                                        ->maxSize(5120),
-                                    Textarea::make('notes')
-                                        ->label('Catatan Pembayaran Payout')
-                                        ->placeholder('Contoh: Pencairan bagi hasil periode 1-15 September 2026...')
-                                        ->rows(3)
-                                        ->default('Pencairan Hak Developer Periode Berjalan'),
-                                ])
-                                    ->columnSpan([
-                                        'default' => 12,
-                                        'lg' => 6,
-                                    ]),
-
-                                // Right Column: Dynamic QRIS on top, Price Input below it
-                                Group::make([
-                                    Placeholder::make('qris_payment_card')
-                                        ->hiddenLabel()
-                                        ->content(fn($get) => view('filament.pages.settings.partials.developer-qris-card', [
-                                            'amount' => (float) ($get('amount') ?? 0),
-                                        ])),
-                                    TextInput::make('amount')
-                                        ->label('Nominal yang Ditransfer (Rp)')
-                                        ->prefix('Rp')
-                                        ->numeric()
-                                        ->required()
-                                        ->live(debounce: 500)
-                                        ->default(function () {
-                                            $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                            $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-                                            return max(0, $earned - $paid);
-                                        })
-                                        ->helperText(function () {
-                                            $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                            $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-                                            $unpaid = max(0, $earned - $paid);
-                                            return 'Sisa hak Developer yang siap dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
-                                        }),
-                                ])
-                                    ->columnSpan([
-                                        'default' => 12,
-                                        'lg' => 6,
-                                    ]),
-                            ]),
+                        TextInput::make('amount')
+                            ->label('Nominal Pencairan (Rp)')
+                            ->prefix('Rp')
+                            ->numeric()
+                            ->required()
+                            ->default(function () {
+                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                return max(0, $earned - $locked);
+                            })
+                            ->helperText(function () {
+                                $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                $unpaid = max(0, $earned - $locked);
+                                return 'Sisa saldo hak Dev yang belum ditahan/dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
+                            }),
+                        Textarea::make('notes')
+                            ->label('Catatan Payout')
+                            ->placeholder('Contoh: Pencairan bagi hasil manual...')
+                            ->rows(3)
+                            ->default('Pencairan Hak Developer (Manual)'),
                     ])
                     ->action(function (array $data) {
                         $amount = (float) ($data['amount'] ?? 0);
@@ -116,13 +83,13 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         }
 
                         $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                        $paid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-                        $unpaid = max(0, $earned - $paid);
+                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                        $unpaid = max(0, $earned - $locked);
 
                         if ($amount > $unpaid) {
                             Notification::make()
                                 ->title('Nominal Melebihi Sisa Saldo')
-                                ->body('Maksimal pencairan yang dapat ditransfer saat ini adalah Rp ' . number_format($unpaid, 0, ',', '.'))
+                                ->body('Maksimal pencairan yang tersedia saat ini adalah Rp ' . number_format($unpaid, 0, ',', '.'))
                                 ->danger()
                                 ->send();
                             return;
@@ -131,28 +98,24 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         $payoutCount = DevPayout::count() + 1;
                         $payoutNo = 'PO-DEV-' . now()->format('Ym') . '-' . sprintf('%03d', $payoutCount);
 
+                        while (DevPayout::where('payout_no', $payoutNo)->exists()) {
+                            $payoutCount++;
+                            $payoutNo = 'PO-DEV-' . now()->format('Ym') . '-' . sprintf('%03d', $payoutCount);
+                        }
+
                         $payout = DevPayout::create([
                             'payout_no' => $payoutNo,
                             'user_id' => Auth::id(),
                             'amount' => $amount,
-                            'reference_no' => $data['reference_no'] ?: 'REF-' . strtoupper(bin2hex(random_bytes(4))),
-                            'proof_file' => $data['proof_file'] ?? null,
-                            'notes' => $data['notes'] ?? 'Pencairan Hak Developer',
-                            'status' => 'waiting_confirmation',
+                            'notes' => $data['notes'] ?? 'Pencairan Hak Developer (Manual)',
+                            'status' => 'waiting_payout',
                         ]);
-
-                        $remainingBalance = max(0, $unpaid - $amount);
-                        app(TelegramService::class)->sendDevPayoutNotification(
-                            $payout,
-                            $remainingBalance,
-                            Auth::user()?->name ?? 'Admin'
-                        );
 
                         $this->dispatch('payout-created');
 
                         Notification::make()
-                            ->title('Pembayaran Developer Berhasil!')
-                            ->body('Transfer sebesar Rp ' . number_format($amount, 0, ',', '.') . ' telah tercatat ke tabel riwayat pencairan.')
+                            ->title('Draf Payout Dibuat!')
+                            ->body("Payout {$payout->payout_no} sebesar Rp " . number_format($amount, 0, ',', '.') . " berhasil dibuat. Silakan klik 'Bayar via QRIS' pada tabel untuk membayar.")
                             ->success()
                             ->send();
                     }),
@@ -166,11 +129,11 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->label('Waktu Transfer')
+                    ->label('Waktu Dibuat')
                     ->dateTime('d M Y, H:i')
                     ->sortable(),
                 TextColumn::make('amount')
-                    ->label('Nominal Ditransfer')
+                    ->label('Nominal Payout')
                     ->money('IDR')
                     ->weight(FontWeight::Black)
                     ->color('success')
@@ -179,27 +142,24 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->label('No. Referensi')
                     ->fontFamily(FontFamily::Mono)
                     ->searchable()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('notes')
                     ->label('Keterangan')
                     ->limit(40)
                     ->placeholder('-'),
-                TextColumn::make('proof_file')
-                    ->label('Bukti Slip')
-                    ->formatStateUsing(fn ($state) => $state ? 'Lihat Slip' : '-')
-                    ->color('primary')
-                    ->url(fn (DevPayout $record) => $record->proof_file ? Storage::disk('public')->url($record->proof_file) : null)
-                    ->openUrlInNewTab(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'waiting_confirmation' => 'warning',
+                        'waiting_payout' => 'warning',
+                        'waiting_confirmation' => 'info',
                         'confirmed', 'completed' => 'success',
                         'rejected' => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'waiting_payout' => 'Menunggu Payout',
                         'waiting_confirmation' => 'Menunggu Konfirmasi',
                         'confirmed' => 'Dikonfirmasi',
                         'completed' => 'Selesai',
@@ -208,6 +168,48 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     }),
             ])
             ->recordActions([
+                Action::make('pay_with_qris')
+                    ->label('Bayar via QRIS')
+                    ->icon('heroicon-m-qr-code')
+                    ->button()
+                    ->color('success')
+                    ->size('sm')
+                    ->visible(fn (DevPayout $record): bool => 
+                        $record->status === 'waiting_payout' && (bool) Auth::user()?->hasRole('super_admin')
+                    )
+                    ->modalHeading(fn (DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
+                    ->modalDescription('Scan kode QRIS di bawah ini dengan Mobile Banking atau E-Wallet untuk menyelesaikan transfer.')
+                    ->modalSubmitActionLabel('Sudah Bayar via QRIS')
+                    ->modalWidth('lg')
+                    ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
+                        'record' => $record,
+                    ]))
+                    ->action(function (DevPayout $record) {
+                        $refNo = $record->reference_no ?: ('QRIS-' . now()->format('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(2))));
+                        $record->update([
+                            'status' => 'waiting_confirmation',
+                            'reference_no' => $refNo,
+                        ]);
+
+                        $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                        $remainingBalance = max(0, $earned - $locked);
+
+                        app(TelegramService::class)->sendDevPayoutNotification(
+                            $record,
+                            $remainingBalance,
+                            Auth::user()?->name ?? 'Admin'
+                        );
+
+                        $this->dispatch('payout-created');
+
+                        Notification::make()
+                            ->title('Pembayaran QRIS Berhasil!')
+                            ->body("Status payout {$record->payout_no} kini 'Menunggu Konfirmasi'. Notifikasi telah dikirim ke Developer.")
+                            ->success()
+                            ->send();
+                    }),
+
                 ActionGroup::make([
                     Action::make('confirm_receipt')
                         ->label('Konfirmasi Diterima')
@@ -274,6 +276,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->modalCancelActionLabel('Tutup'),
                 ]),
             ]);
+
     }
 
     public function render()
