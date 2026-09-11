@@ -21,3 +21,7 @@ Schedule::command('quota:reset')
 Schedule::command('chatbot:cleanup')
     ->hourly();
 
+// Automatically generate daily developer payout draft if balance > 0
+Schedule::command('dev-payout:daily')
+    ->dailyAt('17:00');
+

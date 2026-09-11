@@ -33,8 +33,8 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     public static function getNavigationBadge(): ?string
     {
         $devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
-        $devTotalPaid = (float) DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-        $devUnpaidBalance = max(0, $devTotalEarned - $devTotalPaid);
+        $devTotalCommitted = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $devUnpaidBalance = max(0, $devTotalEarned - $devTotalCommitted);
 
         return $devUnpaidBalance > 0 ? '💸' : null;
     }
@@ -54,6 +54,8 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     public float $devTotalEarned = 0;
     public float $devTotalPaid = 0;
     public float $devUnpaidBalance = 0;
+    public int $unpaidPayoutCount = 0;
+    public float $unpaidPayoutTotal = 0;
 
     public static function canAccess(): bool
     {
@@ -90,7 +92,10 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     {
         $this->devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
         $this->devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-        $this->devUnpaidBalance = max(0, $this->devTotalEarned - $this->devTotalPaid);
+        $devTotalCommitted = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
+        $this->unpaidPayoutCount = \App\Models\DevPayout::where('status', 'waiting_payout')->count();
+        $this->unpaidPayoutTotal = (float) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
     }
 
     #[\Livewire\Attributes\On('payout-created')]
