@@ -13,7 +13,7 @@ class DevSettingsPage extends Page
     protected static ?string $navigationLabel = 'Setting';
     protected static ?string $title = 'Setting Gateway Pembayaran & Developer';
     protected static ?string $slug = 'dev-settings';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 99;
 
     protected string $view = 'filament.pages.dev-settings-page';
 

@@ -191,7 +191,7 @@
                         </span>
                         <span class="text-[10px] text-gray-400 uppercase font-mono">POST</span>
                     </div>
-                    @php $belibayarWebhook = route('payment.belibayar.callback'); @endphp
+                    @php $belibayarWebhook = route('belibayar.webhook'); @endphp
                     <div class="flex items-center gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-mono text-gray-800 dark:text-gray-200">
                         <span class="truncate flex-1">{{ $belibayarWebhook }}</span>
                         <button type="button" 
@@ -214,7 +214,7 @@
                         </span>
                         <span class="text-[10px] text-gray-400 uppercase font-mono">POST</span>
                     </div>
-                    @php $midtransWebhook = route('payment.midtrans.notification'); @endphp
+                    @php $midtransWebhook = route('midtrans.webhook'); @endphp
                     <div class="flex items-center gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-xs font-mono text-gray-800 dark:text-gray-200">
                         <span class="truncate flex-1">{{ $midtransWebhook }}</span>
                         <button type="button" 

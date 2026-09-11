@@ -659,10 +659,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::post('/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
-Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle']);
+Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('payment.midtrans.notification');
 
 Route::post('/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle'])->name('belibayar.webhook');
-Route::post('/api/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle']);
+Route::post('/api/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle'])->name('payment.belibayar.callback');
 
 
 Route::get('/invoice/preview/{record}', function (App\Models\Submission $record) {
