@@ -39,11 +39,20 @@ return [
         'driver' => env('AI_REVIEW_DRIVER', 'gemini'),
     ],
 
-        'midtrans' => [
+    'midtrans' => [
         'server_key' => env('MIDTRANS_SERVER_KEY'),
         'client_key' => env('MIDTRANS_CLIENT_KEY'),
         'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
     ],
+
+    'belibayar' => [
+        'api_key' => env('BELIBAYAR_API_KEY'),
+        'secret_key' => env('BELIBAYAR_SECRET_KEY'),
+        'webhook_secret' => env('BELIBAYAR_WEBHOOK_SECRET'),
+        'is_production' => (bool) env('BELIBAYAR_IS_PRODUCTION', false),
+    ],
+
+    'payment_gateway' => env('ACTIVE_PAYMENT_GATEWAY', 'midtrans'),
 
     'repo_url' => env('REPO_URL', env('DOI_URL', env('REPOSITORY_URL', 'http://127.0.0.1:8001'))),
 

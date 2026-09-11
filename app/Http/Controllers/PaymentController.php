@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,10 +12,10 @@ use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    protected MidtransQrisService $qrisService;
+    protected PaymentGatewayManager $qrisService;
     protected SubmissionPricingService $pricingService;
 
-    public function __construct(MidtransQrisService $qrisService, SubmissionPricingService $pricingService)
+    public function __construct(PaymentGatewayManager $qrisService, SubmissionPricingService $pricingService)
     {
         $this->qrisService = $qrisService;
         $this->pricingService = $pricingService;

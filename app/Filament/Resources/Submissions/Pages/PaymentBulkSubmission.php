@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Submissions\Pages;
 use App\Filament\Resources\Submissions\SubmissionResource;
 use App\Models\Payment;
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Filament\Resources\Pages\Page;
 use Illuminate\Support\Collection;
@@ -23,7 +23,7 @@ class PaymentBulkSubmission extends Page
     public array $itemsPricing = [];
     public array $selectedIds = [];
 
-    public function mount(MidtransQrisService $qrisService, SubmissionPricingService $pricingService): void
+    public function mount(PaymentGatewayManager $qrisService, SubmissionPricingService $pricingService): void
     {
         $idsParam = request()->query('records');
 

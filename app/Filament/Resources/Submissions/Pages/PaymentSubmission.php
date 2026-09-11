@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Submissions\Pages;
 use App\Filament\Resources\Submissions\SubmissionResource;
 use App\Models\Payment;
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -62,7 +62,7 @@ class PaymentSubmission extends Page
 
         if (!$this->isExtracting) {
             $pricingService = app(SubmissionPricingService::class);
-            $qrisService = app(MidtransQrisService::class);
+            $qrisService = app(PaymentGatewayManager::class);
 
             $this->pricing = $pricingService->calculate($this->record);
 

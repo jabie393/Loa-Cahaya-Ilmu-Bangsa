@@ -660,6 +660,9 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
 Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle']);
 
+Route::post('/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle'])->name('belibayar.webhook');
+Route::post('/api/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle']);
+
 
 Route::get('/invoice/preview/{record}', function (App\Models\Submission $record) {
     // 1. Get direct paid payments (e.g. single submission or DOI addon)

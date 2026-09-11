@@ -12,13 +12,25 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class MidtransQrisService
+use App\Services\PaymentGateways\PaymentFulfillmentService;
+use App\Services\PaymentGateways\PaymentGatewayInterface;
+
+class MidtransQrisService implements PaymentGatewayInterface
 {
     protected SubmissionPricingService $pricingService;
+    protected PaymentFulfillmentService $fulfillmentService;
 
-    public function __construct(SubmissionPricingService $pricingService)
-    {
+    public function __construct(
+        SubmissionPricingService $pricingService,
+        ?PaymentFulfillmentService $fulfillmentService = null
+    ) {
         $this->pricingService = $pricingService;
+        $this->fulfillmentService = $fulfillmentService ?? app(PaymentFulfillmentService::class);
+    }
+
+    public function getGatewayName(): string
+    {
+        return 'midtrans';
     }
 
     public function getServerKey(): string
@@ -219,6 +231,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'submission',
             'payer_name' => $customerName,
@@ -283,54 +296,11 @@ class MidtransQrisService
                 $transStatus = $data['transaction_status'] ?? null;
 
                 if (in_array($transStatus, ['capture', 'settlement'])) {
-                    $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
-                    $mergedRaw = array_merge($existingRaw, $data);
-                    if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
-                        $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
-                    }
-
-                    $payment->update([
-                        'payment_status' => 'paid',
-                        'transaction_status' => $transStatus,
-                        'paid_at' => now(),
-                        'raw_response' => $mergedRaw,
-                    ]);
-
-                    $payment->ensureInvoiceNumber();
-
-                    if ($payment->type === 'bulk_submission') {
-                        $submissions = !empty($payment->submission_ids)
-                            ? Submission::whereIn('id', $payment->submission_ids)->get()
-                            : ($payment->submission ? collect([$payment->submission]) : collect());
-
-                        foreach ($submissions as $sub) {
-                            $sub->update(['payment_status' => 'paid']);
-                            $sub->approveAndProcess();
-                        }
-                    } elseif ($payment->type === 'doi_addon') {
-                        if ($payment->submission) {
-                            $this->activateDoiForSubmission($payment->submission);
-                        }
-                    } elseif ($payment->type === 'replace_pdf') {
-                        if ($payment->submission) {
-                            $this->applyReplacePdfForSubmission($payment->submission, $payment);
-                        }
-                    } else {
-                        if ($payment->submission) {
-                            $payment->submission->update(['payment_status' => 'paid']);
-                            $payment->submission->approveAndProcess();
-                        }
-                    }
+                    $this->fulfillmentService->markAsPaid($payment, $transStatus, $data);
                 } elseif ($transStatus === 'expire') {
-                    $payment->update([
-                        'payment_status' => 'expired',
-                        'transaction_status' => 'expire',
-                    ]);
+                    $this->fulfillmentService->markAsExpired($payment, $data);
                 } elseif (in_array($transStatus, ['deny', 'cancel'])) {
-                    $payment->update([
-                        'payment_status' => 'failed',
-                        'transaction_status' => $transStatus,
-                    ]);
+                    $this->fulfillmentService->markAsFailed($payment, $transStatus, $data);
                 }
             }
         } catch (\Exception $e) {
@@ -338,6 +308,33 @@ class MidtransQrisService
         }
 
         return $payment->fresh();
+    }
+
+    public function checkStatus(Payment $payment): Payment
+    {
+        return $this->checkStatusFromMidtrans($payment);
+    }
+
+    public function cancelPayment(Payment $payment): bool
+    {
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => $authHeader,
+            ])->timeout(10)->post($this->getBaseUrl() . '/v2/' . $payment->order_id . '/cancel');
+
+            if ($response->successful()) {
+                $this->fulfillmentService->markAsFailed($payment, 'cancel', $response->json() ?? []);
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Midtrans cancelPayment failed for {$payment->order_id}: " . $e->getMessage());
+        }
+
+        return false;
     }
 
     /**
@@ -411,6 +408,27 @@ class MidtransQrisService
                 return $latestDoi;
             }
         }
+
+        return $this->chargeDoiAddonQris($submission);
+    }
+
+    public function chargeDoiQris(Submission $submission): Payment
+    {
+        return $this->chargeDoiAddonQris($submission);
+    }
+
+    public function forceNewDoiPayment(Submission $submission): Payment
+    {
+        $paidDoi = $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'paid')->first();
+        if ($paidDoi) {
+            $paidDoi->ensureInvoiceNumber();
+            return $paidDoi;
+        }
+
+        $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'pending')->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
 
         return $this->chargeDoiAddonQris($submission);
     }
@@ -497,6 +515,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'doi_addon',
             'payer_name' => $customerName,
@@ -608,6 +627,16 @@ class MidtransQrisService
         return $this->chargeReplacePdfQris($submission, $tempFilePath ?: '');
     }
 
+    public function forceNewReplacePdfPayment(Submission $submission, string $tempFilePath = ''): Payment
+    {
+        $submission->payments()->where('type', 'replace_pdf')->where('payment_status', 'pending')->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
+
+        return $this->chargeReplacePdfQris($submission, $tempFilePath);
+    }
+
     /**
      * Charge QRIS for Replace PDF Service (Rp 25,000).
      */
@@ -697,6 +726,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'replace_pdf',
             'payer_name' => $customerName,
@@ -858,6 +888,11 @@ class MidtransQrisService
         return $this->chargeBulkQris($submissions);
     }
 
+    public function forceNewBulkPayment($submissions): Payment
+    {
+        return $this->chargeBulkQris($submissions);
+    }
+
     /**
      * Create bulk QRIS transaction for multiple submissions.
      */
@@ -944,6 +979,7 @@ class MidtransQrisService
             'submission_ids' => $submissionIds,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'bulk_submission',
             'payer_name' => $payerName,

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('invoice_number')->nullable()->unique();
             $table->string('order_id')->unique();
             $table->string('transaction_id')->nullable()->index();
+            $table->string('gateway')->default('midtrans')->index();
             $table->string('payment_method')->default('qris');
             $table->string('type')->default('submission')->index(); // 'submission', 'doi_addon', 'bulk_submission'
             $table->string('payer_name')->nullable();
