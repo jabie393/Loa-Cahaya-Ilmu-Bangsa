@@ -186,6 +186,11 @@
                     </div>
 
                     <!-- Pricing Breakdown Card -->
+                    @php
+                        $hasPricing = !empty($pricing) && is_array($pricing);
+                        $grossTotal = $hasPricing ? ($pricing['gross_amount'] ?? 0) : ($payment->gross_amount ?? 0);
+                        $tierName = $hasPricing ? ($pricing['tier_name'] ?? 'Standar') : 'Standar Publikasi';
+                    @endphp
                     <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
                             <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -197,11 +202,11 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between items-center text-slate-600">
                                 <span>Paket / Kategori:</span>
-                                <span class="font-semibold text-slate-800">{{ $pricing['tier_name'] ?? 'Standar' }}</span>
+                                <span class="font-semibold text-slate-800">{{ $tierName }}</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-600">
                                 <span>Biaya Layanan:</span>
-                                <span class="font-semibold text-slate-800">Rp {{ number_format($pricing['gross_amount'] ?? 0, 0, ',', '.') }}</span>
+                                <span class="font-semibold text-slate-800">Rp {{ number_format($grossTotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-600 text-xs">
                                 <span>Biaya Transaksi (MDR QRIS):</span>
@@ -210,7 +215,7 @@
                             <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
                                 <span class="text-base font-bold text-slate-900">Total Pembayaran:</span>
                                 <span class="text-2xl font-black text-blue-600">
-                                    Rp {{ number_format($pricing['gross_amount'] ?? 0, 0, ',', '.') }}
+                                    Rp {{ number_format($grossTotal, 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>

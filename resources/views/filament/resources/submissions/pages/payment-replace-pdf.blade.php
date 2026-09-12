@@ -354,6 +354,12 @@
                             </div>
 
                             <!-- Integrated Pricing Breakdown under QRIS -->
+                            @php
+                                $hasPricing = !empty($pricing) && is_array($pricing);
+                                $origAmount = $hasPricing ? ($pricing['original_amount'] ?? 25000) : 25000;
+                                $grossAmount = $hasPricing ? ($pricing['gross_amount'] ?? 25000) : ($payment->gross_amount ?? 25000);
+                                $discountAmount = $hasPricing ? ($pricing['discount_amount'] ?? 0) : 0;
+                            @endphp
                             <div
                                 class="bg-gray-50 dark:bg-gray-800/60 p-4 rounded-xl border border-gray-200 dark:border-gray-700/60 text-left mb-4">
                                 <div class="space-y-2 text-xs">
@@ -365,16 +371,16 @@
                                     <div class="flex justify-between items-center text-gray-500 dark:text-gray-400">
                                         <span>Biaya Layanan:</span>
                                         <span class="font-semibold text-gray-800 dark:text-gray-200">Rp
-                                            {{ number_format(($pricing['original_amount'] ?? 25000), 0, ',', '.') }}</span>
+                                            {{ number_format($origAmount, 0, ',', '.') }}</span>
                                     </div>
-                                    @if(!empty($pricing['discount_amount']) && $pricing['discount_amount'] > 0)
+                                    @if($discountAmount > 0)
                                         <div
                                             class="flex justify-between items-center text-blue-600 dark:text-blue-400 font-medium">
                                             <span class="flex items-center gap-1.5">
                                                 <span>Potongan Member CIB:</span>
                                             </span>
                                             <span class="font-bold">-Rp
-                                                {{ number_format($pricing['discount_amount'], 0, ',', '.') }}</span>
+                                                {{ number_format($discountAmount, 0, ',', '.') }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -383,7 +389,7 @@
                                     <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Total
                                         Tagihan:</span>
                                     <span class="text-xl font-black text-blue-600 dark:text-blue-400">
-                                        Rp {{ number_format($pricing['gross_amount'] ?? 25000, 0, ',', '.') }}
+                                        Rp {{ number_format($grossAmount, 0, ',', '.') }}
                                     </span>
                                 </div>
                             </div>

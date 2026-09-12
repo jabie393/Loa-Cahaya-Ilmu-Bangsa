@@ -50,11 +50,15 @@ class PaymentSubmission extends Page
         $this->record->refresh();
         $this->isExtracting = ($this->record->review_status === 'processing');
 
-        if (!$this->isExtracting) {
-            $pricingService = app(SubmissionPricingService::class);
-            $qrisService = app(PaymentGatewayManager::class);
+        $pricingService = app(SubmissionPricingService::class);
+        try {
+            $this->pricing = $pricingService->calculate($this->record, Auth::user());
+        } catch (\Throwable $e) {
+            $this->pricing = null;
+        }
 
-            $this->pricing = $pricingService->calculate($this->record);
+        if (!$this->isExtracting) {
+            $qrisService = app(PaymentGatewayManager::class);
 
             try {
                 $this->payment = $qrisService->getOrCreatePayment($this->record);
