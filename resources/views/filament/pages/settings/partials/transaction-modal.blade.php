@@ -46,65 +46,62 @@
     };
 @endphp
 
-<div class="space-y-4 sm:space-y-5 max-h-[76vh] sm:max-h-[82vh] overflow-y-auto custom-scrollbar pr-1 -mr-1">
-    {{-- TOP DARK NAVY CARD (FULL WIDTH) --}}
-    <div class="bg-[#0f1d4a] text-white rounded-2xl p-4 sm:p-5 shadow-md relative overflow-hidden">
-        {{-- TOP ROW: LABEL & STATUS BADGE --}}
-        <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-blue-200/70">
-                Order ID {{ $gatewayLabel }}
-            </span>
-            <span class="px-3.5 py-1 rounded-full text-[11px] font-bold font-mono tracking-wider {{ $isPaid ? 'bg-[#09262b] border border-emerald-500/40 text-emerald-400' : 'bg-amber-950/80 border border-amber-500/40 text-amber-400' }}">
-                {{ strtoupper($record->payment_status ?: 'PAID') }}
-            </span>
-        </div>
-
-        {{-- ORDER ID --}}
-        <div class="mt-2 mb-3.5 sm:mb-4">
-            <div class="font-mono font-extrabold text-lg sm:text-xl md:text-2xl text-white tracking-wide break-all">
-                {{ $record->order_id }}
-            </div>
-        </div>
-
-        {{-- BOTTOM ROW: WAKTU BAYAR & TIPE TRANSAKSI --}}
-        <div class="grid grid-cols-2 pt-2 border-t border-blue-900/60">
-            <div class="pr-4">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-200/60 block">
-                    Waktu Bayar
-                </span>
-                <div class="text-sm font-semibold font-mono text-white mt-1">
-                    {{ $paidAt }}
+<div class="space-y-3.5 sm:space-y-4 max-h-[78vh] overflow-y-auto custom-scrollbar pr-0.5">
+    {{-- TOP DARK NAVY CARD (COMPACT & SLEEK BANNER) --}}
+    <div class="bg-gradient-to-r from-[#0d183f] via-[#0f1d4a] to-[#12245c] text-white rounded-2xl p-3.5 sm:p-4 shadow-md relative overflow-hidden border border-blue-900/40">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-200/70">
+                        Order ID {{ $gatewayLabel }}
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider {{ $isPaid ? 'bg-[#09262b] border border-emerald-500/40 text-emerald-400' : 'bg-amber-950/80 border border-amber-500/40 text-amber-400' }}">
+                        {{ strtoupper($record->payment_status ?: 'PAID') }}
+                    </span>
+                </div>
+                <div class="font-mono font-extrabold text-base sm:text-lg text-white tracking-wide break-all">
+                    {{ $record->order_id }}
                 </div>
             </div>
 
-            <div class="border-l border-blue-800/60 pl-6">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-blue-200/60 block">
-                    Tipe Transaksi
-                </span>
-                <div class="text-sm font-semibold text-white mt-1">
-                    {{ $transType }}
+            <div class="flex items-center gap-4 sm:gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-blue-900/60 shrink-0 text-left sm:text-right">
+                <div>
+                    <span class="text-[9.5px] font-bold uppercase tracking-wider text-blue-200/60 block">
+                        Waktu Bayar
+                    </span>
+                    <div class="text-xs sm:text-sm font-semibold font-mono text-white mt-0.5">
+                        {{ $paidAt }}
+                    </div>
+                </div>
+                <div class="border-l border-blue-800/60 pl-4 sm:pl-6">
+                    <span class="text-[9.5px] font-bold uppercase tracking-wider text-blue-200/60 block">
+                        Tipe Transaksi
+                    </span>
+                    <div class="text-xs sm:text-sm font-semibold text-white mt-0.5">
+                        {{ $transType }}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- TWO COLUMN LAYOUT --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 items-start">
         {{-- LEFT COLUMN (7 COLS): DAFTAR NASKAH (SUPPORTS MULTI-ITEM) --}}
-        <div class="lg:col-span-7 space-y-3">
+        <div class="lg:col-span-7 space-y-2.5">
             <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <span class="text-[10.5px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Daftar Naskah ({{ $itemCount }} {{ $itemCount > 1 ? 'Items' : 'Item' }})
                 </span>
                 @if($itemCount > 1)
-                    <span class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 px-2 py-0.5 rounded-full">
+                    <span class="text-[9.5px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900 px-2 py-0.5 rounded-full">
                         Transaksi Kolektif
                     </span>
                 @endif
             </div>
 
             {{-- SCROLLABLE ITEMS LIST --}}
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-3 sm:p-4 divide-y divide-gray-100 dark:divide-gray-800 max-h-[220px] sm:max-h-[280px] md:max-h-[320px] overflow-y-auto custom-scrollbar space-y-1">
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-3 divide-y divide-gray-100 dark:divide-gray-800 max-h-[200px] sm:max-h-[240px] overflow-y-auto custom-scrollbar space-y-1">
                 @if($hasItems)
                     @foreach($record->items as $idx => $item)
                         @php
@@ -129,20 +126,20 @@
                                 }
                             }
                         @endphp
-                        <div class="py-3 first:pt-1 last:pb-1 flex justify-between items-start gap-4">
-                            <div class="space-y-1.5 min-w-0 flex-1">
+                        <div class="py-2 first:pt-0.5 last:pb-0.5 flex justify-between items-start gap-3">
+                            <div class="space-y-1 min-w-0 flex-1">
                                 {{-- ITEM TYPE & DOI REQUEST BADGE --}}
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-bold text-gray-900 dark:text-white text-sm">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
                                         {{ $itemType }}
                                     </span>
                                     @if($wantsDoi)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                                             <x-filament::icon icon="heroicon-m-check-badge" class="w-3 h-3 text-blue-600 dark:text-blue-400" />
                                             Request DOI
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-medium bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
                                             Tanpa DOI
                                         </span>
                                     @endif
@@ -164,13 +161,13 @@
                                 </div>
 
                                 {{-- JOURNAL & AUTHOR --}}
-                                <div class="text-xs text-gray-400 dark:text-gray-500 flex items-center flex-wrap gap-1">
+                                <div class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center flex-wrap gap-1">
                                     <span class="font-medium text-gray-600 dark:text-gray-300">{{ $sub?->journal?->name ?? 'Jurnal CIB' }}</span>
                                     <span>·</span>
                                     <span>{{ $sub?->author_name ?: $payerName }}</span>
                                 </div>
                             </div>
-                            <div class="font-mono font-bold text-gray-900 dark:text-white text-sm shrink-0 text-right">
+                            <div class="font-mono font-bold text-gray-900 dark:text-white text-xs sm:text-sm shrink-0 text-right">
                                 Rp {{ number_format($item->gross_amount, 0, ',', '.') }}
                             </div>
                         </div>
@@ -198,20 +195,20 @@
                             }
                         }
                     @endphp
-                    <div class="py-2 flex justify-between items-start gap-4">
-                        <div class="space-y-1.5 min-w-0 flex-1">
+                    <div class="py-1.5 flex justify-between items-start gap-3">
+                        <div class="space-y-1 min-w-0 flex-1">
                             {{-- ITEM TYPE & DOI REQUEST BADGE --}}
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-bold text-gray-900 dark:text-white text-sm">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
                                     {{ $itemType }}
                                 </span>
                                 @if($wantsDoi)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                                         <x-filament::icon icon="heroicon-m-check-badge" class="w-3 h-3 text-blue-600 dark:text-blue-400" />
                                         Request DOI
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-medium bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
                                         Tanpa DOI
                                     </span>
                                 @endif
@@ -232,90 +229,86 @@
                             </div>
 
                             {{-- JOURNAL & AUTHOR --}}
-                            <div class="text-xs text-gray-400 dark:text-gray-500 flex items-center flex-wrap gap-1">
+                            <div class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center flex-wrap gap-1">
                                 <span class="font-medium text-gray-600 dark:text-gray-300">{{ $sub?->journal?->name ?? 'Jurnal CIB' }}</span>
                                 <span>·</span>
                                 <span>{{ $sub?->author_name ?: $payerName }}</span>
                             </div>
                         </div>
-                        <div class="font-mono font-bold text-gray-900 dark:text-white text-sm shrink-0 text-right">
+                        <div class="font-mono font-bold text-gray-900 dark:text-white text-xs sm:text-sm shrink-0 text-right">
                             Rp {{ number_format($record->gross_amount, 0, ',', '.') }}
                         </div>
                     </div>
                 @endif
             </div>
 
-            <div class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center justify-between px-1 pt-1">
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 flex items-center justify-between px-1">
                 <span>Dihitung otomatis oleh sistem settlement</span>
                 <span class="font-mono font-semibold text-gray-500">{{ $itemCount }} Naskah</span>
             </div>
         </div>
 
         {{-- RIGHT COLUMN (5 COLS): INFORMASI PEMBAYAR & PEMBAGIAN HASIL --}}
-        <div class="lg:col-span-5 space-y-4">
+        <div class="lg:col-span-5 space-y-2.5">
             {{-- INFORMASI PEMBAYAR --}}
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 space-y-3">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 block">
-                    Informasi Pembayar
-                </span>
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-3 sm:p-3.5 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 block">
+                        Informasi Pembayar
+                    </span>
+                    <span class="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400">
+                        {{ $invoiceNo }}
+                    </span>
+                </div>
 
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold text-sm flex items-center justify-center shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
                         {{ $initials }}
                     </div>
                     <div class="min-w-0 flex-1">
-                        <div class="font-bold text-gray-900 dark:text-white text-sm truncate">
+                        <div class="font-bold text-gray-900 dark:text-white text-xs truncate">
                             {{ $payerName }}
                         </div>
-                        <div class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                        <div class="text-[10.5px] text-gray-400 dark:text-gray-500 truncate">
                             {{ $payerEmail }}
                         </div>
                     </div>
                 </div>
-
-                <div class="pt-3 border-t border-dashed border-gray-200 dark:border-gray-800 flex justify-between items-center text-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                        No. Invoice
-                    </span>
-                    <span class="font-mono font-bold text-xs text-blue-600 dark:text-blue-400">
-                        {{ $invoiceNo }}
-                    </span>
-                </div>
             </div>
 
             {{-- PEMBAGIAN HASIL (SETTLEMENT) --}}
-            <div class="bg-[#f4f7fb] dark:bg-gray-800/70 border border-slate-200/80 dark:border-gray-700 rounded-2xl p-4 sm:p-4.5">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-3">
+            <div class="bg-[#f4f7fb] dark:bg-gray-800/70 border border-slate-200/80 dark:border-gray-700 rounded-2xl p-3 sm:p-3.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
                     Pembagian Hasil (Settlement)
                 </span>
 
-                <div class="space-y-2.5">
+                <div class="space-y-1.5">
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-600 dark:text-slate-300">Total Kotor (Gross)</span>
-                        <span class="font-mono font-bold text-gray-900 dark:text-white text-sm">
+                        <span class="font-mono font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
                             Rp {{ number_format($record->gross_amount, 0, ',', '.') }}
                         </span>
                     </div>
 
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-600 dark:text-slate-300">MDR QRIS (0,7%)</span>
-                        <span class="font-mono font-bold text-amber-600 dark:text-amber-400 text-sm">
+                        <span class="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
                             - Rp {{ number_format($record->mdr_amount, 0, ',', '.') }}
                         </span>
                     </div>
 
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-600 dark:text-slate-300">Dev</span>
-                        <span class="font-mono font-bold text-blue-500 dark:text-blue-400 text-sm">
+                        <span class="font-mono font-bold text-blue-500 dark:text-blue-400 text-xs sm:text-sm">
                             - Rp {{ number_format($record->developer_net_share, 0, ',', '.') }}
                         </span>
                     </div>
 
-                    <div class="border-t border-slate-200 dark:border-gray-700 my-1.5 pt-1.5"></div>
+                    <div class="border-t border-slate-200 dark:border-gray-700 my-1 pt-1"></div>
 
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-gray-900 dark:text-white text-sm">Admin</span>
-                        <span class="font-mono font-black text-blue-600 dark:text-blue-400 text-base sm:text-lg">
+                        <span class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Admin</span>
+                        <span class="font-mono font-black text-blue-600 dark:text-blue-400 text-sm sm:text-base">
                             Rp {{ number_format($record->journal_share, 0, ',', '.') }}
                         </span>
                     </div>
