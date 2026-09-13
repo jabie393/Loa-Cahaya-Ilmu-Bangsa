@@ -19,6 +19,11 @@ class DevSettingsPage extends Page
 
     public string $activeGateway = 'midtrans';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function canAccess(): bool
     {
         return Auth::user()?->hasAnyRole(['ryu_dev', 'dev', 'developer']) ?? false;

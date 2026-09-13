@@ -41,7 +41,7 @@ class SubmissionPricingsTable
                     ->label('Biaya / Tarif')
                     ->formatStateUsing(function ($state, SubmissionPricing $record): string {
                         if ($record->key === 'setting_mdr_rate') {
-                            return ($state * 100) . '%';
+                            return (round((float) $state * 100, 2)) . '%';
                         }
                         return 'Rp ' . number_format($state, 0, ',', '.');
                     })
