@@ -336,7 +336,7 @@ class SubmissionsTable
             ->recordActions([
                 ActionGroup::make([
                     Action::make('bayar')
-                        ->label('Bayar QRIS')
+                        ->label('Proceed to Payment')
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
@@ -349,7 +349,7 @@ class SubmissionsTable
                         ->visible(fn(Submission $record) => $record->review_status === 'failed' && $record->status !== 'Approved')
                         ->action(fn(Submission $record) => $record->processReviewInBackground()),
                     Action::make('tambah_doi')
-                        ->label('Tambah DOI')
+                        ->label('Add DOI')
                         ->icon('heroicon-o-plus-circle')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment.doi', ['record' => $record]))
@@ -428,7 +428,7 @@ class SubmissionsTable
                             }
                         }),
                     Action::make('replace_pdf')
-                        ->label('Ganti PDF')
+                        ->label('Replace PDF')
                         ->color('primary')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->url(fn(Submission $record) => SubmissionResource::getUrl('replace_pdf', ['record' => $record]))
@@ -533,7 +533,7 @@ class SubmissionsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('bulk_pay_qris')
-                        ->label('Bayar QRIS Terpilih')
+                        ->label('Proceed to Payment (Selected)')
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->action(function (Collection $records) {

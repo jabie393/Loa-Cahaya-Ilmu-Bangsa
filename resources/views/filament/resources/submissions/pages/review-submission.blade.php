@@ -90,7 +90,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <p class="text-amber-900 dark:text-amber-100 text-sm font-medium">Silakan selesaikan pembayaran QRIS.
+                    <p class="text-amber-900 dark:text-amber-100 text-sm font-medium">Silakan selesaikan pembayaran.
                     </p>
                 </div>
                 @if (!in_array($record->review_status, ['processing', 'failed']))
@@ -100,7 +100,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                         </svg>
-                        Bayar QRIS
+                        Proceed to Payment
                     </a>
                 @endif
             </div>

@@ -205,7 +205,7 @@ class CreateSubmission extends CreateRecord
                             ->placeholder('email@example.com'),
 
                         Checkbox::make('agreement')
-                            ->label('LoA Berlaku Jika Dilengkapi Bukti Pembayaran dan Link Terbitan, Dengan ini saya bersedia naskah saya ditarik apabila dikemudian hari terdapat kecurangan dalam pengerjaannya')
+                            ->label('LoA berlaku jika dilengkapi link dan PDF terbitan resmi. Dengan ini saya bersedia naskah saya ditarik apabila di kemudian hari terdapat kecurangan atau pelanggaran etika publikasi.')
                             ->accepted()
                             ->dehydrated(false)
                             ->required(),
@@ -263,7 +263,7 @@ class CreateSubmission extends CreateRecord
             ->info()
             ->icon('heroicon-o-information-circle')
             ->title('Pengajuan Berhasil Dikirim!')
-            ->body('Naskah Anda sedang dalam proses peninjauan (review). Setelah selesai, Anda dapat melakukan pembayaran melalui tombol "Bayar QRIS" di daftar naskah.')
+            ->body('Naskah Anda sedang dalam proses peninjauan (review). Setelah selesai, Anda dapat melakukan pembayaran melalui tombol "Proceed to Payment" di daftar naskah.')
             ->duration(10000);
     }
 }

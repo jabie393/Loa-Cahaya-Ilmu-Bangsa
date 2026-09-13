@@ -113,7 +113,7 @@ class ReviewSubmission extends Page
                 }),
 
             Action::make('replace_pdf')
-                ->label('Ganti PDF')
+                ->label('Replace PDF')
                 ->color('primary')
                 ->icon('heroicon-m-arrow-up-tray')
                 ->size('sm')
@@ -154,7 +154,7 @@ class ReviewSubmission extends Page
                 ->visible(fn() => $this->record->status === 'Pending' && Auth::user()?->hasRole('super_admin')),
             ActionGroup::make([
                 Action::make('bayar')
-                    ->label('Bayar QRIS')
+                    ->label('Proceed to Payment')
                     ->icon('heroicon-m-credit-card')
                     ->color('success')
                     ->url(fn(): string => static::$resource::getUrl('payment', ['record' => $this->record]))
