@@ -134,20 +134,22 @@ aria-labelledby="modal-title">
                 </p>
             </div>
 
-            <!-- Step by Step Instructions -->
-            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60">
-                <h4 class="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                    <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <!-- Video Tutorial Notice -->
+            <div class="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50/60 dark:from-slate-800/60 dark:to-indigo-950/40 border border-blue-200/80 dark:border-indigo-800/60 flex items-center gap-3.5">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Langkah Mudah Membayar:</span>
-                </h4>
-                <ol class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 pl-5 list-decimal">
-                    <li>Pilih pengajuan naskah Anda pada tabel, lalu klik tombol <strong>"Proceed to Payment"</strong>.</li>
-                    <li>Buka aplikasi <strong>M-Banking</strong> atau <strong>E-Wallet</strong> Anda, lalu pilih fitur <strong>Scan QRIS</strong>.</li>
-                    <li>Arahkan kamera ke barcode QRIS di layar dan pastikan nominal tagihan telah sesuai.</li>
-                    <li>Selesaikan pembayaran. Sistem akan memperbarui status tagihan menjadi <strong>Paid</strong> secara otomatis.</li>
-                </ol>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+                        <span>Video Panduan & Tutorial:</span>
+                    </h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Untuk langkah pembayarannya bisa ditonton melalui <strong>video tutorial</strong> pada tombol <span class="inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-slate-600 shadow-xs"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Tutorial</span> di <strong>pojok kanan atas sistem</strong>.
+                    </p>
+                </div>
             </div>
 
         </div>
