@@ -7,15 +7,15 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
-class DevSettingsPage extends Page
+class GatewaySettings extends Page
 {
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'Setting';
-    protected static ?string $title = 'Setting Gateway Pembayaran & Developer';
-    protected static ?string $slug = 'dev-settings';
+    protected static ?string $navigationLabel = 'Gateway Settings';
+    protected static ?string $title = 'Gateway Settings';
+    protected static ?string $slug = 'gateway-settings';
     protected static ?int $navigationSort = 99;
 
-    protected string $view = 'filament.pages.dev-settings-page';
+    protected string $view = 'filament.pages.gateway-settings';
 
     public string $activeGateway = 'midtrans';
 

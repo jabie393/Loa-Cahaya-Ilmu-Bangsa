@@ -73,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->navigationGroup('Gateway Settings')
+                    ->navigationGroup(' Settings')
                     ->navigationSort(4),
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('right')
