@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\SubmissionPricings;
 
-use App\Filament\Resources\SubmissionPricings\Pages\CreateSubmissionPricing;
-use App\Filament\Resources\SubmissionPricings\Pages\EditSubmissionPricing;
 use App\Filament\Resources\SubmissionPricings\Pages\ListSubmissionPricings;
 use App\Filament\Resources\SubmissionPricings\Schemas\SubmissionPricingForm;
 use App\Filament\Resources\SubmissionPricings\Tables\SubmissionPricingsTable;
@@ -40,7 +38,7 @@ class SubmissionPricingResource extends Resource
 
     public static function canCreate(): bool
     {
-        return Auth::user()?->hasRole('ryu_dev') ?? false;
+        return false;
     }
 
     public static function canEdit($record): bool
@@ -50,7 +48,7 @@ class SubmissionPricingResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return Auth::user()?->hasRole('ryu_dev') ?? false;
+        return false;
     }
 
     public static function form(Schema $schema): Schema
@@ -67,8 +65,6 @@ class SubmissionPricingResource extends Resource
     {
         return [
             'index' => ListSubmissionPricings::route('/'),
-            'create' => CreateSubmissionPricing::route('/create'),
-            'edit' => EditSubmissionPricing::route('/{record}/edit'),
         ];
     }
 }

@@ -102,7 +102,11 @@ class SubmissionPricingsTable
                     ->label('Status Aktif'),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->modalHeading(fn (SubmissionPricing $record): string => "Ubah Tarif: {$record->tier_name}")
+                    ->modalWidth('lg')
+                    ->modalDescription('Perbarui tarif biaya pemohon dan bagian pendapatan developer.')
+                    ->successNotificationTitle('Tarif berhasil diperbarui!'),
             ]);
     }
 }

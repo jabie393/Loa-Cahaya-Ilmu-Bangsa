@@ -32,8 +32,6 @@ class ListSubmissionPricings extends ListRecords
                         ->success()
                         ->send();
                 }),
-            CreateAction::make()
-                ->label('Tambah Tier Baru'),
         ];
     }
 }
