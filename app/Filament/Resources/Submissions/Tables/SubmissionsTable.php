@@ -341,12 +341,6 @@ class SubmissionsTable
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
                         ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && !in_array($record->review_status, ['processing', 'failed'])),
-                    Action::make('review')
-                        ->label('Review')
-                        ->icon('heroicon-o-eye')
-                        ->color('warning')
-                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('review', ['record' => $record]))
-                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->review_status !== 'processing'),
                     Action::make('request_review_again')
                         ->label('Minta Review Lagi')
                         ->icon('heroicon-o-arrow-path')
