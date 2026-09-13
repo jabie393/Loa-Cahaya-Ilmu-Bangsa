@@ -3,14 +3,9 @@
 namespace App\Filament\Resources\SubmissionPricings\Tables;
 
 use App\Models\SubmissionPricing;
-use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Notifications\Notification;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class SubmissionPricingsTable
@@ -41,15 +36,6 @@ class SubmissionPricingsTable
                     ->weight('bold')
                     ->searchable()
                     ->description(fn (SubmissionPricing $record): ?string => $record->notes),
-
-                TextColumn::make('author_range_label')
-                    ->label('Rentang Penulis')
-                    ->alignCenter(),
-
-                IconColumn::make('with_doi')
-                    ->label('DOI')
-                    ->boolean()
-                    ->alignCenter(),
 
                 TextColumn::make('gross_amount')
                     ->label('Biaya / Tarif')
@@ -84,9 +70,6 @@ class SubmissionPricingsTable
                     })
                     ->color('success')
                     ->weight('semibold'),
-
-                ToggleColumn::make('is_active')
-                    ->label('Aktif'),
             ])
             ->defaultSort('sort_order', 'asc')
             ->filters([
@@ -98,8 +81,6 @@ class SubmissionPricingsTable
                         'addon' => 'Add-on',
                         'setting' => 'Parameter Global',
                     ]),
-                TernaryFilter::make('is_active')
-                    ->label('Status Aktif'),
             ])
             ->recordActions([
                 EditAction::make()
