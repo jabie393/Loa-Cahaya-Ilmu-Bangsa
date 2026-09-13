@@ -70,9 +70,9 @@ class GeminiReviewService implements AiReviewContract
                         'type' => 'OBJECT',
                         'properties' => [
                             'name' => ['type' => 'STRING'],
-                            'institution' => ['type' => 'STRING'],
+                            'institution' => ['type' => 'STRING', 'nullable' => true],
                         ],
-                        'required' => ['name', 'institution'],
+                        'required' => ['name'],
                     ]
                 ],
                 'detected_references' => ['type' => 'STRING', 'nullable' => true],
@@ -124,13 +124,13 @@ class GeminiReviewService implements AiReviewContract
         }
 
         $decoded = $this->decodeGeminiJson($rawContent);
-        return $this->sanitizeExtractedResults($decoded);
+        return $this->sanitizeExtractedResults($decoded, $text);
     }
 
     /**
      * Sanitize and normalize extracted metadata (clean double numbering, spacing glitches, author artifacts, etc.)
      */
-    public function sanitizeExtractedResults(array $results): array
+    public function sanitizeExtractedResults(array $results, string $sourceText = ''): array
     {
         // 1. Sanitize References
         if (!empty($results['detected_references']) && is_string($results['detected_references'])) {
@@ -179,52 +179,102 @@ class GeminiReviewService implements AiReviewContract
         }
 
         // 2. Sanitize Authors
-        if (!empty($results['detected_authors']) && is_array($results['detected_authors'])) {
-            $cleanedAuthors = [];
-            foreach ($results['detected_authors'] as $author) {
-                if (!is_array($author)) {
-                    continue;
+        $rawAuthors = $results['detected_authors'] ?? $results['authors'] ?? $results['author'] ?? $results['penulis'] ?? null;
+        $authorList = [];
+
+        if (is_string($rawAuthors)) {
+            // Raw string containing author names separated by commas/newlines
+            $splitNames = preg_split('/[,\n;]|\s+dan\s+|\s+and\s+/iu', $rawAuthors);
+            foreach ($splitNames as $namePart) {
+                $trimmed = trim($namePart);
+                if ($trimmed !== '') {
+                    $authorList[] = ['name' => $trimmed, 'institution' => ''];
                 }
-
-                $name = trim($author['name'] ?? '');
-                $institution = trim($author['institution'] ?? '');
-
-                if ($name === '') {
-                    continue;
-                }
-
-                // Clean trailing footnote numbers, asterisks, symbols from author name
-                $name = preg_replace('/[\d\*\#\†\‡\§\^]+$/u', '', $name);
-                $name = trim($name, " ,;\t\n\r\0\x0B");
-
-                // Clean double dots and weird initial spacing in names (e.g. "M. . W." -> "M. W.")
-                $name = preg_replace('/\b([A-Za-z])\.\s*\.\s*/u', '$1. ', $name);
-                $name = preg_replace('/(?<!\.)\.\.(?!\.)/u', '.', $name);
-
-                // Clean academic titles if prefix (e.g. "Prof. Dr. Ir. Budi" -> "Budi")
-                $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|H|Hj)\.?\s*)+/iu', '', $name);
-
-                // Clean academic degree suffixes if present (e.g. ", M.Kom, Ph.D")
-                $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
-
-                // Collapse whitespace
-                $name = preg_replace('/\s+/u', ' ', $name);
-                $name = trim($name, " ,;\t\n\r\0\x0B");
-
-                // Sanitize Institution
-                $institution = preg_replace('/^[\d\*\#\†\‡\§\^]+\s*/u', '', $institution);
-                $institution = preg_replace('/[\*\#\†\‡\§\^]+/u', '', $institution);
-                $institution = preg_replace('/,([A-Za-z])/u', ', $1', $institution);
-                $institution = preg_replace('/\s+/u', ' ', $institution);
-                $institution = trim($institution, " ,;\t\n\r\0\x0B");
-
-                $cleanedAuthors[] = [
-                    'name' => $name,
-                    'institution' => $institution,
-                ];
             }
-            $results['detected_authors'] = $cleanedAuthors;
+        } elseif (is_array($rawAuthors)) {
+            foreach ($rawAuthors as $author) {
+                if (is_string($author)) {
+                    $trimmed = trim($author);
+                    if ($trimmed !== '') {
+                        $authorList[] = ['name' => $trimmed, 'institution' => ''];
+                    }
+                } elseif (is_array($author)) {
+                    $authorList[] = $author;
+                }
+            }
         }
+
+        $cleanedAuthors = [];
+        $blacklistedNames = [
+            'author', 'penulis', 'copyright', 'publish by', 'published by', 'plagiarism checker',
+            'reviewer', 'abstract', 'abstrak', 'keywords', 'kata kunci', 'e-mail', 'email',
+            'issn', 'vol', 'volume', 'anonymous', 'null', 'none', 'n/a', 'tanpa nama'
+        ];
+
+        foreach ($authorList as $author) {
+            $name = trim($author['name'] ?? $author['author'] ?? $author['penulis'] ?? $author['nama'] ?? '');
+            $institution = trim($author['institution'] ?? $author['affiliation'] ?? $author['instansi'] ?? $author['afiliasi'] ?? '');
+
+            if ($name === '') {
+                continue;
+            }
+
+            // Clean leading and trailing footnote numbers, asterisks, symbols from author name
+            $name = preg_replace('/^[\d\s,\*\#\†\‡\§\^]+/u', '', $name);
+            $name = preg_replace('/[\d\*\#\†\‡\§\^]+$/u', '', $name);
+            $name = preg_replace('/(?<=[a-zA-Z])\s*\d+\s*(?=,|$|\s)/u', '', $name);
+            $name = trim($name, " ,;\t\n\r\0\x0B");
+
+            // Clean double dots and weird initial spacing in names (e.g. "M. . W." -> "M. W.")
+            $name = preg_replace('/\b([A-Za-z])\.\s*\.\s*/u', '$1. ', $name);
+            $name = preg_replace('/(?<!\.)\.\.(?!\.)/u', '.', $name);
+
+            // Clean academic titles if prefix (e.g. "Prof. Dr. Ir. Budi" -> "Budi")
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|H|Hj)\.?\s*)+/iu', '', $name);
+
+            // Clean academic degree suffixes if present (e.g. ", M.Kom, Ph.D")
+            $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
+
+            // Collapse whitespace
+            $name = preg_replace('/\s+/u', ' ', $name);
+            $name = trim($name, " ,;\t\n\r\0\x0B");
+
+            if (mb_strlen($name) < 2) {
+                continue;
+            }
+
+            $lowerName = strtolower($name);
+            if (in_array($lowerName, $blacklistedNames) || str_contains($lowerName, 'copyright') || str_contains($lowerName, 'publish by') || str_contains($lowerName, 'published by') || str_contains($lowerName, 'plagiarism') || str_contains($lowerName, 'checker')) {
+                continue;
+            }
+
+            // Filter out names that look like filenames or emails
+            if (preg_match('/\.[a-z0-9]{2,5}$/i', $name) || str_contains($name, '@')) {
+                continue;
+            }
+
+            // Sanitize Institution
+            $institution = preg_replace('/^[\d\*\#\†\‡\§\^]+\s*/u', '', $institution);
+            $institution = preg_replace('/[\*\#\†\‡\§\^]+/u', '', $institution);
+            $institution = preg_replace('/,([A-Za-z])/u', ', $1', $institution);
+            $institution = preg_replace('/\s+/u', ' ', $institution);
+            $institution = trim($institution, " ,;\t\n\r\0\x0B");
+
+            $cleanedAuthors[] = [
+                'name' => $name,
+                'institution' => $institution,
+            ];
+        }
+
+        // 2b. If authors are empty after sanitization, run deterministic heuristic fallback on text
+        if (empty($cleanedAuthors) && !empty($sourceText)) {
+            $heuristicAuthors = $this->extractAuthorsFromText($sourceText, $results['detected_title'] ?? null);
+            if (!empty($heuristicAuthors)) {
+                $cleanedAuthors = $heuristicAuthors;
+            }
+        }
+
+        $results['detected_authors'] = $cleanedAuthors;
 
         // 3. Sanitize Title & Abstract & Keywords
         if (!empty($results['detected_title']) && is_string($results['detected_title'])) {
@@ -245,6 +295,125 @@ class GeminiReviewService implements AiReviewContract
         }
 
         return $results;
+    }
+
+    /**
+     * Deterministic heuristic to extract author names and affiliations from first page text.
+     */
+    public function extractAuthorsFromText(string $text, ?string $title = null): array
+    {
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+        // Limit to first section up to Abstrak / Abstract
+        $target = $text;
+        if (preg_match('/\b(abstrak|abstract)\b/iu', $text, $m, PREG_OFFSET_CAPTURE)) {
+            $target = substr($text, 0, $m[0][1]);
+        }
+
+        // If title is known, extract everything AFTER the title
+        if (!empty($title)) {
+            $words = preg_split('/\s+/u', trim($title));
+            $words = array_filter($words, fn($w) => mb_strlen($w) > 2);
+            $words = array_values($words);
+
+            for ($len = min(5, count($words)); $len >= 1; $len--) {
+                $slice = array_slice($words, -$len);
+                $pattern = '/' . implode('[\s\n\r]+', array_map(fn($w) => preg_quote($w, '/'), $slice)) . '/iu';
+                if (preg_match($pattern, $target, $m, PREG_OFFSET_CAPTURE)) {
+                    $target = substr($target, $m[0][1] + strlen($m[0][0]));
+                    break;
+                }
+            }
+        }
+
+        // Split into lines
+        $rawLines = explode("\n", $target);
+        $lines = [];
+        foreach ($rawLines as $l) {
+            $t = trim($l);
+            if ($t !== '') {
+                $lines[] = $t;
+            }
+        }
+
+        $affilPatterns = [
+            '/jurusan/i', '/fakultas/i', '/universitas/i', '/prodi/i', '/program studi/i',
+            '/institut/i', '/sekolah tinggi/i', '/politeknik/i', '/akademi/i',
+            '/department/i', '/faculty/i', '/university/i', '/institute/i', '/college/i',
+            '/e-?mail/i', '/@/'
+        ];
+
+        $authorLines = [];
+        $affilLines = [];
+        $foundAffil = false;
+
+        foreach ($lines as $line) {
+            $isAffil = false;
+            foreach ($affilPatterns as $p) {
+                if (preg_match($p, $line)) {
+                    $isAffil = true;
+                    $foundAffil = true;
+                    break;
+                }
+            }
+
+            if ($foundAffil) {
+                if (!preg_match('/@|e-?mail/i', $line)) {
+                    $cleanAffil = preg_replace('/^[\d\s,\*\#\†\‡\§\^]+/u', '', $line);
+                    if (mb_strlen($cleanAffil) > 3) {
+                        $affilLines[] = $cleanAffil;
+                    }
+                }
+            } else {
+                $authorLines[] = $line;
+            }
+        }
+
+        $commonAffiliation = implode(', ', array_unique($affilLines));
+
+        $authorBlock = implode(' ', $authorLines);
+        // Replace superscript numbers and symbols
+        $authorBlock = preg_replace('/(?<=[a-zA-Z])\s*\d+\s*(?=,|$|\s)/u', '', $authorBlock);
+        $authorBlock = preg_replace('/\b\d+\b/u', '', $authorBlock);
+        $authorBlock = preg_replace('/[\*\#\†\‡\§\^]+/u', '', $authorBlock);
+
+        $rawCandidates = preg_split('/,|;|\s+dan\s+|\s+and\s+|\s+&\s+/iu', $authorBlock);
+        $authors = [];
+
+        foreach ($rawCandidates as $candidate) {
+            $name = trim($candidate, " \t\n\r\0\x0B,.;-");
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|H|Hj)\.?\s*)+/iu', '', $name);
+            $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
+            $name = preg_replace('/\s+/u', ' ', $name);
+            $name = trim($name);
+
+            if (mb_strlen($name) >= 3 && preg_match('/^[A-Za-z\s\.\'\-]+$/u', $name)) {
+                if (!preg_match('/^(author|penulis|abstract|abstrak|keywords|e-?mail|copyright|publish|issn|vol|volume)/iu', $name)) {
+                    $authors[] = [
+                        'name' => $name,
+                        'institution' => $commonAffiliation,
+                    ];
+                }
+            }
+        }
+
+        return $authors;
+    }
+
+    /**
+     * Public helper to extract authors directly from a document using heuristic text parsing.
+     */
+    public function extractAuthorsFromDocument(string $filePath, ?string $title = null, ?Model $record = null): array
+    {
+        try {
+            $text = $this->extractText($filePath, $record);
+            if (!empty($text)) {
+                return $this->extractAuthorsFromText($text, $title);
+            }
+        } catch (\Throwable $e) {
+            // Ignore error
+        }
+        return [];
     }
 
     /**
@@ -330,12 +499,15 @@ PANDUAN PENTING EKSTRAKSI & RESTORASI TEKS:
    - Pisahkan setiap entri referensi dengan baris baru (\n).
    - Perbaiki spasi kata dan tanda baca yang menempel pada setiap entri referensi (contoh: \'Nama,A.(2020).JudulBuku\' -> \'Nama, A. (2020). Judul Buku\').
    - Ambil maksimal 20 entri pertama daftar pustaka formal di akhir naskah. JANGAN mengambil kutipan di dalam paragraf (in-text citation seperti \'Kotler (2022)\').
-3. NAMA PENULIS & AFILIASI (detected_authors):
-   - Bersihkan angka footnote/superskrip/bintang (*) yang menempel pada nama (contoh: \'Ahmad Dahlan1*\' -> \'Ahmad Dahlan\').
-   - Perbaiki inisial nama yang typo atau memiliki spasi/titik ganda (contoh: \'M. . W. E. NP\' -> \'M. W. E. NP\').
-   - Hilangkan gelar akademik (Prof., Dr., M.Kom, S.T., Ph.D, dsb).
+3. NAMA PENULIS & AFILIASI (detected_authors) - SANGAT PENTING:
+   - Lokasi Penulis: Penulis terletak di halaman 1 naskah, tepat di bawah Judul Artikel dan di atas Abstrak/Afiliasi.
+   - Pada teks PDF yang diekstrak, nama penulis seringkali diikuti oleh angka superskrip footnote di baris baru (contoh: "Nichar F. Aruperes\n1\n, Ivonne S. Saerang\n2\n, Rudy S. Wenas\n3"). Anda WAJIB mengekstrak SEMUA nama penulis ini satu per satu! Hapus angka 1, 2, 3 tersebut.
+   - Bersihkan tanda footnote/bintang (*) atau simbol lainnya yang menempel pada nama.
+   - Hilangkan gelar akademik (Prof., Dr., Drs., Ir., M.Kom, S.T., Ph.D, SE, MM, dsb).
    - Nama harus dalam format penulisan EYD/Title Case yang benar.
-   - Afiliasi/instansi ditulis lengkap (jangan disingkat jika memungkinkan) dan perbaiki spasi yang hilang.';
+   - JANGAN PERNAH mengembalikan array kosong untuk detected_authors jika terdapat nama penulis di bawah judul artikel!
+   - JANGAN mengambil teks metadata penerbitan atau footer/sidebar (seperti \'Copyright : author\', \'Publish by\', \'Plagiarism checker\', atau \'Article History\') sebagai nama penulis.
+   - Afiliasi/instansi ditulis lengkap (jangan disingkat jika memungkinkan). Jika beberapa penulis memiliki afiliasi yang sama, cantumkan afiliasi tersebut pada masing-masing penulis.';
 
         if ($isExternal) {
             return 'Anda adalah asisten AI dari \'Cahaya Ilmu Bangsa\'.

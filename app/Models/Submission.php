@@ -20,7 +20,12 @@ class Submission extends Model
                 $submission->date_of_loa = now();
             }
             if (empty($submission->author_name)) {
-                $submission->author_name = \Illuminate\Support\Facades\Auth::user()?->name ?? ($submission->user?->name ?? 'Author');
+                $userName = \Illuminate\Support\Facades\Auth::user()?->name ?? ($submission->user?->name ?? 'Author');
+                if (preg_match('/\.[a-z0-9]{2,5}$/i', $userName) || in_array(strtolower($userName), ['admin', 'system', 'root', 'user'])) {
+                    $submission->author_name = 'Penulis Naskah';
+                } else {
+                    $submission->author_name = $userName;
+                }
             }
             if (empty($submission->email)) {
                 $submission->email = \Illuminate\Support\Facades\Auth::user()?->email ?? ($submission->user?->email ?? '');
@@ -301,12 +306,33 @@ class Submission extends Model
                 }
             }
 
-            // Fallback to user details if both automated and manual input are empty
+            // Fallback: If authors are still empty, try heuristic document extraction directly
             if (empty($this->authors) && empty($updates['authors'])) {
+                $filePath = $this->file_path ?? $this->manuscript_file;
+                if (!empty($filePath)) {
+                    try {
+                        $reviewService = app(\App\Services\GeminiReviewService::class);
+                        $heuristicAuthors = $reviewService->extractAuthorsFromDocument($filePath, $updates['title'] ?? $this->title, $this);
+                        if (!empty($heuristicAuthors)) {
+                            $updates['authors'] = $heuristicAuthors;
+                            $updates['author_name'] = implode(', ', array_column($heuristicAuthors, 'name'));
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+            }
+
+            // Final fallback to user details if both automated and manual input are empty
+            if (empty($this->authors) && empty($updates['authors'])) {
+                $fallbackName = $this->user?->name ?? 'Author';
+                if (preg_match('/\.[a-z0-9]{2,5}$/i', $fallbackName) || in_array(strtolower($fallbackName), ['admin', 'system', 'root', 'user'])) {
+                    $fallbackName = 'Penulis Naskah';
+                }
                 $updates['authors'] = [
-                    ['name' => $this->user?->name ?? 'Author', 'institution' => '']
+                    ['name' => $fallbackName, 'institution' => '']
                 ];
-                $updates['author_name'] = $this->user?->name ?? 'Author';
+                $updates['author_name'] = $fallbackName;
             }
             if (empty($this->email) && empty($updates['email'])) {
                 $updates['email'] = $this->user?->email;
