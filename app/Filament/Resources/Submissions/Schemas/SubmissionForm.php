@@ -157,7 +157,8 @@ class SubmissionForm
                             ->url()
                             ->placeholder('https://...')
                             ->helperText('Tautan artikel ilmiah yang telah terbit pada website jurnal OJS.')
-                            ->nullable(),
+                            ->nullable()
+                            ->visible(fn($record) => $record !== null && ($record->status === 'Approved' || in_array($record->ojs_status, ['submitted', 'published']))),
                     ]),
             ])
             ->columns(1);
