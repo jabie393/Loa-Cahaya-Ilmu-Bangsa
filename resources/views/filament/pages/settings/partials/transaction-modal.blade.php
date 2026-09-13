@@ -31,15 +31,28 @@
 
     $hasItems = $record->items->isNotEmpty();
     $itemCount = $hasItems ? count($record->items) : 1;
+
+    $gateway = strtolower($record->gateway ?? '');
+    if (empty($gateway)) {
+        if (str_starts_with($record->order_id, 'BYR-') || str_contains($record->order_id, 'BELIBAYAR')) {
+            $gateway = 'belibayar';
+        } else {
+            $gateway = 'midtrans';
+        }
+    }
+    $gatewayLabel = match($gateway) {
+        'belibayar' => 'Belibayar',
+        default => 'Midtrans',
+    };
 @endphp
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-5 max-h-[76vh] sm:max-h-[82vh] overflow-y-auto custom-scrollbar pr-1 -mr-1">
     {{-- TOP DARK NAVY CARD (FULL WIDTH) --}}
-    <div class="bg-[#0f1d4a] text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+    <div class="bg-[#0f1d4a] text-white rounded-2xl p-4 sm:p-5 shadow-md relative overflow-hidden">
         {{-- TOP ROW: LABEL & STATUS BADGE --}}
         <div class="flex items-center justify-between">
             <span class="text-[11px] font-bold uppercase tracking-wider text-blue-200/70">
-                Order ID Midtrans
+                Order ID {{ $gatewayLabel }}
             </span>
             <span class="px-3.5 py-1 rounded-full text-[11px] font-bold font-mono tracking-wider {{ $isPaid ? 'bg-[#09262b] border border-emerald-500/40 text-emerald-400' : 'bg-amber-950/80 border border-amber-500/40 text-amber-400' }}">
                 {{ strtoupper($record->payment_status ?: 'PAID') }}
@@ -47,8 +60,8 @@
         </div>
 
         {{-- ORDER ID --}}
-        <div class="mt-2.5 mb-5">
-            <div class="font-mono font-extrabold text-xl sm:text-2xl text-white tracking-wide">
+        <div class="mt-2 mb-3.5 sm:mb-4">
+            <div class="font-mono font-extrabold text-lg sm:text-xl md:text-2xl text-white tracking-wide break-all">
                 {{ $record->order_id }}
             </div>
         </div>
@@ -76,7 +89,7 @@
     </div>
 
     {{-- TWO COLUMN LAYOUT --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
         {{-- LEFT COLUMN (7 COLS): DAFTAR NASKAH (SUPPORTS MULTI-ITEM) --}}
         <div class="lg:col-span-7 space-y-3">
             <div class="flex items-center justify-between">
@@ -91,7 +104,7 @@
             </div>
 
             {{-- SCROLLABLE ITEMS LIST --}}
-            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 divide-y divide-gray-100 dark:divide-gray-800 max-h-[420px] overflow-y-auto space-y-1">
+            <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-3 sm:p-4 divide-y divide-gray-100 dark:divide-gray-800 max-h-[220px] sm:max-h-[280px] md:max-h-[320px] overflow-y-auto custom-scrollbar space-y-1">
                 @if($hasItems)
                     @foreach($record->items as $idx => $item)
                         @php
@@ -271,12 +284,12 @@
             </div>
 
             {{-- PEMBAGIAN HASIL (SETTLEMENT) --}}
-            <div class="bg-[#f4f7fb] dark:bg-gray-800/70 border border-slate-200/80 dark:border-gray-700 rounded-2xl p-5">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-4">
+            <div class="bg-[#f4f7fb] dark:bg-gray-800/70 border border-slate-200/80 dark:border-gray-700 rounded-2xl p-4 sm:p-4.5">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-3">
                     Pembagian Hasil (Settlement)
                 </span>
 
-                <div class="space-y-3">
+                <div class="space-y-2.5">
                     <div class="flex justify-between items-center text-xs">
                         <span class="text-slate-600 dark:text-slate-300">Total Kotor (Gross)</span>
                         <span class="font-mono font-bold text-gray-900 dark:text-white text-sm">
@@ -298,7 +311,7 @@
                         </span>
                     </div>
 
-                    <div class="border-t border-slate-200 dark:border-gray-700 my-2 pt-2"></div>
+                    <div class="border-t border-slate-200 dark:border-gray-700 my-1.5 pt-1.5"></div>
 
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-gray-900 dark:text-white text-sm">Admin</span>
@@ -311,3 +324,19 @@
         </div>
     </div>
 </div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.2);
+        border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(100, 116, 139, 0.4);
+    }
+</style>

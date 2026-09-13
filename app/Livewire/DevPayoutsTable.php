@@ -46,7 +46,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->modalHeading('Buat Draf Payout Developer')
                     ->modalDescription('Tentukan nominal hak dev yang ingin dicairkan. Status akan menjadi "Menunggu Payout" dan siap dibayar via QRIS.')
                     ->modalSubmitActionLabel('Buat Draf Payout')
-                    ->modalWidth('lg')
+                    ->modalWidth('md')
                     ->schema([
                         TextInput::make('amount')
                             ->label('Nominal Pencairan (Rp)')
@@ -180,7 +180,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->modalHeading(fn (DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
                     ->modalDescription('Scan kode QRIS di bawah ini dengan Mobile Banking atau E-Wallet untuk menyelesaikan transfer.')
                     ->modalSubmitActionLabel('Sudah Bayar via QRIS')
-                    ->modalWidth('lg')
+                    ->modalWidth('md')
                     ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
                         'record' => $record,
                     ]))
@@ -271,6 +271,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->icon('heroicon-m-document-text')
                         ->color('gray')
                         ->modalHeading('Kuitansi Pencairan Hak Developer')
+                        ->modalWidth('md')
                         ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.payout-receipt-modal', ['record' => $record]))
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Tutup'),
