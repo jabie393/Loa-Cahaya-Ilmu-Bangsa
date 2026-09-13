@@ -87,6 +87,8 @@ class SubmissionPricingsTable
                     ->modalHeading(fn (SubmissionPricing $record): string => "Ubah Tarif: {$record->tier_name}")
                     ->modalWidth('lg')
                     ->modalDescription('Perbarui tarif biaya pemohon dan bagian pendapatan developer.')
+                    ->modalSubmitActionLabel('Simpan Perubahan')
+                    ->modalCancelActionLabel('Batal')
                     ->successNotificationTitle('Tarif berhasil diperbarui!'),
             ]);
     }
