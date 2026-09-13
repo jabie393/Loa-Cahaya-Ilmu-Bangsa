@@ -73,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->navigationGroup('Settings')
+                    ->navigationGroup('Gateway Settings')
                     ->navigationSort(4),
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('right')
@@ -84,7 +84,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
-                fn (): string => Blade::render('@include("filament.partials.topbar-tutorial-button")'),
+                fn(): string => Blade::render('@include("filament.partials.topbar-tutorial-button")'),
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
