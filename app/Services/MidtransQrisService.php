@@ -594,6 +594,49 @@ class MidtransQrisService implements PaymentGatewayInterface
      */
     public function getOrCreateReplacePdfPayment(Submission $submission, ?string $tempFilePath = null): Payment
     {
+        // 1. If no explicit new tempFilePath is provided, check if replace_pdf has already been paid
+        if (empty($tempFilePath)) {
+            $paid = $submission->payments()
+                ->where('type', 'replace_pdf')
+                ->where('payment_status', 'paid')
+                ->latest()
+                ->first();
+
+            if ($paid) {
+                // Check if there is a valid newer unexpired replacement in progress
+                $pending = $submission->payments()
+                    ->where('type', 'replace_pdf')
+                    ->where('payment_status', 'pending')
+                    ->where('id', '>', $paid->id)
+                    ->latest()
+                    ->first();
+
+                if ($pending && !$pending->isExpired()) {
+                    $pRaw = is_array($pending->raw_response) ? $pending->raw_response : [];
+                    $pPath = $pRaw['new_pdf_path'] ?? null;
+                    if ($pPath && Storage::disk('public')->exists($pPath)) {
+                        $latest = $pending;
+                    } else {
+                        $pending->update([
+                            'payment_status' => 'expired',
+                            'transaction_status' => 'expire',
+                        ]);
+                        $paid->ensureInvoiceNumber();
+                        return $paid;
+                    }
+                } else {
+                    if ($pending) {
+                        $pending->update([
+                            'payment_status' => 'expired',
+                            'transaction_status' => 'expire',
+                        ]);
+                    }
+                    $paid->ensureInvoiceNumber();
+                    return $paid;
+                }
+            }
+        }
+
         if (empty($tempFilePath)) {
             $prev = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
             $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? null;

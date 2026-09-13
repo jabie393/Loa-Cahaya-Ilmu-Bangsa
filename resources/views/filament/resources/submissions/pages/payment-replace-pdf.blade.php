@@ -501,7 +501,11 @@
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': csrfToken,
                                 'X-Requested-With': 'XMLHttpRequest'
-                            }
+                            },
+                            body: JSON.stringify({
+                                order_id: this.orderId,
+                                type: 'replace_pdf'
+                            })
                         });
                         const data = await res.json();
                         if (data.success) {

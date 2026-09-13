@@ -8,6 +8,7 @@ use App\Services\SubmissionPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
@@ -154,7 +155,7 @@ class PaymentController extends Controller
     /**
      * Simulate successful payment in Sandbox environment.
      */
-    public function simulateSandbox(int $id): JsonResponse
+    public function simulateSandbox(Request $request, int $id): JsonResponse
     {
         $submission = Submission::with(['payments'])->findOrFail($id);
 
@@ -168,7 +169,18 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Simulasi hanya diperbolehkan pada mode Sandbox.'], 403);
         }
 
-        $latestPayment = $submission->payments()->where('payment_status', 'pending')->latest()->first();
+        $query = $submission->payments()->where('payment_status', 'pending');
+        if ($request->filled('order_id')) {
+            $query->where('order_id', $request->input('order_id'));
+        } elseif ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        $latestPayment = $query->latest()->first();
+        if (!$latestPayment) {
+            $latestPayment = $submission->payments()->where('payment_status', 'pending')->latest()->first();
+        }
+
         if (!$latestPayment) {
             return response()->json(['message' => 'Tidak ada transaksi pending yang dapat disimulasikan.'], 400);
         }
@@ -330,10 +342,29 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $paidPayment = $submission->payments()
+            ->where('type', 'replace_pdf')
+            ->where('payment_status', 'paid')
+            ->latest()
+            ->first();
+
         $latestPayment = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if (!$latestPayment) {
             return response()->json(['status' => 'no_payment', 'is_paid' => false]);
+        }
+
+        // If an older paid payment exists and latest payment is ghost/unpaid without a valid temp file:
+        if ($paidPayment && $latestPayment->id !== $paidPayment->id && !$latestPayment->isPaid()) {
+            $raw = is_array($latestPayment->raw_response) ? $latestPayment->raw_response : [];
+            $tempPath = $raw['new_pdf_path'] ?? null;
+            if (!$tempPath || !Storage::disk('public')->exists($tempPath) || $latestPayment->isExpired()) {
+                $latestPayment->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+                $latestPayment = $paidPayment;
+            }
         }
 
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
