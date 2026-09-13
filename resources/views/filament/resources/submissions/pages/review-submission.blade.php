@@ -48,8 +48,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Silahkan review data pengajuan dan
-                    bukti pembayaran di bawah ini.</p>
+                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Silakan review data pengajuan di bawah ini.</p>
             </div>
         @endif
         @if ($record->status == 'Approved')
@@ -666,8 +665,7 @@
                 @endphp
 
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bukti
-                        Invoice</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Invoice Pembayaran</h4>
                     <div
                         class="flex min-h-[160px] flex-col justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                         @if ($isPaid)
