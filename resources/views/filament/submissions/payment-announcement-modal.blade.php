@@ -167,7 +167,7 @@ aria-labelledby="modal-title">
                             localStorage.removeItem('cib_payment_announcement_seen_v1');
                         }
                     "
-                    class="rounded border-slate-300 text-emerald-600 shadow-sm focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 cursor-pointer">
+                    class="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 cursor-pointer">
                 <label for="cib-dont-show-announcement" class="cursor-pointer font-medium">
                     Jangan tampilkan pengumuman ini lagi
                 </label>
@@ -175,8 +175,11 @@ aria-labelledby="modal-title">
 
             <button type="button" 
                 @click="closeModal()" 
-                class="w-full sm:w-auto relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-amber-500 px-5 py-2 text-xs font-bold text-white shadow-[0_3px_10px_rgba(16,185,129,0.2)] hover:shadow-[0_4px_12px_rgba(16,185,129,0.25)] hover:scale-[1.01] focus:outline-none transition-all duration-300 transform active:scale-100">
-                Saya Mengerti, Lanjutkan
+                class="w-full sm:w-auto relative inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.01] focus:outline-none transition-all duration-300 transform active:scale-100">
+                <span>Saya Mengerti, Lanjutkan</span>
+                <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
             </button>
         </div>
 

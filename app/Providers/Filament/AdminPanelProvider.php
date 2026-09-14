@@ -35,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('')
+            ->homeUrl(fn () => auth()->user()?->hasAnyRole(['ryu_dev', 'dev', 'developer']) ? url('/dev-payouts') : url('/journal'))
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->spa()
             ->registration()
