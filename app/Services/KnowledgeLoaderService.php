@@ -57,11 +57,9 @@ class KnowledgeLoaderService
                     ->get();
 
                 if ($pricingTiers->isNotEmpty()) {
-                    $knowledge .= "\n--- SOURCE: realtime_database_pricelist.txt ---\n";
-                    $knowledge .= "# PRICELIST RESMI REALTIME (DATABASE SISTEM)\n\n";
-                    $knowledge .= "🚨 PERHATIAN UTAMA UNTUK KANDA PUTRA (PRIORITAS HARGA TERTINGGI):\n";
-                    $knowledge .= "Data harga di bawah ini diambil LANGSUNG DARI DATABASE SISTEM secara real-time. Jika admin mengubah harga di database atau terdapat perbedaan nominal harga dengan dokumen lain, KANDA PUTRA WAJIB 100% MENGGUNAKAN HARGA DARI DATABASE DI BAWAH INI sebagai acuan mutlak yang benar.\n\n";
-                    $knowledge .= "Daftar harga bersih resmi (total yang dibayarkan penulis) yang AKTIF saat ini:\n\n";
+                    $knowledge .= "\n--- SOURCE: pricelist_resmi.txt ---\n";
+                    $knowledge .= "# DAFTAR TARIF & BIAYA RESMI PUBLIKASI CIB\n\n";
+                    $knowledge .= "Berikut adalah daftar tarif dan biaya resmi publikasi yang berlaku di Cahaya Ilmu Bangsa Institute:\n\n";
 
                     foreach ($pricingTiers as $tier) {
                         $formattedPrice = 'Rp ' . number_format($tier->gross_amount, 0, ',', '.');
@@ -82,10 +80,11 @@ class KnowledgeLoaderService
                         $knowledge .= "- **{$tier->tier_name}**: {$formattedPrice}{$descStr}\n";
                     }
 
-                    $knowledge .= "\nAturan Jawaban Kanda Putra Mengenai Harga & Pembayaran:\n";
-                    $knowledge .= "1. Selalu gunakan nominal persis seperti daftar database di atas jika user bertanya tentang harga/biaya publikasi.\n";
-                    $knowledge .= "2. Jangan menyebutkan nama vendor/penyedia payment gateway tertentu (cukup sebutkan pembayaran melalui 'QRIS resmi CIB').\n";
-                    $knowledge .= "3. Jangan pernah membicarakan pembagian hasil/settlement internal (dev dapat berapa, jurnal dapat berapa, atau fee MDR).\n";
+                    $knowledge .= "\nAturan Jawaban Kanda Putra Mengenai Biaya:\n";
+                    $knowledge .= "1. Gunakan nominal persis seperti daftar biaya resmi di atas saat menjawab pertanyaan tentang biaya/tarif publikasi.\n";
+                    $knowledge .= "2. JANGAN PERNAH mengatakan atau menuliskan kepada user bahwa harga ini 'bersifat dinamis', 'update dari database', atau istilah teknis sistem lainnya. Sampaikan saja nominalnya secara alami dan wajar sebagai tarif resmi CIB.\n";
+                    $knowledge .= "3. Jangan menyebutkan nama vendor/penyedia payment gateway tertentu (cukup sebutkan pembayaran melalui 'QRIS resmi CIB').\n";
+                    $knowledge .= "4. Jangan pernah membicarakan pembagian hasil/settlement internal (dev dapat berapa, jurnal dapat berapa, atau fee MDR).\n";
                     $knowledge .= "-----------------------------\n";
                 }
             }
