@@ -66,6 +66,29 @@ class BelibayarQrisService implements PaymentGatewayInterface
             : 'https://api.belibayar.id/direct/v1/sandbox';
     }
 
+    public function getCallbackUrl(): string
+    {
+        $custom = config('services.belibayar.callback_url') ?: env('BELIBAYAR_CALLBACK_URL');
+        if (!empty($custom)) {
+            return trim((string) $custom);
+        }
+
+        $appUrl = config('app.url');
+        if (!empty($appUrl) && !str_contains($appUrl, '127.0.0.1') && !str_contains($appUrl, 'localhost')) {
+            // Force HTTPS for live domains to prevent 301 Moved Permanently redirects that drop POST webhooks
+            if (str_starts_with($appUrl, 'http://')) {
+                $appUrl = 'https://' . substr($appUrl, 7);
+            }
+            return rtrim($appUrl, '/') . '/api/belibayar/webhook';
+        }
+
+        if (request()->isSecure() || (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+            return secure_url('/api/belibayar/webhook');
+        }
+
+        return url('/api/belibayar/webhook');
+    }
+
     /**
      * Sanitize customer name to meet Belibayar requirement:
      * 5-25 chars alphanumeric, space, underscore, dash (without PT/CV prefix).
@@ -299,7 +322,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
-            'callback_url' => url('/api/belibayar/webhook'),
+            'callback_url' => $this->getCallbackUrl(),
         ];
 
         $response = $this->postRequest('/payment/charge', $payload);
@@ -434,7 +457,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
-            'callback_url' => url('/api/belibayar/webhook'),
+            'callback_url' => $this->getCallbackUrl(),
         ];
 
         $response = $this->postRequest('/payment/charge', $payload);
@@ -616,7 +639,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'expired_time' => $expiredTime,
-            'callback_url' => url('/api/belibayar/webhook'),
+            'callback_url' => $this->getCallbackUrl(),
         ];
 
         $response = $this->postRequest('/payment/charge', $payload);
@@ -790,7 +813,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'customer_name' => $payerName,
             'customer_email' => $payerEmail,
             'expired_time' => $expiredTime,
-            'callback_url' => url('/api/belibayar/webhook'),
+            'callback_url' => $this->getCallbackUrl(),
         ];
 
         $response = $this->postRequest('/payment/charge', $payload);
