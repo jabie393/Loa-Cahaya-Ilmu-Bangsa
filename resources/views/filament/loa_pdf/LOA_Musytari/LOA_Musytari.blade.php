@@ -139,7 +139,7 @@
         <div>
             <img src="{{ asset('assets/cover/Musytari.jpg') }}"
                  alt=""
-                 class="w-[120px]" />
+                 class="w-[75px] h-auto object-contain" />
         </div>
     </div>
     <div class="bg-primary my-5 h-[1px] w-full"></div>
