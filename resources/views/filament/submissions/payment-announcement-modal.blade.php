@@ -119,18 +119,18 @@ aria-labelledby="modal-title">
                 </p>
             </div>
 
-            <!-- Highlight Box 3: Rincian Tarif & Diskon Member -->
-            <div class="p-3.5 rounded-xl bg-gradient-to-br from-indigo-50/80 via-indigo-50/40 to-slate-50 dark:from-slate-800/60 dark:to-indigo-950/30 border border-indigo-100/90 dark:border-slate-800 space-y-1.5 shadow-xs">
+            <!-- Highlight Box 3: Terintegrasi OJS -->
+            <div class="p-3.5 rounded-xl bg-gradient-to-br from-blue-50/80 via-blue-50/40 to-slate-50 dark:from-slate-800/60 dark:to-blue-950/30 border border-blue-100/90 dark:border-slate-800 space-y-1.5 shadow-xs">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1.5 rounded-lg bg-indigo-600 text-white shadow-xs">
+                    <div class="p-1.5 rounded-lg bg-blue-600 text-white shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                     </div>
-                    <span>3. Transparansi Tarif & Potongan Member CIB</span>
+                    <span>3. Terintegrasi OJS</span>
                 </div>
                 <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-7 sm:pl-8">
-                    Rincian tagihan diperhitungkan secara transparan berdasarkan kategori naskah, jumlah penulis, serta opsi DOI. Bagi pengguna yang terdaftar sebagai <strong>Member CIB</strong>, sistem secara otomatis mengaplikasikan potongan harga khusus pada setiap naskah yang diajukan.
+                    Bisa pengajuan <strong>DOI</strong> sebelum atau sesudah proses submit, maupun revisi PDF dapat dilakukan pada sistem kurasi digital LOA dan <strong>terintegrasi langsung dengan OJS</strong>.
                 </p>
             </div>
 
