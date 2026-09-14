@@ -3,7 +3,7 @@
     dontShowAgain: false,
     init() {
         const seen = localStorage.getItem('cib_payment_announcement_seen_v1') === 'true';
-        this.dontShowAgain = seen;
+        this.dontShowAgain = false;
         if (!seen) {
             setTimeout(() => {
                 this.isOpen = true;
@@ -21,7 +21,7 @@
 }" 
 @open-payment-announcement.window="
     isOpen = true;
-    dontShowAgain = (localStorage.getItem('cib_payment_announcement_seen_v1') === 'true');
+    dontShowAgain = false;
 "
 x-show="isOpen" 
 x-cloak
