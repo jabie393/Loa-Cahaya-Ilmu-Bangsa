@@ -38,19 +38,48 @@ class BelibayarWebhookController extends Controller
         $webhookSecret = $this->belibayarService->getWebhookSecret();
         $isProduction = $this->belibayarService->isProduction();
 
+        $payload = $request->json()->all();
+        if (empty($payload)) {
+            $payload = $request->all();
+        }
+
+        $secretKey = $this->belibayarService->getSecretKey();
+
         Log::info('Belibayar Webhook Received', [
             'signature_header' => $signature,
-            'body' => $request->all(),
+            'body' => $payload,
         ]);
 
-        // 1. Verify Signature (only when secret is configured, for security)
-        if (!empty($webhookSecret)) {
-            $expectedSignature = hash_hmac('sha256', $rawContent, $webhookSecret);
+        // 1. Handle Belibayar dashboard test ping ("Kirim Tes Webhook") immediately with 200 OK
+        $isTestEvent = ($request->header('X-Belibayar-Test') === 'true')
+            || ($request->header('X-Belibayar-Event') === 'payment.test')
+            || (isset($payload['event']) && $payload['event'] === 'payment.test')
+            || (isset($payload['channel']) && $payload['channel'] === 'TEST')
+            || (isset($payload['reference']) && str_starts_with((string) $payload['reference'], 'TEST-'));
 
-            if (!hash_equals($expectedSignature, $signature)) {
+        if ($isTestEvent) {
+            Log::info('Belibayar Webhook: Test ping event received from Belibayar dashboard');
+            return response()->json([
+                'success' => true,
+                'messages' => 'Belibayar webhook test ping received successfully',
+            ], 200);
+        }
+
+        // 2. Verify Signature (check against webhook_secret and secret_key fallback)
+        $signatureMatches = false;
+        if (!empty($signature)) {
+            $sig1 = !empty($webhookSecret) ? hash_hmac('sha256', $rawContent, $webhookSecret) : '';
+            $sig2 = !empty($secretKey) ? hash_hmac('sha256', $rawContent, $secretKey) : '';
+
+            if ((!empty($sig1) && hash_equals($sig1, $signature)) || (!empty($sig2) && hash_equals($sig2, $signature))) {
+                $signatureMatches = true;
+            }
+        }
+
+        if (!empty($webhookSecret) || !empty($secretKey)) {
+            if (!$signatureMatches) {
                 Log::warning('Belibayar Webhook: Invalid signature', [
                     'received' => $signature,
-                    'expected' => $expectedSignature,
                     'is_production' => $isProduction,
                 ]);
 
@@ -63,11 +92,6 @@ class BelibayarWebhookController extends Controller
                     Log::info('Belibayar Webhook (Sandbox): Continuing despite signature mismatch for development/simulator testing.');
                 }
             }
-        }
-
-        $payload = $request->json()->all();
-        if (empty($payload)) {
-            $payload = $request->all();
         }
 
         // 2. Filter out withdrawal events if any
