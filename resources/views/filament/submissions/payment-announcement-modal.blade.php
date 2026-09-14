@@ -50,7 +50,8 @@ aria-labelledby="modal-title">
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-8 scale-95"
-        class="relative w-full max-w-2xl sm:max-w-3xl max-h-[96vh] sm:max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white/95 px-4 py-3 sm:px-6 sm:py-4 text-left shadow-[0_25px_60px_-15px_rgba(37,99,235,0.15)] transition-all dark:bg-slate-900/95 border border-blue-500/15 dark:border-blue-500/25 backdrop-blur-xl">
+        style="border: none !important; outline: none !important;"
+        class="relative w-full max-w-2xl sm:max-w-3xl max-h-[96vh] sm:max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white/95 px-4 py-3 sm:px-6 sm:py-4 text-left shadow-[0_25px_60px_-15px_rgba(37,99,235,0.15)] transition-all dark:bg-slate-900/95 border-0 backdrop-blur-xl">
         
         <!-- Modern ambient glows behind the card -->
         <div class="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-blue-500/10 blur-[100px] dark:bg-blue-500/5"></div>
@@ -90,52 +91,52 @@ aria-labelledby="modal-title">
         <div class="relative z-10 flex-1 overflow-y-auto pr-1 py-3 custom-scrollbar scroll-smooth space-y-3">
             
             <!-- Highlight Box 1: Support Seluruh Bank & E-Wallet -->
-            <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
+            <div class="p-3.5 rounded-xl bg-gradient-to-br from-blue-50/80 via-blue-50/40 to-slate-50 dark:from-slate-800/60 dark:to-blue-950/30 border border-blue-100/90 dark:border-slate-800 space-y-1.5 shadow-xs">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                    <div class="p-1.5 rounded-lg bg-blue-600 text-white shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                     </div>
                     <span>1. Pembayaran Instan Menggunakan QRIS Dinamis</span>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-6 sm:pl-7">
+                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-7 sm:pl-8">
                     Setiap tagihan diterbitkan dengan kode <strong>QRIS Standar Nasional</strong> yang unik dan dinamis. Anda dapat membayar melalui seluruh aplikasi <strong>M-Banking</strong> (BCA, Mandiri, BRI, BNI, BSI, Permata, CIMB, dll.) maupun <strong>E-Wallet</strong> (GoPay, OVO, DANA, ShopeePay, LinkAja).
                 </p>
             </div>
 
             <!-- Highlight Box 2: Verifikasi Otomatis -->
-            <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
+            <div class="p-3.5 rounded-xl bg-gradient-to-br from-blue-50/80 via-blue-50/40 to-slate-50 dark:from-slate-800/60 dark:to-blue-950/30 border border-blue-100/90 dark:border-slate-800 space-y-1.5 shadow-xs">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                    <div class="p-1.5 rounded-lg bg-blue-600 text-white shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                     <span>2. Verifikasi Realtime — Tanpa Perlu Unggah Struk Manual</span>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-6 sm:pl-7">
+                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-7 sm:pl-8">
                     Setelah proses scan dan bayar berhasil di aplikasi perbankan Anda, status transaksi akan <strong>langsung terverifikasi lunas secara otomatis dalam hitungan detik</strong>. Anda tidak perlu lagi melakukan konfirmasi manual ataupun mengunggah bukti transfer.
                 </p>
             </div>
 
             <!-- Highlight Box 3: Rincian Tarif & Diskon Member -->
-            <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
+            <div class="p-3.5 rounded-xl bg-gradient-to-br from-indigo-50/80 via-indigo-50/40 to-slate-50 dark:from-slate-800/60 dark:to-indigo-950/30 border border-indigo-100/90 dark:border-slate-800 space-y-1.5 shadow-xs">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                    <div class="p-1.5 rounded-lg bg-indigo-600 text-white shadow-xs">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
                     </div>
                     <span>3. Transparansi Tarif & Potongan Member CIB</span>
                 </div>
-                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-6 sm:pl-7">
+                <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-7 sm:pl-8">
                     Rincian tagihan diperhitungkan secara transparan berdasarkan kategori naskah, jumlah penulis, serta opsi DOI. Bagi pengguna yang terdaftar sebagai <strong>Member CIB</strong>, sistem secara otomatis mengaplikasikan potongan harga khusus pada setiap naskah yang diajukan.
                 </p>
             </div>
 
             <!-- Video Tutorial Notice (Pojok kanan atas) -->
-            <div class="p-3.5 rounded-xl border border-blue-500/20 dark:border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 flex items-center gap-3">
+            <div class="p-3.5 rounded-xl bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-blue-50/40 dark:from-slate-800/60 dark:to-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 flex items-center gap-3 shadow-xs">
                 <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
