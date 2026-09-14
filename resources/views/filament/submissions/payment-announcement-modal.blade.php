@@ -48,7 +48,7 @@ aria-labelledby="modal-title">
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
-        class="relative w-full max-w-2xl max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
+        class="relative w-full max-w-3xl max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
         
         <!-- Ambient Decorative Top Header Gradient -->
         <div class="h-2 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500"></div>
