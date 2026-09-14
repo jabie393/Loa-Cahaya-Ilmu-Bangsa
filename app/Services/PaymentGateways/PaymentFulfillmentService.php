@@ -14,6 +14,8 @@ class PaymentFulfillmentService
      */
     public function markAsPaid(Payment $payment, string $transStatus = 'settlement', array $rawResponse = []): void
     {
+        $wasAlreadyPaid = ($payment->payment_status === 'paid');
+
         $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
         $mergedRaw = array_merge($existingRaw, $rawResponse);
         if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
@@ -28,6 +30,12 @@ class PaymentFulfillmentService
         ]);
 
         $payment->ensureInvoiceNumber();
+
+        // Idempotency: If this transaction was already fulfilled, skip redundant processing
+        if ($wasAlreadyPaid) {
+            Log::info("PaymentFulfillment: Payment #{$payment->id} ({$payment->order_id}) was already fulfilled. Skipping redundant processing.");
+            return;
+        }
 
         if ($payment->type === 'bulk_submission') {
             $submissions = !empty($payment->submission_ids)

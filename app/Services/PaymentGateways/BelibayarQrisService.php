@@ -237,6 +237,20 @@ class BelibayarQrisService implements PaymentGatewayInterface
      * --------------------------------------------------------------------------
      */
 
+    public function cancelAndExpirePendingPayment(Payment $payment): void
+    {
+        try {
+            $this->cancelPayment($payment);
+        } catch (\Throwable $e) {
+            Log::warning("Belibayar cancelPayment error during expiration: " . $e->getMessage());
+        }
+
+        $payment->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
+    }
+
     public function getOrCreatePayment(Submission $submission): Payment
     {
         $paidPayment = $submission->payments()
@@ -269,11 +283,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 }
             }
 
-            // Otherwise expire current pending and generate new
-            $latestPayment->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            // Otherwise cancel at gateway and expire in DB before generating new
+            $this->cancelAndExpirePendingPayment($latestPayment);
         }
 
         return $this->chargeQris($submission);
@@ -289,10 +300,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         $submission->payments()
             ->where('payment_status', 'pending')
-            ->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
 
         return $this->chargeQris($submission);
     }
@@ -409,10 +418,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 }
             }
 
-            $latest->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            $this->cancelAndExpirePendingPayment($latest);
         }
 
         return $this->chargeDoiQris($submission);
@@ -426,10 +432,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
             return $paidDoi;
         }
 
-        $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'pending')->update([
-            'payment_status' => 'expired',
-            'transaction_status' => 'expire',
-        ]);
+        $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'pending')
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
 
         return $this->chargeDoiQris($submission);
     }
@@ -597,10 +602,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 }
             }
 
-            $latest->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            $this->cancelAndExpirePendingPayment($latest);
         }
 
         return $this->chargeReplacePdfQris($submission, $tempFilePath ?: '');
@@ -614,10 +616,9 @@ class BelibayarQrisService implements PaymentGatewayInterface
             return $paid;
         }
 
-        $submission->payments()->where('type', 'replace_pdf')->where('payment_status', 'pending')->update([
-            'payment_status' => 'expired',
-            'transaction_status' => 'expire',
-        ]);
+        $submission->payments()->where('type', 'replace_pdf')->where('payment_status', 'pending')
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
 
         return $this->chargeReplacePdfQris($submission, $tempFilePath);
     }
@@ -759,10 +760,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 }
             }
 
-            $pendingPayment->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            $this->cancelAndExpirePendingPayment($pendingPayment);
         }
 
         return $this->chargeBulkQris($submissions);
@@ -793,10 +791,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
                 $ids = is_array($p->submission_ids) ? $p->submission_ids : [];
                 sort($ids);
                 if ($ids === $submissionIds) {
-                    $p->update([
-                        'payment_status' => 'expired',
-                        'transaction_status' => 'expire',
-                    ]);
+                    $this->cancelAndExpirePendingPayment($p);
                 }
             });
 
