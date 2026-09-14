@@ -248,10 +248,27 @@
                             <div
                                 class="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100 dark:border-gray-800 mb-4 flex flex-col items-center justify-center">
                                 <template x-if="qrisUrl && !errorMessage">
-                                    <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                                        <img :src="qrisUrl" alt="QRIS Code"
-                                            x-on:error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
-                                            class="w-56 h-56 object-contain rounded-lg">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                                            <img :src="qrisUrl" alt="QRIS Code"
+                                                x-on:error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
+                                                class="w-56 h-56 object-contain rounded-lg">
+                                        </div>
+                                        <button type="button" @click="downloadQris()" :disabled="isDownloading"
+                                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold shadow-sm transition-all active:scale-[0.98] cursor-pointer">
+                                            <template x-if="isDownloading">
+                                                <svg class="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </template>
+                                            <template x-if="!isDownloading">
+                                                <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                </svg>
+                                            </template>
+                                            <span x-text="isDownloading ? 'Mengunduh...' : 'Download Gambar QRIS'"></span>
+                                        </button>
                                     </div>
                                 </template>
                                 <template x-if="errorMessage">
@@ -473,6 +490,7 @@
                 isChecking: false,
                 isRegenerating: false,
                 isSimulating: false,
+                isDownloading: false,
                 countdownText: '15:00',
                 pollTimer: null,
                 countdownTimer: null,
@@ -616,6 +634,64 @@
                     } finally {
                         this.isRegenerating = false;
                     }
+                },
+
+                downloadQris() {
+                    if (!this.qrisUrl) return;
+                    this.isDownloading = true;
+                    const filename = `QRIS-${this.orderId || 'CIB'}.png`;
+
+                    fetch(this.qrisUrl, { mode: 'cors' })
+                        .then(res => {
+                            if (!res.ok) throw new Error('Fetch failed');
+                            return res.blob();
+                        })
+                        .then(blob => {
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+                            this.isDownloading = false;
+                        })
+                        .catch(() => {
+                            try {
+                                const img = new Image();
+                                img.crossOrigin = 'anonymous';
+                                img.onload = () => {
+                                    try {
+                                        const canvas = document.createElement('canvas');
+                                        canvas.width = img.naturalWidth || 300;
+                                        canvas.height = img.naturalHeight || 300;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.fillStyle = '#FFFFFF';
+                                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                        ctx.drawImage(img, 0, 0);
+                                        const dataUrl = canvas.toDataURL('image/png');
+                                        const a = document.createElement('a');
+                                        a.href = dataUrl;
+                                        a.download = filename;
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                    } catch (e) {
+                                        window.open(this.qrisUrl, '_blank');
+                                    }
+                                    this.isDownloading = false;
+                                };
+                                img.onerror = () => {
+                                    window.open(this.qrisUrl, '_blank');
+                                    this.isDownloading = false;
+                                };
+                                img.src = this.qrisUrl;
+                            } catch (e) {
+                                window.open(this.qrisUrl, '_blank');
+                                this.isDownloading = false;
+                            }
+                        });
                 }
             };
         }
