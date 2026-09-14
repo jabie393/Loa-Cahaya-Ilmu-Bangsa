@@ -15,8 +15,14 @@
             min-height: 480px;
         }
 
-        .fi-dropdown-panel {
-            z-index: 50 !important;
+        /* Prevent mascot / chatbot from dimming or flickering during Livewire polling */
+        #kanda-putra-mascot-root,
+        #mascot-container,
+        #mascot-avatar,
+        #mascot-panel,
+        #mascot-maximize-trigger,
+        #mascot-container * {
+            opacity: 1 !important;
         }
     </style>
 

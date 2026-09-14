@@ -4,7 +4,26 @@
     #mascot-panel:not(.hidden) {
         display: flex !important;
     }
+
+    /* Isolate mascot completely from Livewire polling and loading states */
+    #kanda-putra-mascot-root,
+    #mascot-container,
+    #mascot-panel,
+    #mascot-maximize-trigger,
+    #mascot-avatar,
+    #mascot-img,
+    #kanda-putra-mascot-root * {
+        -webkit-backface-visibility: hidden;
+    }
+
+    #kanda-putra-mascot-root [wire\:loading],
+    #kanda-putra-mascot-root button[wire\:loading],
+    #mascot-container [wire\:loading] {
+        opacity: 1 !important;
+    }
 </style>
+
+<div wire:ignore id="kanda-putra-mascot-root">
 <div id="mascot-maximize-trigger" onclick="Mascot.toggleMinimize()"
     style="background-color: #003da3;"
     class="fixed bottom-10 right-0 z-[9999] hidden cursor-pointer items-center justify-center rounded-l-full p-2 pr-1 text-white shadow-2xl backdrop-blur-md transition-all duration-300 hover:pr-3 group">
@@ -150,6 +169,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 @if($errors->any())

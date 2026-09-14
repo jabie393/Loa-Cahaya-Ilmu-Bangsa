@@ -238,7 +238,7 @@ class SubmissionsTable
                     return null;
                 }
 
-                return '15s';
+                return '5s';
             })
             ->defaultSort('volume_sort_key', 'desc')
             ->filters([
