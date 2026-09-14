@@ -392,9 +392,15 @@ class BelibayarQrisService implements PaymentGatewayInterface
             return $paidDoi;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateDoiAddon($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         $latest = $submission->payments()->where('type', 'doi_addon')->latest()->first();
         if ($latest && $latest->payment_status === 'pending') {
-            if ($latest->gateway === 'belibayar' && !$latest->isExpired()) {
+            $paymentGross = (int) round($latest->gross_amount);
+
+            if ($latest->gateway === 'belibayar' && !$latest->isExpired() && $paymentGross === $currentGross) {
                 if ($this->isDummyQr($latest->qris_url)) {
                     $latest = $this->checkStatus($latest);
                 }
@@ -567,9 +573,15 @@ class BelibayarQrisService implements PaymentGatewayInterface
             $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? null;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateReplacePdf($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
         if ($latest && $latest->payment_status === 'pending') {
-            if ($latest->gateway === 'belibayar' && !$latest->isExpired()) {
+            $paymentGross = (int) round($latest->gross_amount);
+
+            if ($latest->gateway === 'belibayar' && !$latest->isExpired() && $paymentGross === $currentGross) {
                 if ($tempFilePath) {
                     $raw = is_array($latest->raw_response) ? $latest->raw_response : [];
                     $raw['new_pdf_path'] = $tempFilePath;

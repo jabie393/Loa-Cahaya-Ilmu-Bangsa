@@ -391,11 +391,15 @@ class MidtransQrisService implements PaymentGatewayInterface
             return $payment;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateDoiAddon($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         // Check for latest pending DOI payment
         $latestDoi = $submission->payments()->where('type', 'doi_addon')->latest()->first();
 
         if ($latestDoi && $latestDoi->payment_status === 'pending') {
-            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== 20000) {
+            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== $currentGross) {
                 $latestDoi->update([
                     'payment_status' => 'expired',
                     'transaction_status' => 'expire',
@@ -642,11 +646,15 @@ class MidtransQrisService implements PaymentGatewayInterface
             $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? null;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateReplacePdf($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         // Check for latest pending Replace PDF payment
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if ($latest && $latest->payment_status === 'pending') {
-            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== 25000) {
+            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== $currentGross) {
                 $latest->update([
                     'payment_status' => 'expired',
                     'transaction_status' => 'expire',
