@@ -50,23 +50,23 @@ aria-labelledby="modal-title">
         x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
         x-transition:leave-end="opacity-0 translate-y-8 scale-95"
-        class="relative w-full max-w-2xl sm:max-w-3xl max-h-[96vh] sm:max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white/95 px-4 py-3 sm:px-6 sm:py-4 text-left shadow-[0_25px_60px_-15px_rgba(16,185,129,0.15)] transition-all dark:bg-slate-900/95 border border-emerald-500/10 dark:border-emerald-500/20 backdrop-blur-xl">
+        class="relative w-full max-w-2xl sm:max-w-3xl max-h-[96vh] sm:max-h-[92vh] flex flex-col transform overflow-hidden rounded-2xl bg-white/95 px-4 py-3 sm:px-6 sm:py-4 text-left shadow-[0_25px_60px_-15px_rgba(37,99,235,0.15)] transition-all dark:bg-slate-900/95 border border-blue-500/15 dark:border-blue-500/25 backdrop-blur-xl">
         
         <!-- Modern ambient glows behind the card -->
-        <div class="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-emerald-500/10 blur-[100px] dark:bg-emerald-500/5"></div>
-        <div class="pointer-events-none absolute -right-40 -bottom-40 h-80 w-80 rounded-full bg-amber-500/10 blur-[100px] dark:bg-amber-500/5"></div>
+        <div class="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-blue-500/10 blur-[100px] dark:bg-blue-500/5"></div>
+        <div class="pointer-events-none absolute -right-40 -bottom-40 h-80 w-80 rounded-full bg-indigo-500/10 blur-[100px] dark:bg-indigo-500/5"></div>
 
         <!-- Header -->
         <div class="relative z-10 flex items-center justify-between border-b border-slate-100 pb-2.5 dark:border-slate-800/80 flex-shrink-0">
             <div class="flex items-center gap-3">
                 <!-- Glowing branding-colored icon -->
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/10 to-amber-500/10 text-emerald-600 dark:from-emerald-500/20 dark:to-amber-500/20 dark:text-emerald-400 shadow-sm">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 text-blue-600 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-400 shadow-sm border border-blue-500/20">
                     <svg class="h-6 w-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                 </div>
                 <div>
-                    <h3 id="modal-title" class="text-base font-extrabold tracking-tight sm:text-lg md:text-xl bg-gradient-to-r from-emerald-600 to-amber-500 bg-clip-text text-transparent dark:from-emerald-400 dark:to-amber-400">
+                    <h3 id="modal-title" class="text-base font-extrabold tracking-tight sm:text-lg md:text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
                         Pembaruan Sistem Pembayaran
                     </h3>
                     <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
@@ -92,7 +92,7 @@ aria-labelledby="modal-title">
             <!-- Highlight Box 1: Support Seluruh Bank & E-Wallet -->
             <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                    <div class="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
@@ -107,7 +107,7 @@ aria-labelledby="modal-title">
             <!-- Highlight Box 2: Verifikasi Otomatis -->
             <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                    <div class="p-1 rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -122,7 +122,7 @@ aria-labelledby="modal-title">
             <!-- Highlight Box 3: Rincian Tarif & Diskon Member -->
             <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800/60 shadow-sm bg-slate-50/70 dark:bg-slate-950/40 space-y-1.5">
                 <div class="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs sm:text-sm">
-                    <div class="p-1 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                    <div class="p-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
@@ -135,8 +135,8 @@ aria-labelledby="modal-title">
             </div>
 
             <!-- Video Tutorial Notice (Pojok kanan atas) -->
-            <div class="p-3.5 rounded-xl border border-emerald-500/20 dark:border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 flex items-center gap-3">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-amber-500 text-white shadow-sm">
+            <div class="p-3.5 rounded-xl border border-blue-500/20 dark:border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 flex items-center gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-sm">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -147,7 +147,7 @@ aria-labelledby="modal-title">
                         Video Panduan & Tutorial:
                     </h4>
                     <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Untuk langkah pembayarannya bisa ditonton melalui <strong>video tutorial</strong> pada tombol <span class="inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shadow-xs"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Tutorial</span> di <strong>pojok kanan atas sistem</strong>.
+                        Untuk langkah pembayarannya bisa ditonton melalui <strong>video tutorial</strong> pada tombol <span class="inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 shadow-xs"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Tutorial</span> di <strong>pojok kanan atas sistem</strong>.
                     </p>
                 </div>
             </div>
@@ -202,19 +202,19 @@ aria-labelledby="modal-title">
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(16, 185, 129, 0.2);
+        background: rgba(37, 99, 235, 0.2);
         border-radius: 10px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(16, 185, 129, 0.4);
+        background: rgba(37, 99, 235, 0.4);
     }
 
     .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(16, 185, 129, 0.3);
+        background: rgba(37, 99, 235, 0.3);
     }
 
     .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(16, 185, 129, 0.5);
+        background: rgba(37, 99, 235, 0.5);
     }
 </style>
