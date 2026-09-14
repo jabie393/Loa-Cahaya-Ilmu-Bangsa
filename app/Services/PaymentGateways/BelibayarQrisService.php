@@ -191,6 +191,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
 
         $responseData = $response->json();
 
+        Log::info("Belibayar GET Response [{$response->status()}]", ['body' => $responseData]);
+
         if (!$response->successful() || empty($responseData)) {
             $errorMessage = $responseData['messages'] ?? ($responseData['message'] ?? 'Gagal memverifikasi status Belibayar.id');
             if (!empty($responseData['data']['fields']) && is_array($responseData['data']['fields'])) {
@@ -863,13 +865,17 @@ class BelibayarQrisService implements PaymentGatewayInterface
         try {
             $response = $this->getRequest('/payment/status/' . $payment->order_id);
             $data = $response['data'] ?? [];
-            $status = strtolower($data['status'] ?? '');
+            $status = strtolower($data['status'] ?? ($response['status'] ?? ''));
 
-            if ($status === 'paid') {
+            $isPaid = in_array($status, ['paid', 'success', 'settlement', 'completed', 'berhasil']);
+            $isExpired = in_array($status, ['expired', 'expire', 'kadaluwarsa']);
+            $isFailed = in_array($status, ['cancelled', 'canceled', 'failed', 'rejected', 'gagal']);
+
+            if ($isPaid) {
                 $this->fulfillmentService->markAsPaid($payment, 'settlement', $response);
-            } elseif ($status === 'expired') {
+            } elseif ($isExpired) {
                 $this->fulfillmentService->markAsExpired($payment, $response);
-            } elseif (in_array($status, ['cancelled', 'failed', 'rejected'])) {
+            } elseif ($isFailed) {
                 $this->fulfillmentService->markAsFailed($payment, $status, $response);
             }
 

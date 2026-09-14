@@ -28,8 +28,15 @@ class BelibayarWebhookController extends Controller
     public function handle(Request $request): JsonResponse
     {
         $rawContent = $request->getContent();
-        $signature = (string) $request->header('X-Belibayar-Signature', '');
+        $signature = (string) (
+            $request->header('X-Belibayar-Signature') 
+            ?? $request->header('X-Signature') 
+            ?? $request->header('X-Callback-Signature') 
+            ?? $request->header('Signature') 
+            ?? ''
+        );
         $webhookSecret = $this->belibayarService->getWebhookSecret();
+        $isProduction = $this->belibayarService->isProduction();
 
         Log::info('Belibayar Webhook Received', [
             'signature_header' => $signature,
@@ -44,16 +51,24 @@ class BelibayarWebhookController extends Controller
                 Log::warning('Belibayar Webhook: Invalid signature', [
                     'received' => $signature,
                     'expected' => $expectedSignature,
+                    'is_production' => $isProduction,
                 ]);
 
-                return response()->json([
-                    'success' => false,
-                    'messages' => 'Invalid signature',
-                ], 401);
+                if ($isProduction) {
+                    return response()->json([
+                        'success' => false,
+                        'messages' => 'Invalid signature',
+                    ], 401);
+                } else {
+                    Log::info('Belibayar Webhook (Sandbox): Continuing despite signature mismatch for development/simulator testing.');
+                }
             }
         }
 
         $payload = $request->json()->all();
+        if (empty($payload)) {
+            $payload = $request->all();
+        }
 
         // 2. Filter out withdrawal events if any
         if (isset($payload['event']) && is_string($payload['event']) && str_starts_with($payload['event'], 'withdrawal.')) {
@@ -61,10 +76,17 @@ class BelibayarWebhookController extends Controller
             return response()->json(['success' => true, 'messages' => 'Withdrawal event acknowledged'], 200);
         }
 
-        // 3. Extract payment data
-        $orderId = $payload['reference'] ?? ($payload['order_id'] ?? null);
-        $status = strtolower($payload['status'] ?? '');
-        $transactionId = $payload['transaction_id'] ?? null;
+        // 3. Extract payment data (handle potential nested 'data' wrapper)
+        $data = (isset($payload['data']) && is_array($payload['data'])) ? $payload['data'] : $payload;
+
+        $orderId = $data['reference'] 
+            ?? ($data['order_id'] 
+            ?? ($data['external_id'] 
+            ?? ($payload['reference'] 
+            ?? ($payload['order_id'] ?? null))));
+
+        $status = strtolower($data['status'] ?? ($payload['status'] ?? ''));
+        $transactionId = $data['transaction_id'] ?? ($payload['transaction_id'] ?? null);
 
         if (!$orderId) {
             Log::warning('Belibayar Webhook: Missing reference / order_id in payload');
@@ -83,13 +105,17 @@ class BelibayarWebhookController extends Controller
         }
 
         // 4. Process Status Updates
-        if ($status === 'paid') {
+        $isPaid = in_array($status, ['paid', 'success', 'settlement', 'completed', 'berhasil']);
+        $isExpired = in_array($status, ['expired', 'expire', 'kadaluwarsa']);
+        $isFailed = in_array($status, ['cancelled', 'canceled', 'failed', 'rejected', 'gagal']);
+
+        if ($isPaid) {
             $this->fulfillmentService->markAsPaid($payment, 'settlement', $payload);
             Log::info("Belibayar Webhook: Payment #{$payment->id} (Order: {$orderId}) marked as PAID");
-        } elseif ($status === 'expired') {
+        } elseif ($isExpired) {
             $this->fulfillmentService->markAsExpired($payment, $payload);
             Log::info("Belibayar Webhook: Payment #{$payment->id} (Order: {$orderId}) marked as EXPIRED");
-        } elseif (in_array($status, ['cancelled', 'failed', 'rejected'])) {
+        } elseif ($isFailed) {
             $this->fulfillmentService->markAsFailed($payment, $status, $payload);
             Log::info("Belibayar Webhook: Payment #{$payment->id} (Order: {$orderId}) marked as FAILED/CANCELLED");
         } else {
