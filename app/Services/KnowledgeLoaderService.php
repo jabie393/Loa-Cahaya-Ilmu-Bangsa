@@ -59,7 +59,9 @@ class KnowledgeLoaderService
                 if ($pricingTiers->isNotEmpty()) {
                     $knowledge .= "\n--- SOURCE: realtime_database_pricelist.txt ---\n";
                     $knowledge .= "# PRICELIST RESMI REALTIME (DATABASE SISTEM)\n\n";
-                    $knowledge .= "Berikut adalah daftar harga bersih resmi (total nominal yang dibayar penulis) yang aktif secara realtime di database sistem saat ini:\n\n";
+                    $knowledge .= "🚨 PERHATIAN UTAMA UNTUK KANDA PUTRA (PRIORITAS HARGA TERTINGGI):\n";
+                    $knowledge .= "Data harga di bawah ini diambil LANGSUNG DARI DATABASE SISTEM secara real-time. Jika admin mengubah harga di database atau terdapat perbedaan nominal harga dengan dokumen lain, KANDA PUTRA WAJIB 100% MENGGUNAKAN HARGA DARI DATABASE DI BAWAH INI sebagai acuan mutlak yang benar.\n\n";
+                    $knowledge .= "Daftar harga bersih resmi (total yang dibayarkan penulis) yang AKTIF saat ini:\n\n";
 
                     foreach ($pricingTiers as $tier) {
                         $formattedPrice = 'Rp ' . number_format($tier->gross_amount, 0, ',', '.');
@@ -80,7 +82,10 @@ class KnowledgeLoaderService
                         $knowledge .= "- **{$tier->tier_name}**: {$formattedPrice}{$descStr}\n";
                     }
 
-                    $knowledge .= "\nKanda Putra wajib menggunakan data harga di atas sebagai acuan utama yang valid ketika menjawab pertanyaan mengenai tarif publikasi atau biaya layanan.\n";
+                    $knowledge .= "\nAturan Jawaban Kanda Putra Mengenai Harga & Pembayaran:\n";
+                    $knowledge .= "1. Selalu gunakan nominal persis seperti daftar database di atas jika user bertanya tentang harga/biaya publikasi.\n";
+                    $knowledge .= "2. Jangan menyebutkan nama vendor/penyedia payment gateway tertentu (cukup sebutkan pembayaran melalui 'QRIS resmi CIB').\n";
+                    $knowledge .= "3. Jangan pernah membicarakan pembagian hasil/settlement internal (dev dapat berapa, jurnal dapat berapa, atau fee MDR).\n";
                     $knowledge .= "-----------------------------\n";
                 }
             }
