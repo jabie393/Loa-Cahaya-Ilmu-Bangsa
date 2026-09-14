@@ -551,4 +551,50 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Download QRIS image directly to the user's device (proxied via backend to avoid CORS & blank tab).
+     */
+    public function downloadQris(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $url = $request->query('url');
+
+        $payment = null;
+        if ($orderId) {
+            $payment = \App\Models\Payment::where('order_id', $orderId)->first();
+        }
+
+        if ($payment && !empty($payment->qris_url)) {
+            $url = $payment->qris_url;
+        } elseif ($payment && !empty($payment->qr_string)) {
+            $url = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=15&data=' . urlencode($payment->qr_string);
+        }
+
+        if (!$url) {
+            abort(404, 'Gambar QRIS tidak ditemukan.');
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->withoutVerifying()
+                ->get($url);
+
+            if (!$response->successful() && $orderId) {
+                // Fallback QR code generator if original image URL fails
+                $fallbackUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=15&data=' . urlencode($orderId);
+                $response = \Illuminate\Support\Facades\Http::timeout(15)->withoutVerifying()->get($fallbackUrl);
+            }
+
+            $filename = 'QRIS-' . ($orderId ?: 'CIB') . '.png';
+            $contentType = $response->header('Content-Type') ?: 'image/png';
+
+            return response($response->body(), 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'no-cache, private',
+            ]);
+        } catch (\Exception $e) {
+            abort(500, 'Gagal mengunduh QRIS: ' . $e->getMessage());
+        }
+    }
 }

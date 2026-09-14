@@ -655,7 +655,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/payment-replace-pdf', [\App\Http\Controllers\PaymentController::class, 'showReplacePdf'])->name('submissions.payment.replace-pdf');
     Route::get('/submissions/{id}/payment-replace-pdf/check', [\App\Http\Controllers\PaymentController::class, 'checkReplacePdfStatus'])->name('submissions.payment.replace-pdf.check');
     Route::post('/submissions/{id}/payment-replace-pdf/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateReplacePdf'])->name('submissions.payment.replace-pdf.regenerate');
-
+    Route::get('/payments/download-qris', [\App\Http\Controllers\PaymentController::class, 'downloadQris'])->name('payments.download-qris');
 });
 
 Route::post('/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
