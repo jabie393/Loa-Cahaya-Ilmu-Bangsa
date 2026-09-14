@@ -1,9 +1,9 @@
-<!-- Announcement Modal for Submissions Page: Payment Method Update -->
 <div x-data="{
     isOpen: false,
-    dontShowAgain: true,
+    dontShowAgain: false,
     init() {
-        const seen = localStorage.getItem('cib_payment_announcement_seen_v1');
+        const seen = localStorage.getItem('cib_payment_announcement_seen_v1') === 'true';
+        this.dontShowAgain = seen;
         if (!seen) {
             setTimeout(() => {
                 this.isOpen = true;
@@ -13,15 +13,16 @@
     closeModal() {
         if (this.dontShowAgain) {
             localStorage.setItem('cib_payment_announcement_seen_v1', 'true');
+        } else {
+            localStorage.removeItem('cib_payment_announcement_seen_v1');
         }
-        this.isOpen = false;
-    },
-    dismissForever() {
-        localStorage.setItem('cib_payment_announcement_seen_v1', 'true');
         this.isOpen = false;
     }
 }" 
-@open-payment-announcement.window="isOpen = true"
+@open-payment-announcement.window="
+    isOpen = true;
+    dontShowAgain = (localStorage.getItem('cib_payment_announcement_seen_v1') === 'true');
+"
 x-show="isOpen" 
 x-cloak
 class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-4 sm:px-6 sm:py-6" 
@@ -156,10 +157,22 @@ aria-labelledby="modal-title">
 
         <!-- Footer Actions -->
         <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <label class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 dark:text-slate-400">
-                <input type="checkbox" x-model="dontShowAgain" class="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800">
-                <span>Jangan tampilkan pengumuman ini lagi</span>
-            </label>
+            <div class="flex items-center gap-2 select-none text-xs text-slate-600 dark:text-slate-400">
+                <input type="checkbox" 
+                    id="cib-dont-show-announcement"
+                    x-model="dontShowAgain" 
+                    @change="
+                        if ($event.target.checked) {
+                            localStorage.setItem('cib_payment_announcement_seen_v1', 'true');
+                        } else {
+                            localStorage.removeItem('cib_payment_announcement_seen_v1');
+                        }
+                    "
+                    class="rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 cursor-pointer">
+                <label for="cib-dont-show-announcement" class="cursor-pointer">
+                    Jangan tampilkan pengumuman ini lagi
+                </label>
+            </div>
 
             <button type="button" 
                 @click="closeModal()" 
