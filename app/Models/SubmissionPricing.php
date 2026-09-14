@@ -42,11 +42,13 @@ class SubmissionPricing extends Model
     protected static function booted()
     {
         static::saved(function () {
+            \App\Services\SubmissionPricingService::clearMemoized();
             Cache::forget('submission_pricing_tiers');
             Cache::forget('submission_pricing_settings');
         });
 
         static::deleted(function () {
+            \App\Services\SubmissionPricingService::clearMemoized();
             Cache::forget('submission_pricing_tiers');
             Cache::forget('submission_pricing_settings');
         });

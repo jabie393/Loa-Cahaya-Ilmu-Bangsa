@@ -19,16 +19,42 @@ class SubmissionPricingService
      */
     public const MEMBER_DISCOUNT = 10000.0;
 
+    protected static ?\Illuminate\Database\Eloquent\Collection $memoizedTiers = null;
+    protected static ?\Illuminate\Database\Eloquent\Collection $memoizedSettings = null;
+
+    public static function clearMemoized(): void
+    {
+        static::$memoizedTiers = null;
+        static::$memoizedSettings = null;
+    }
+
+    public function getActivePricingTiers()
+    {
+        if (static::$memoizedTiers === null) {
+            static::$memoizedTiers = SubmissionPricing::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        }
+        return static::$memoizedTiers;
+    }
+
+    public function getPricingSettings()
+    {
+        if (static::$memoizedSettings === null) {
+            static::$memoizedSettings = SubmissionPricing::where('category', 'setting')
+                ->get()
+                ->keyBy('key');
+        }
+        return static::$memoizedSettings;
+    }
+
     /**
      * Get active MDR rate (from database or default fallback).
      */
     public function getMdrRate(): float
     {
         try {
-            $settings = Cache::remember('submission_pricing_settings', 3600, function () {
-                return SubmissionPricing::where('category', 'setting')->get()->keyBy('key');
-            });
-
+            $settings = $this->getPricingSettings();
             if (isset($settings['setting_mdr_rate']) && $settings['setting_mdr_rate']->is_active) {
                 return (float) $settings['setting_mdr_rate']->gross_amount;
             }
@@ -45,10 +71,7 @@ class SubmissionPricingService
     public function getMemberDiscount(): float
     {
         try {
-            $settings = Cache::remember('submission_pricing_settings', 3600, function () {
-                return SubmissionPricing::where('category', 'setting')->get()->keyBy('key');
-            });
-
+            $settings = $this->getPricingSettings();
             if (isset($settings['setting_member_discount']) && $settings['setting_member_discount']->is_active) {
                 return (float) $settings['setting_member_discount']->gross_amount;
             }
@@ -155,12 +178,7 @@ class SubmissionPricingService
     protected function determinePricing(bool $isInternational, bool $withDoi, int $authorCount): array
     {
         try {
-            $tiers = Cache::remember('submission_pricing_tiers', 3600, function () {
-                return SubmissionPricing::where('is_active', true)
-                    ->whereIn('category', ['issn', 'international', 'addon'])
-                    ->orderBy('sort_order')
-                    ->get();
-            });
+            $tiers = $this->getActivePricingTiers();
 
             $targetCategory = $isInternational ? 'international' : 'issn';
 
@@ -275,9 +293,9 @@ class SubmissionPricingService
         $tierName = 'Add-on DOI Repository Identifier';
 
         try {
-            $addon = Cache::remember('submission_pricing_tiers', 3600, function () {
-                return SubmissionPricing::where('is_active', true)->get();
-            })->firstWhere('key', 'addon_doi');
+            $tiers = $this->getActivePricingTiers();
+            $addon = $tiers->firstWhere('key', 'addon_doi')
+                ?: $tiers->first(fn($t) => $t->category === 'addon' && (bool) $t->with_doi === true);
 
             if ($addon) {
                 $originalGross = (float) $addon->gross_amount;
@@ -327,9 +345,9 @@ class SubmissionPricingService
         $tierName = 'Ganti PDF Naskah';
 
         try {
-            $addon = Cache::remember('submission_pricing_tiers', 3600, function () {
-                return SubmissionPricing::where('is_active', true)->get();
-            })->firstWhere('key', 'service_replace_pdf');
+            $tiers = $this->getActivePricingTiers();
+            $addon = $tiers->firstWhere('key', 'service_replace_pdf')
+                ?: $tiers->first(fn($t) => $t->category === 'addon' && !(bool) $t->with_doi);
 
             if ($addon) {
                 $originalGross = (float) $addon->gross_amount;
