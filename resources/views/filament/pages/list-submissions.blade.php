@@ -21,8 +21,8 @@
     </style>
 
 
-    <!-- Payment Method Announcement Banner (Allows re-opening anytime) -->
-    <div style="border: none !important; outline: none !important;" class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-sky-500/10 backdrop-blur-sm shadow-xs border-0">
+    <!-- Payment Method Announcement Banner (Allows re-opening anytime, isolated from table polling) -->
+    <div wire:ignore style="border: none !important; outline: none !important;" class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-sky-500/10 backdrop-blur-sm shadow-xs border-0">
         <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-xs border border-blue-500/20">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,6 +53,8 @@
     <!-- Render the default table -->
     {{ $this->table }}
 
-    <!-- Announcement Modal Popup -->
-    @include('filament.submissions.payment-announcement-modal')
+    <!-- Announcement Modal Popup (Isolated from Livewire DOM morphing) -->
+    <div wire:ignore>
+        @include('filament.submissions.payment-announcement-modal')
+    </div>
 </x-filament-panels::page>

@@ -227,7 +227,19 @@ class SubmissionsTable
                     })
                     ->sortable(),
             ])
-            ->poll('5s')
+            ->poll(function ($livewire) {
+                // Matikan polling jika sedang ada modal/action yang terbuka (seperti 'Buat Pengajuan Baru')
+                // agar form, dropdown, dan elemen di luar tabel tidak terganggu/tertutup sendiri
+                if (
+                    !empty($livewire->mountedActions) ||
+                    !empty($livewire->mountedTableActions) ||
+                    (method_exists($livewire, 'getMountedAction') && $livewire->getMountedAction() !== null)
+                ) {
+                    return null;
+                }
+
+                return '15s';
+            })
             ->defaultSort('volume_sort_key', 'desc')
             ->filters([
                 SelectFilter::make('ojs_base_url')
