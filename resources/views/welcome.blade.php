@@ -46,24 +46,75 @@
                 background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 50%, #e0e7ff 100%);
             }
 
-            @keyframes fadeInScale {
-                from {
+            /* Page Opening Transitions */
+            @keyframes navFadeDown {
+                0% {
                     opacity: 0;
-                    transform: scale(0.98) translateY(20px);
+                    transform: translateY(-16px);
                 }
-
-                to {
+                100% {
                     opacity: 1;
-                    transform: scale(1) translateY(0);
+                    transform: translateY(0);
                 }
             }
 
-            .animate-reveal {
-                animation: fadeInScale 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            @keyframes heroFadeUp {
+                0% {
+                    opacity: 0;
+                    transform: translateY(28px);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
             }
 
-            #pdf-canvas {
-                object-fit: cover;
+            @keyframes imageEntrance {
+                0% {
+                    opacity: 0;
+                    transform: scale(1.04) translateX(12px);
+                }
+                100% {
+                    opacity: 1;
+                    transform: scale(1) translateX(0);
+                }
+            }
+
+            @keyframes fadeIn {
+                0% {
+                    opacity: 0;
+                }
+                100% {
+                    opacity: 1;
+                }
+            }
+
+            .anim-nav {
+                animation: navFadeDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+
+            .anim-badge {
+                animation: heroFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+            }
+
+            .anim-title {
+                animation: heroFadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+            }
+
+            .anim-desc {
+                animation: heroFadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+            }
+
+            .anim-cta {
+                animation: heroFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both;
+            }
+
+            .anim-image {
+                animation: imageEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+            }
+
+            .anim-footer {
+                animation: fadeIn 0.9s ease-out 0.5s both;
             }
         </style>
 
@@ -74,7 +125,7 @@
 
     <body class="font-body text-on-surface selection:bg-primary/20 bg-surface flex h-[100dvh] min-h-screen flex-col justify-between overflow-hidden antialiased">
         <!-- TopNavBar -->
-        <nav class="fixed top-0 z-50 w-full bg-white/20 shadow-[0_20px_40px_rgba(0,74,198,0.05)] backdrop-blur-xl dark:bg-slate-950/80">
+        <nav class="anim-nav fixed top-0 z-50 w-full bg-white/20 shadow-[0_20px_40px_rgba(0,74,198,0.05)] backdrop-blur-xl dark:bg-slate-950/80">
             <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-8 py-4">
                 <div class="font-headline text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
                     <a href="{{ url('/') }}" class="flex items-center gap-2">
@@ -117,7 +168,7 @@
             <!-- Hero Section -->
             <section class="relative flex h-full w-full items-center overflow-hidden pt-16 sm:pt-20 lg:pt-0">
                 <!-- Right Side Building Artwork for large screens (flushed to right edge) -->
-                <div class="pointer-events-none absolute bottom-0 right-0 top-0 z-0 hidden w-[50%] select-none items-center justify-end overflow-hidden lg:flex xl:w-[52%] 2xl:w-[50%]">
+                <div class="anim-image pointer-events-none absolute bottom-0 right-0 top-0 z-0 hidden w-[50%] select-none items-center justify-end overflow-hidden lg:flex xl:w-[52%] 2xl:w-[50%]">
                     <div class="relative flex h-full w-full items-center justify-end">
                         <img src="{{ asset('assets/bg.png') }}" alt="Building Architecture" class="h-full w-full object-cover object-right-bottom" />
 
@@ -130,54 +181,56 @@
                 </div>
 
                 <!-- Mobile / Tablet Full-Cover Background Image -->
-                <div class="pointer-events-none absolute inset-0 z-0 select-none overflow-hidden lg:hidden">
+                <div class="anim-image pointer-events-none absolute inset-0 z-0 select-none overflow-hidden lg:hidden">
                     <img src="{{ asset('assets/bg.png') }}" alt="Building Architecture" class="h-full w-full object-cover object-center" />
                     <!-- Soft overlay for text legibility -->
                     <div class="bg-surface/10 pointer-events-none absolute inset-0 backdrop-blur-[2px]"></div>
                     <div class="from-surface via-surface/60 to-surface/40 pointer-events-none absolute inset-0 bg-gradient-to-t"></div>
                 </div>
 
-                <div class="relative z-10 mx-auto my-auto w-full max-w-7xl px-6 py-4 sm:px-8 sm:py-8">
-                    <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
+                <div class="relative z-10 mx-auto my-auto w-full max-w-7xl px-4 py-3 sm:px-8 sm:py-6 md:py-8">
+                    <div class="grid grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-8">
                         <!-- Left Column (Full width on mobile): Typography & CTAs -->
                         <div class="col-span-1 flex flex-col justify-center text-left lg:col-span-7 xl:col-span-6">
+                            <!-- Badge -->
                             <div
-                                class="border-primary/20 mb-3 inline-flex items-center gap-2 self-start rounded-full border bg-white/80 px-3.5 py-1 shadow-sm backdrop-blur-sm sm:mb-5 sm:px-4 sm:py-1.5">
-                                <span class="bg-primary flex h-2 w-2 rounded-full"></span>
-                                <span class="font-headline text-primary text-[10px] font-bold uppercase tracking-widest sm:text-xs">Portal
+                                class="anim-badge border-primary/20 mb-2.5 inline-flex items-center gap-1.5 self-start rounded-full border bg-white/80 px-3 py-1 shadow-sm backdrop-blur-sm sm:mb-4 sm:gap-2 sm:px-4 sm:py-1.5 lg:mb-6">
+                                <span class="bg-primary flex h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2"></span>
+                                <span class="font-headline text-primary text-[10px] font-bold uppercase tracking-widest sm:text-xs md:text-xs">Portal
                                     Terpadu LOA &amp; Repositori</span>
                             </div>
 
-                            <h1 class="font-headline mb-3 text-3xl font-extrabold leading-[1.15] tracking-tighter text-slate-900 sm:mb-5 sm:text-5xl md:text-6xl lg:text-7xl">
+                            <!-- Main Headline -->
+                            <h1 class="anim-title font-headline mb-3 text-2xl font-extrabold leading-[1.15] tracking-tight text-slate-900 xs:text-3xl sm:mb-4 sm:text-4xl sm:leading-[1.1] sm:tracking-tighter md:mb-6 md:text-5xl lg:text-6xl xl:text-7xl">
                                 Sistem Terpadu <br />
                                 <span class="bg-linear-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">Publikasi
                                     &amp; Repositori</span>
                             </h1>
 
-                            <p class="mb-5 max-w-xl text-sm font-medium leading-relaxed text-slate-700 sm:mb-8 sm:text-base md:text-lg lg:text-xl">
+                            <!-- Subheading / Description -->
+                            <p class="anim-desc mb-4 max-w-xs text-xs font-medium leading-relaxed text-slate-700 sm:mb-6 sm:max-w-md sm:text-sm md:mb-8 md:max-w-lg md:text-base lg:max-w-xl lg:text-lg xl:text-xl">
                                 Akses satu pintu untuk pengajuan <strong>Letter of Acceptance (LOA)</strong>, layanan penerbitan jurnal, dan pengarsipan repositori karya ilmiah Cahaya Ilmu Bangsa.
                             </p>
 
-                            <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-4">
+                            <!-- CTA Button Container -->
+                            <div class="anim-cta flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-4">
                                 <a href="{{ auth()->check() ? '/journal' : '/register' }}"
-                                    class="editorial-gradient font-headline shadow-primary/30 group flex items-center justify-center gap-2.5 rounded-xl px-6 py-3 text-sm font-bold text-white transition-all hover:scale-105 hover:shadow-xl sm:gap-3 sm:rounded-2xl sm:px-8 sm:py-4 sm:text-lg">
+                                    class="editorial-gradient font-headline shadow-primary/30 group flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-all hover:scale-105 hover:shadow-xl sm:w-auto sm:gap-3 sm:rounded-2xl sm:px-7 sm:py-3.5 sm:text-sm md:px-8 md:py-4 md:text-base lg:text-lg">
                                     Ajukan LOA Sekarang
-                                    <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1 sm:text-2xl">arrow_forward</span>
+                                    <span class="material-symbols-outlined text-base transition-transform group-hover:translate-x-1 sm:text-lg md:text-xl lg:text-2xl">arrow_forward</span>
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
-
-
         </main>
 
         <!-- Mascot Helper -->
         <x-mascot />
 
         <!-- Footer -->
-        <footer class="relative z-10 w-full flex-none border-t border-slate-200/50 bg-white/40 px-6 py-3 backdrop-blur-md sm:px-12 sm:py-4 dark:bg-slate-900/40">
+        <footer class="anim-footer relative z-10 w-full flex-none border-t border-slate-200/50 bg-white/40 px-6 py-3 backdrop-blur-md sm:px-12 sm:py-4 dark:bg-slate-900/40">
             <div class="mx-auto flex w-full max-w-7xl flex-row items-center justify-between text-xs font-semibold uppercase tracking-widest text-slate-500">
                 <div class="flex items-center gap-2">
                     <span class="font-headline text-sm font-black text-slate-900 dark:text-white">LOA</span>
