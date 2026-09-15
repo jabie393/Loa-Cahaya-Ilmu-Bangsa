@@ -48,8 +48,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Silahkan review data pengajuan dan
-                    bukti pembayaran di bawah ini.</p>
+                <p class="text-primary-900 dark:text-primary-100 text-md font-medium">Silakan review data pengajuan di bawah ini.</p>
             </div>
         @endif
         @if ($record->status == 'Approved')
@@ -91,8 +90,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <p class="text-amber-900 dark:text-amber-100 text-sm font-medium">Silakan selesaikan pembayaran QRIS
-                        untuk mengaktifkan persetujuan (LOA Approval) otomatis.</p>
+                    <p class="text-amber-900 dark:text-amber-100 text-sm font-medium">Silakan selesaikan pembayaran.
+                    </p>
                 </div>
                 @if (!in_array($record->review_status, ['processing', 'failed']))
                     <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('payment', ['record' => $record]) }}"
@@ -101,7 +100,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15A2.25 2.25 0 0 0 2.25 6.75v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
                         </svg>
-                        Bayar QRIS
+                        Proceed to Payment
                     </a>
                 @endif
             </div>
@@ -436,7 +435,7 @@
                                         'failed' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-500/30',
                                         default => 'bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-700/50 dark:text-gray-400 dark:ring-gray-600/20',
                                     }
-                                                                }}">
+                                                                                            }}">
                                                                 {{ $record->ojs_status }}
                                                             </span>
                                 @else
@@ -486,7 +485,8 @@
                                 </div>
                             </div>
                             <div class="mt-4">
-                                <x-filament::button href="{{ Storage::disk('public')->url($record->manuscript_file) . '?v=' . ($record->updated_at?->timestamp ?? time()) }}"
+                                <x-filament::button
+                                    href="{{ Storage::disk('public')->url($record->manuscript_file) . '?v=' . ($record->updated_at?->timestamp ?? time()) }}"
                                     tag="a" download target="_blank" icon="heroicon-m-arrow-down-tray" color="primary"
                                     class="w-full">
                                     Download File PDF
@@ -509,7 +509,8 @@
                             <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                                 Akun Penulis OJS
                             </h4>
-                            <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400">
+                            <span
+                                class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400">
                                 Terhubung ke OJS
                             </span>
                         </div>
@@ -529,12 +530,15 @@
                                             class="font-mono font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/60 px-2 py-0.5 rounded">{{ $record->ojs_password }}</span>
                                     </div>
                                     <p class="text-[11px] text-amber-600 dark:text-amber-400 italic mt-1 leading-normal">
-                                        *Password ini digenerate secara otomatis karena akun baru pertama kali didaftarkan ke OJS.
+                                        *Password ini digenerate secara otomatis karena akun baru pertama kali didaftarkan ke
+                                        OJS.
                                     </p>
                                 @else
-                                    <div class="rounded-lg bg-blue-50/60 dark:bg-blue-950/30 p-2.5 mt-1 border border-blue-100 dark:border-blue-900/40">
+                                    <div
+                                        class="rounded-lg bg-blue-50/60 dark:bg-blue-950/30 p-2.5 mt-1 border border-blue-100 dark:border-blue-900/40">
                                         <p class="text-[11px] text-blue-700 dark:text-blue-300 leading-relaxed">
-                                            Email ini telah terdaftar di OJS sebelumnya. Silakan login ke portal OJS menggunakan password akun yang sudah Anda miliki.
+                                            Email ini telah terdaftar di OJS sebelumnya. Silakan login ke portal OJS menggunakan
+                                            password akun yang sudah Anda miliki.
                                         </p>
                                     </div>
                                     <div
@@ -546,15 +550,16 @@
                                 @endif
 
                                 @if ($ojsLoginUrl)
-                                    <div class="pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs">
+                                    <div
+                                        class="pt-2 border-t border-gray-100 dark:border-gray-700/50 flex items-center justify-between text-xs">
                                         <a href="{{ $ojsLoginUrl }}" target="_blank"
-                                           class="inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 hover:underline dark:text-primary-400">
+                                            class="inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 hover:underline dark:text-primary-400">
                                             <span>Masuk ke Portal OJS</span>
                                             <x-heroicon-m-arrow-top-right-on-square class="w-3.5 h-3.5" />
                                         </a>
                                         @if (!$record->ojs_password && $ojsLostPasswordUrl)
                                             <a href="{{ $ojsLostPasswordUrl }}" target="_blank"
-                                               class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-[11px] hover:underline">
+                                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-[11px] hover:underline">
                                                 Lupa Password OJS?
                                             </a>
                                         @endif
@@ -660,8 +665,7 @@
                 @endphp
 
                 <div class="space-y-4">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bukti
-                        Invoice</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Invoice Pembayaran</h4>
                     <div
                         class="flex min-h-[160px] flex-col justify-center rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-gray-700 dark:bg-gray-800">
                         @if ($isPaid)

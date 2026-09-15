@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'midtrans/webhook',
             'api/midtrans/webhook',
+            'belibayar/webhook',
+            'api/belibayar/webhook',
         ]);
 
         $middleware->append(\App\Http\Middleware\TrustProxies::class);

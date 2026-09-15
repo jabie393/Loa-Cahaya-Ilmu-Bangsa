@@ -19,6 +19,7 @@ class Payment extends Model
         'invoice_number',
         'order_id',
         'transaction_id',
+        'gateway',
         'payment_method',
         'type',
         'payer_name',

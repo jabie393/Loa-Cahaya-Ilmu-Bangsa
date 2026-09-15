@@ -175,7 +175,7 @@
                     NO: {{ $record->created_at->format('Y') }}/CIB{{ sprintf('%03d', $record->journal->id) }}/LOA{{ sprintf('%03d', $record->id) }}
                 </span>
                 <span class="text-primary font-lato text-[10pt] font-bold">
-                    {{ $record->approved_date?->format('d F Y') }}
+                    {{ ($record->approved_date ?? $record->date_of_loa ?? now())->format('d F Y') }}
                 </span>
             </p>
             <div class="pt-5">
@@ -342,7 +342,7 @@
         <div class="pb-5">
             <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">
                 <span class="font-garamond text-[10pt] font-bold text-black">
-                    Malang, {{ $record->approved_date?->format('d F Y') }}
+                    Malang, {{ ($record->approved_date ?? $record->date_of_loa ?? now())->format('d F Y') }}
                 </span>
             </p>
             <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">

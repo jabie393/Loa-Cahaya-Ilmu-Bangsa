@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Submissions\Pages;
 use App\Filament\Resources\Submissions\SubmissionResource;
 use App\Models\Submission;
 use App\Services\GeminiReviewService;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -273,7 +273,7 @@ class ReplacePdfSubmission extends Page implements HasForms
         }
 
         // 3. Buat Tagihan Pembayaran & Arahkan ke Payment
-        $qrisService = app(MidtransQrisService::class);
+        $qrisService = app(PaymentGatewayManager::class);
         try {
             $qrisService->getOrCreateReplacePdfPayment($this->record, $relativePublicPath);
 

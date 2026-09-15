@@ -55,15 +55,42 @@
                 box-sizing: border-box !important;
                 border-radius: 0 !important;
             }
+
+            .header-container {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+            .meta-container {
+                flex-direction: row !important;
+            }
+
+            .table-container {
+                overflow: visible !important;
+            }
+
+            .table-container table {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+
+            .summary-box {
+                width: 20rem !important;
+            }
+
+            .footer-container {
+                flex-direction: row !important;
+                align-items: flex-end !important;
+            }
         }
     </style>
 </head>
 
-<body class="py-8 px-4 flex flex-col items-center">
+<body class="py-4 px-2.5 sm:py-8 sm:px-4 flex flex-col items-center min-h-screen bg-slate-50 text-slate-800">
 
     <!-- Action Bar / Buttons -->
     <div
-        class="no-print w-full max-w-[210mm] mb-4 flex items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm">
+        class="no-print w-full max-w-[210mm] mb-4 flex items-center justify-between gap-3 bg-white p-3 sm:p-3.5 rounded-xl border border-slate-200 shadow-sm">
         <a href="{{ url()->previous() ?: route('filament.admin.resources.submissions.index') }}"
             class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-700 transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -73,7 +100,7 @@
         </a>
         <div class="flex items-center gap-2">
             <button onclick="window.print()"
-                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all cursor-pointer">
+                class="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-all cursor-pointer">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z" />
@@ -85,89 +112,95 @@
 
     <!-- Printable Invoice Sheet (A4 Dimensions) -->
     <div id="invoice-paper"
-        class="w-full max-w-[210mm] min-h-[280mm] bg-white border border-slate-200/90 rounded-2xl p-8 sm:p-12 shadow-xl text-slate-800 relative overflow-hidden flex flex-col justify-between">
+        class="w-full max-w-[210mm] min-h-fit sm:min-h-[280mm] print:min-h-[297mm] bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl p-4 sm:p-8 md:p-12 shadow-xl text-slate-800 relative overflow-hidden flex flex-col justify-between box-border">
 
         <!-- Watermark PAID -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] select-none">
-            <span class="text-[130pt] font-black uppercase tracking-widest text-blue-900 -rotate-45">LUNAS</span>
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] sm:opacity-[0.04] select-none overflow-hidden">
+            <span class="text-[50pt] sm:text-[90pt] md:text-[120pt] font-black uppercase tracking-widest text-blue-900 -rotate-45">LUNAS</span>
         </div>
 
         <div>
             <!-- Header: KOP & Logo -->
-            <div class="flex items-center justify-between border-b-2 border-slate-800 pb-6 mb-7">
-                <div class="flex items-center gap-4">
+            <div class="header-container flex flex-col sm:flex-row print:flex-row items-start sm:items-center print:items-center justify-between gap-4 border-b-2 border-slate-800 pb-5 sm:pb-6 mb-5 sm:mb-7">
+                <div class="flex items-center gap-3 sm:gap-4">
                     <img src="{{ asset('assets/logo.png') }}" alt="Logo Cahaya Ilmu Bangsa"
-                        class="h-16 w-auto object-contain">
+                        class="h-12 sm:h-16 w-auto object-contain shrink-0">
                     <div>
-                        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tight">Cahaya Ilmu Bangsa</h1>
-                        <p class="text-[10px] text-slate-600 font-semibold tracking-wide uppercase">Kemenkumham
+                        <h1 class="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight leading-tight">Cahaya Ilmu Bangsa</h1>
+                        <p class="text-[9.5px] sm:text-[10px] text-slate-600 font-semibold tracking-wide uppercase">Kemenkumham
                             AHU-0018912-AH.01.14</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Jl. Raya Sempalwadak No.6, Arjowinangun, Kec.
+                        <p class="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5 leading-snug">Jl. Raya Sempalwadak No.6, Arjowinangun, Kec.
                             Kedungkandang,</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Kota Malang, Jawa Timur 65132 •
+                        <p class="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5 leading-snug">Kota Malang, Jawa Timur 65132 •
                             admin@cahayailmubangsa.institute</p>
                     </div>
                 </div>
-                <div class="text-right">
+                <div class="w-full sm:w-auto print:w-auto flex flex-row sm:flex-col print:flex-col items-center sm:items-end print:items-end justify-between sm:justify-start gap-1 sm:text-right print:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
                     <span
-                        class="inline-block px-3 py-1 bg-blue-50 border border-blue-300 text-blue-800 text-[11px] font-black uppercase tracking-wider rounded-lg">
+                        class="inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 bg-blue-50 border border-blue-300 text-blue-800 text-[10px] sm:text-[11px] font-black uppercase tracking-wider rounded-lg order-2 sm:order-1">
                         PAID / LUNAS KOLEKTIF
                     </span>
-                    <h2 class="text-2xl font-black text-slate-900 heading-font mt-2">INVOICE</h2>
-                    <p class="text-xs font-mono font-bold text-slate-500">
-                        {{ $payment->invoice_number ?: ('#INV-BULK-' . $payment->id . '-' . date('ymd', strtotime($payment->paid_at ?? now()))) }}
-                    </p>
+                    <div class="order-1 sm:order-2">
+                        <h2 class="text-xl sm:text-2xl font-black text-slate-900 heading-font sm:mt-2">INVOICE</h2>
+                        <p class="text-[11px] sm:text-xs font-mono font-bold text-slate-500">
+                            {{ $payment->invoice_number ?: ('#INV-BULK-' . $payment->id . '-' . date('ymd', strtotime($payment->paid_at ?? now()))) }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
             <!-- Meta Information Columns -->
-            <div class="flex justify-between items-start gap-6 mb-6 text-xs">
-                <div class="max-w-[55%]">
+            <div class="meta-container flex flex-col sm:flex-row print:flex-row justify-between items-start gap-4 sm:gap-6 mb-5 sm:mb-6 text-xs">
+                <div class="w-full sm:max-w-[55%] print:max-w-[55%]">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Ditagihkan
                         Kepada:</span>
                     <p class="font-bold text-slate-900 text-sm mb-0.5">
                         {{ $payment->payer_name ?: ($payment->user?->name ?? 'Pemesan / Penulis Kolektif') }}
                     </p>
-                    <p class="text-slate-600">{{ $payment->payer_email ?: ($payment->user?->email ?? '-') }}</p>
+                    <p class="text-slate-600 break-all sm:break-normal">{{ $payment->payer_email ?: ($payment->user?->email ?? '-') }}</p>
                     <p class="text-slate-500 mt-1 text-[11px] font-semibold text-blue-700">
                         Total Naskah: {{ count($items) }} Naskah Publikasi
                     </p>
                 </div>
-                <div class="text-right shrink-0">
+                <div class="w-full sm:w-auto print:w-auto sm:text-right print:text-right shrink-0 bg-slate-50/80 sm:bg-transparent print:bg-transparent p-3 sm:p-0 print:p-0 rounded-xl sm:rounded-none border sm:border-0 print:border-0 border-slate-100">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Detail
                         Transaksi Kolektif:</span>
-                    <p class="text-slate-700 whitespace-nowrap">
-                        <span class="font-semibold text-slate-500">Order ID:</span>
-                        <span class="font-mono font-bold text-slate-900">{{ $payment->order_id }}</span>
-                    </p>
-                    <p class="text-slate-700 whitespace-nowrap">
-                        <span class="font-semibold text-slate-500">Tanggal Lunas:</span>
-                        <span
-                            class="font-medium text-slate-900">{{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->translatedFormat('d F Y, H:i') . ' WIB' : now()->translatedFormat('d F Y, H:i') . ' WIB' }}</span>
-                    </p>
-                    <p class="text-slate-700 whitespace-nowrap">
-                        <span class="font-semibold text-slate-500">Metode Bayar:</span>
-                        <span class="font-semibold text-slate-900 uppercase">QRIS KOLEKTIF</span>
-                    </p>
+                    <div class="space-y-1 sm:space-y-0.5 print:space-y-0.5">
+                        <p class="text-slate-700 flex sm:inline-block print:inline-block justify-between sm:justify-start gap-2">
+                            <span class="font-semibold text-slate-500">Order ID:</span>
+                            <span class="font-mono font-bold text-slate-900">{{ $payment->order_id }}</span>
+                        </p>
+                        <br class="hidden sm:inline print:inline">
+                        <p class="text-slate-700 flex sm:inline-block print:inline-block justify-between sm:justify-start gap-2">
+                            <span class="font-semibold text-slate-500">Tanggal Lunas:</span>
+                            <span
+                                class="font-medium text-slate-900">{{ $payment->paid_at ? \Carbon\Carbon::parse($payment->paid_at)->translatedFormat('d F Y, H:i') . ' WIB' : now()->translatedFormat('d F Y, H:i') . ' WIB' }}</span>
+                        </p>
+                        <br class="hidden sm:inline print:inline">
+                        <p class="text-slate-700 flex sm:inline-block print:inline-block justify-between sm:justify-start gap-2">
+                            <span class="font-semibold text-slate-500">Metode Bayar:</span>
+                            <span class="font-semibold text-slate-900 uppercase">QRIS KOLEKTIF</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
             <!-- Table of Items (Bulk List) -->
-            <div class="mb-6 overflow-hidden rounded-xl border border-slate-200/90 shadow-sm">
-                <table class="w-full text-left text-xs table-fixed">
+            <div class="table-container mb-6 overflow-x-auto print:overflow-visible rounded-xl border border-slate-200/90 shadow-sm">
+                <table class="w-full text-left text-xs min-w-[500px] sm:min-w-0 print:min-w-0 table-fixed">
                     <colgroup>
-                        <col style="width: 5%;">
-                        <col style="width: 49%;">
+                        <col style="width: 6%;">
+                        <col style="width: 48%;">
                         <col style="width: 24%;">
                         <col style="width: 22%;">
                     </colgroup>
                     <thead
                         class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
                         <tr>
-                            <th class="py-3 px-3.5 text-center">No</th>
-                            <th class="py-3 px-3.5">Detail Naskah & Penulis</th>
-                            <th class="py-3 px-3.5 text-left">Target & Layanan</th>
-                            <th class="py-3 px-3.5 text-right">Subtotal</th>
+                            <th class="py-3 sm:py-3.5 px-3 sm:px-3.5 text-center">No</th>
+                            <th class="py-3 sm:py-3.5 px-3 sm:px-3.5">Detail Naskah & Penulis</th>
+                            <th class="py-3 sm:py-3.5 px-3 sm:px-3.5 text-left">Target & Layanan</th>
+                            <th class="py-3 sm:py-3.5 px-3 sm:px-3.5 text-right">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-slate-700 bg-white">
@@ -240,7 +273,7 @@
                 $bulkDiscount = $payment->discount_amount ?? $items->sum('discount_amount');
             @endphp
             <div class="flex justify-end mb-6">
-                <div class="w-80 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
+                <div class="summary-box w-full sm:w-80 print:w-80 bg-slate-50/80 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
                     <div class="flex justify-between text-slate-600">
                         <span class="font-medium">Total Naskah:</span>
                         <span class="font-bold text-slate-800">{{ count($items) }} Artikel</span>
@@ -260,9 +293,9 @@
                             <span class="font-bold font-mono">-Rp {{ number_format($bulkDiscount, 0, ',', '.') }}</span>
                         </div>
                     @endif
-                    <div class="pt-2.5 border-t border-slate-300 flex justify-between items-baseline">
-                        <span class="text-xs font-black text-slate-900 uppercase tracking-wider">Total Lunas:</span>
-                        <span class="text-2xl font-black text-blue-600 heading-font tracking-tight">
+                    <div class="pt-2.5 border-t border-slate-300 flex justify-between items-baseline gap-2">
+                        <span class="text-xs font-black text-slate-900 uppercase tracking-wider shrink-0">Total Lunas:</span>
+                        <span class="text-xl sm:text-2xl font-black text-blue-600 heading-font tracking-tight text-right">
                             Rp {{ number_format($payment->gross_amount, 0, ',', '.') }}
                         </span>
                     </div>
@@ -271,8 +304,8 @@
         </div>
 
         <!-- Footer / Signature & Legal Notes -->
-        <div class="border-t border-slate-100 pt-5 mt-4 flex items-end justify-between text-xs text-slate-500">
-            <div class="max-w-xs space-y-1">
+        <div class="footer-container border-t border-slate-100 pt-5 mt-4 flex flex-col-reverse sm:flex-row print:flex-row items-center sm:items-end print:items-end justify-between gap-4 text-xs text-slate-500">
+            <div class="w-full sm:max-w-xs print:max-w-xs space-y-1 text-center sm:text-left print:text-left">
                 <p class="font-bold text-slate-800">Catatan Pembayaran Kolektif:</p>
                 <p class="text-[10px] text-slate-500 leading-relaxed">
                     Invoice ini merupakan bukti sah pembayaran kolektif biaya publikasi artikel & penerbitan Letter of

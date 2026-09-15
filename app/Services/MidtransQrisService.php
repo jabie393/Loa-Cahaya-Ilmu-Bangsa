@@ -12,13 +12,25 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class MidtransQrisService
+use App\Services\PaymentGateways\PaymentFulfillmentService;
+use App\Services\PaymentGateways\PaymentGatewayInterface;
+
+class MidtransQrisService implements PaymentGatewayInterface
 {
     protected SubmissionPricingService $pricingService;
+    protected PaymentFulfillmentService $fulfillmentService;
 
-    public function __construct(SubmissionPricingService $pricingService)
-    {
+    public function __construct(
+        SubmissionPricingService $pricingService,
+        ?PaymentFulfillmentService $fulfillmentService = null
+    ) {
         $this->pricingService = $pricingService;
+        $this->fulfillmentService = $fulfillmentService ?? app(PaymentFulfillmentService::class);
+    }
+
+    public function getGatewayName(): string
+    {
+        return 'midtrans';
     }
 
     public function getServerKey(): string
@@ -47,6 +59,20 @@ class MidtransQrisService
         return $this->isProduction()
             ? 'https://api.midtrans.com'
             : 'https://api.sandbox.midtrans.com';
+    }
+
+    public function cancelAndExpirePendingPayment(Payment $payment): void
+    {
+        try {
+            $this->cancelPayment($payment);
+        } catch (\Throwable $e) {
+            Log::warning("Midtrans cancelPayment error during expiration: " . $e->getMessage());
+        }
+
+        $payment->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
     }
 
     /**
@@ -79,10 +105,7 @@ class MidtransQrisService
 
             // Check if expired OR if the amount no longer matches current pricing (e.g. DOI changed or authors changed)
             if (($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) || $paymentGross !== $currentGross) {
-                $latestPayment->update([
-                    'payment_status' => 'expired',
-                    'transaction_status' => 'expire',
-                ]);
+                $this->cancelAndExpirePendingPayment($latestPayment);
             } else {
                 // Still active and valid single QRIS with matching amount
                 if (empty($latestPayment->qris_url) && !empty($latestPayment->qr_string)) {
@@ -109,13 +132,11 @@ class MidtransQrisService
             return $paidPayment;
         }
 
-        // Mark any lingering pending payments as expired
+        // Cancel and mark any lingering pending payments as expired
         $submission->payments()
             ->where('payment_status', 'pending')
-            ->update([
-                'payment_status' => 'expired',
-                'transaction_status' => 'expire',
-            ]);
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
 
         return $this->chargeQris($submission);
     }
@@ -219,6 +240,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'submission',
             'payer_name' => $customerName,
@@ -283,54 +305,11 @@ class MidtransQrisService
                 $transStatus = $data['transaction_status'] ?? null;
 
                 if (in_array($transStatus, ['capture', 'settlement'])) {
-                    $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
-                    $mergedRaw = array_merge($existingRaw, $data);
-                    if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
-                        $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
-                    }
-
-                    $payment->update([
-                        'payment_status' => 'paid',
-                        'transaction_status' => $transStatus,
-                        'paid_at' => now(),
-                        'raw_response' => $mergedRaw,
-                    ]);
-
-                    $payment->ensureInvoiceNumber();
-
-                    if ($payment->type === 'bulk_submission') {
-                        $submissions = !empty($payment->submission_ids)
-                            ? Submission::whereIn('id', $payment->submission_ids)->get()
-                            : ($payment->submission ? collect([$payment->submission]) : collect());
-
-                        foreach ($submissions as $sub) {
-                            $sub->update(['payment_status' => 'paid']);
-                            $sub->approveAndProcess();
-                        }
-                    } elseif ($payment->type === 'doi_addon') {
-                        if ($payment->submission) {
-                            $this->activateDoiForSubmission($payment->submission);
-                        }
-                    } elseif ($payment->type === 'replace_pdf') {
-                        if ($payment->submission) {
-                            $this->applyReplacePdfForSubmission($payment->submission, $payment);
-                        }
-                    } else {
-                        if ($payment->submission) {
-                            $payment->submission->update(['payment_status' => 'paid']);
-                            $payment->submission->approveAndProcess();
-                        }
-                    }
+                    $this->fulfillmentService->markAsPaid($payment, $transStatus, $data);
                 } elseif ($transStatus === 'expire') {
-                    $payment->update([
-                        'payment_status' => 'expired',
-                        'transaction_status' => 'expire',
-                    ]);
+                    $this->fulfillmentService->markAsExpired($payment, $data);
                 } elseif (in_array($transStatus, ['deny', 'cancel'])) {
-                    $payment->update([
-                        'payment_status' => 'failed',
-                        'transaction_status' => $transStatus,
-                    ]);
+                    $this->fulfillmentService->markAsFailed($payment, $transStatus, $data);
                 }
             }
         } catch (\Exception $e) {
@@ -338,6 +317,33 @@ class MidtransQrisService
         }
 
         return $payment->fresh();
+    }
+
+    public function checkStatus(Payment $payment): Payment
+    {
+        return $this->checkStatusFromMidtrans($payment);
+    }
+
+    public function cancelPayment(Payment $payment): bool
+    {
+        $serverKey = $this->getServerKey();
+        $authHeader = 'Basic ' . base64_encode($serverKey . ':');
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Authorization' => $authHeader,
+            ])->timeout(10)->post($this->getBaseUrl() . '/v2/' . $payment->order_id . '/cancel');
+
+            if ($response->successful()) {
+                $this->fulfillmentService->markAsFailed($payment, 'cancel', $response->json() ?? []);
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Midtrans cancelPayment failed for {$payment->order_id}: " . $e->getMessage());
+        }
+
+        return false;
     }
 
     /**
@@ -394,15 +400,16 @@ class MidtransQrisService
             return $payment;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateDoiAddon($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         // Check for latest pending DOI payment
         $latestDoi = $submission->payments()->where('type', 'doi_addon')->latest()->first();
 
         if ($latestDoi && $latestDoi->payment_status === 'pending') {
-            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== 20000) {
-                $latestDoi->update([
-                    'payment_status' => 'expired',
-                    'transaction_status' => 'expire',
-                ]);
+            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== $currentGross) {
+                $this->cancelAndExpirePendingPayment($latestDoi);
             } else {
                 if (empty($latestDoi->qris_url) && !empty($latestDoi->qr_string)) {
                     $latestDoi->qris_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' . urlencode($latestDoi->qr_string);
@@ -411,6 +418,26 @@ class MidtransQrisService
                 return $latestDoi;
             }
         }
+
+        return $this->chargeDoiAddonQris($submission);
+    }
+
+    public function chargeDoiQris(Submission $submission): Payment
+    {
+        return $this->chargeDoiAddonQris($submission);
+    }
+
+    public function forceNewDoiPayment(Submission $submission): Payment
+    {
+        $paidDoi = $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'paid')->first();
+        if ($paidDoi) {
+            $paidDoi->ensureInvoiceNumber();
+            return $paidDoi;
+        }
+
+        $submission->payments()->where('type', 'doi_addon')->where('payment_status', 'pending')
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
 
         return $this->chargeDoiAddonQris($submission);
     }
@@ -497,6 +524,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'doi_addon',
             'payer_name' => $customerName,
@@ -575,20 +603,64 @@ class MidtransQrisService
      */
     public function getOrCreateReplacePdfPayment(Submission $submission, ?string $tempFilePath = null): Payment
     {
+        // 1. If no explicit new tempFilePath is provided, check if replace_pdf has already been paid
+        if (empty($tempFilePath)) {
+            $paid = $submission->payments()
+                ->where('type', 'replace_pdf')
+                ->where('payment_status', 'paid')
+                ->latest()
+                ->first();
+
+            if ($paid) {
+                // Check if there is a valid newer unexpired replacement in progress
+                $pending = $submission->payments()
+                    ->where('type', 'replace_pdf')
+                    ->where('payment_status', 'pending')
+                    ->where('id', '>', $paid->id)
+                    ->latest()
+                    ->first();
+
+                if ($pending && !$pending->isExpired()) {
+                    $pRaw = is_array($pending->raw_response) ? $pending->raw_response : [];
+                    $pPath = $pRaw['new_pdf_path'] ?? null;
+                    if ($pPath && Storage::disk('public')->exists($pPath)) {
+                        $latest = $pending;
+                    } else {
+                        $pending->update([
+                            'payment_status' => 'expired',
+                            'transaction_status' => 'expire',
+                        ]);
+                        $paid->ensureInvoiceNumber();
+                        return $paid;
+                    }
+                } else {
+                    if ($pending) {
+                        $pending->update([
+                            'payment_status' => 'expired',
+                            'transaction_status' => 'expire',
+                        ]);
+                    }
+                    $paid->ensureInvoiceNumber();
+                    return $paid;
+                }
+            }
+        }
+
         if (empty($tempFilePath)) {
             $prev = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
             $tempFilePath = $prev?->raw_response['new_pdf_path'] ?? null;
         }
 
+        $user = $submission->user ?? Auth::user();
+        $pricing = $this->pricingService->calculateReplacePdf($user);
+        $currentGross = (int) round($pricing['gross_amount']);
+
         // Check for latest pending Replace PDF payment
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if ($latest && $latest->payment_status === 'pending') {
-            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== 25000) {
-                $latest->update([
-                    'payment_status' => 'expired',
-                    'transaction_status' => 'expire',
-                ]);
+            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== $currentGross) {
+                $this->cancelAndExpirePendingPayment($latest);
             } else {
                 if ($tempFilePath) {
                     $raw = is_array($latest->raw_response) ? $latest->raw_response : [];
@@ -606,6 +678,15 @@ class MidtransQrisService
         }
 
         return $this->chargeReplacePdfQris($submission, $tempFilePath ?: '');
+    }
+
+    public function forceNewReplacePdfPayment(Submission $submission, string $tempFilePath = ''): Payment
+    {
+        $submission->payments()->where('type', 'replace_pdf')->where('payment_status', 'pending')
+            ->get()
+            ->each(fn ($p) => $this->cancelAndExpirePendingPayment($p));
+
+        return $this->chargeReplacePdfQris($submission, $tempFilePath);
     }
 
     /**
@@ -697,6 +778,7 @@ class MidtransQrisService
             'submission_id' => $submission->id,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'replace_pdf',
             'payer_name' => $customerName,
@@ -846,14 +928,29 @@ class MidtransQrisService
         if ($pendingPayment) {
             $paymentGross = (int) round($pendingPayment->gross_amount);
             if ($paymentGross !== $currentGross) {
-                $pendingPayment->update([
-                    'payment_status' => 'expired',
-                    'transaction_status' => 'expire',
-                ]);
+                $this->cancelAndExpirePendingPayment($pendingPayment);
             } else {
                 return $pendingPayment;
             }
         }
+
+        return $this->chargeBulkQris($submissions);
+    }
+
+    public function forceNewBulkPayment($submissions): Payment
+    {
+        $submissionIds = $submissions->pluck('id')->sort()->values()->toArray();
+
+        Payment::where('type', 'bulk_submission')
+            ->where('payment_status', 'pending')
+            ->get()
+            ->each(function ($p) use ($submissionIds) {
+                $ids = is_array($p->submission_ids) ? $p->submission_ids : [];
+                sort($ids);
+                if ($ids === $submissionIds) {
+                    $this->cancelAndExpirePendingPayment($p);
+                }
+            });
 
         return $this->chargeBulkQris($submissions);
     }
@@ -944,6 +1041,7 @@ class MidtransQrisService
             'submission_ids' => $submissionIds,
             'order_id' => $orderId,
             'transaction_id' => $responseData['transaction_id'] ?? null,
+            'gateway' => 'midtrans',
             'payment_method' => 'qris',
             'type' => 'bulk_submission',
             'payer_name' => $payerName,

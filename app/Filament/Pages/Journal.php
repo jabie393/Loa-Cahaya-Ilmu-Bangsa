@@ -15,6 +15,16 @@ class Journal extends Page
     protected static ?string $navigationLabel = '1. Unduh Template';
     protected static ?string $title = 'Unduh Template';
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        return ! $user->hasRole('ryu_dev');
+    }
+
     // Livewire property for filtering website OJS
     public ?string $ojs_base_url = 'default_env';
 

@@ -42,7 +42,7 @@ class CreateSubmission extends CreateRecord
         }
     }
 
-    public function getMaxContentWidth(): \Filament\Support\Enums\Width | string | null
+    public function getMaxContentWidth(): \Filament\Support\Enums\Width|string|null
     {
         return \Filament\Support\Enums\Width::Full;
     }
@@ -166,23 +166,26 @@ class CreateSubmission extends CreateRecord
                                             if (!empty($journal->identifier)) {
                                                 $dbKeywords = array_map('trim', explode(',', $journal->identifier));
                                                 $missingKeywords = [];
-                                                
+
                                                 foreach ($dbKeywords as $kw) {
                                                     if (!empty($kw) && !str_contains($text, strtolower($kw))) {
                                                         $missingKeywords[] = $kw;
                                                     }
                                                 }
-                                                
+
                                                 if (!empty($missingKeywords)) {
                                                     $fail("Pastikan naskah artikel disesuaikan dengan template {$journal->name} yang sudah disediakan");
                                                 }
                                             } else {
                                                 // 2. Fallback jika identifier di database kosong (Cukup salah satu / OR Logic)
                                                 $found = false;
-                                                if (str_contains($text, $slug)) $found = true;
-                                                if (str_contains($text, $name)) $found = true;
-                                                if (str_contains($text, $firstWord)) $found = true;
-                                                
+                                                if (str_contains($text, $slug))
+                                                    $found = true;
+                                                if (str_contains($text, $name))
+                                                    $found = true;
+                                                if (str_contains($text, $firstWord))
+                                                    $found = true;
+
                                                 if (!$found) {
                                                     $fail("Pastikan naskah artikel disesuaikan dengan template {$journal->name} yang sudah disediakan");
                                                 }
@@ -202,7 +205,7 @@ class CreateSubmission extends CreateRecord
                             ->placeholder('email@example.com'),
 
                         Checkbox::make('agreement')
-                            ->label('LoA Berlaku Jika Dilengkapi Bukti Pembayaran dan Link Terbitan, Dengan ini saya bersedia naskah saya ditarik apabila dikemudian hari terdapat kecurangan dalam pengerjaannya')
+                            ->label('LoA berlaku jika dilengkapi link dan PDF terbitan resmi. Dengan ini saya bersedia naskah saya ditarik apabila di kemudian hari terdapat kecurangan atau pelanggaran etika publikasi.')
                             ->accepted()
                             ->dehydrated(false)
                             ->required(),
@@ -260,7 +263,7 @@ class CreateSubmission extends CreateRecord
             ->info()
             ->icon('heroicon-o-information-circle')
             ->title('Pengajuan Berhasil Dikirim!')
-            ->body('Naskah Anda sedang dalam proses peninjauan (review). Setelah selesai, Anda dapat melakukan pembayaran melalui tombol "Bayar QRIS" di daftar naskah untuk mengaktifkan persetujuan (LOA Approval) otomatis.')
+            ->body('Naskah Anda sedang dalam proses peninjauan (review). Setelah selesai, Anda dapat melakukan pembayaran melalui tombol "Proceed to Payment" di daftar naskah.')
             ->duration(10000);
     }
 }

@@ -11,7 +11,13 @@ class RoleBasedLoginResponse implements LoginResponseContract
     {
         $user = Auth::user();
 
-        $request->session()->put('show_welcome_modal', true);
+        if ($user && $user->hasAnyRole(['ryu_dev', 'dev', 'developer'])) {
+            return redirect()->to('/dev-payouts');
+        }
+
+        if ($request->hasSession()) {
+            $request->session()->put('show_welcome_modal', true);
+        }
 
         return redirect()->to('/journal');
     }

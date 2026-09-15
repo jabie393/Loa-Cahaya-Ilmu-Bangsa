@@ -19,6 +19,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\FontFamily;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -46,7 +47,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->modalHeading('Buat Draf Payout Developer')
                     ->modalDescription('Tentukan nominal hak dev yang ingin dicairkan. Status akan menjadi "Menunggu Payout" dan siap dibayar via QRIS.')
                     ->modalSubmitActionLabel('Buat Draf Payout')
-                    ->modalWidth('lg')
+                    ->modalWidth(Width::ExtraLarge)
                     ->schema([
                         TextInput::make('amount')
                             ->label('Nominal Pencairan (Rp)')
@@ -180,7 +181,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->modalHeading(fn (DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
                     ->modalDescription('Scan kode QRIS di bawah ini dengan Mobile Banking atau E-Wallet untuk menyelesaikan transfer.')
                     ->modalSubmitActionLabel('Sudah Bayar via QRIS')
-                    ->modalWidth('lg')
+                    ->modalWidth(Width::ExtraLarge)
                     ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
                         'record' => $record,
                     ]))
@@ -220,6 +221,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         )
                         ->requiresConfirmation()
                         ->modalHeading('Konfirmasi Penerimaan Dana Payout')
+                        ->modalWidth(Width::Large)
                         ->modalDescription(fn (DevPayout $record): string => 
                             "Apakah Anda yakin telah menerima transfer dana sebesar Rp " . number_format($record->amount, 0, ',', '.') . " ke rekening Anda?"
                         )
@@ -245,6 +247,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->modalHeading('Laporkan Payout Belum Diterima / Bermasalah')
                         ->modalDescription('Dana akan dikembalikan ke saldo hak developer yang belum dicairkan.')
                         ->modalSubmitActionLabel('Kirim Laporan Penolakan')
+                        ->modalWidth(Width::Large)
                         ->form([
                             Textarea::make('rejection_reason')
                                 ->label('Alasan Penolakan / Masalah')
@@ -271,6 +274,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->icon('heroicon-m-document-text')
                         ->color('gray')
                         ->modalHeading('Kuitansi Pencairan Hak Developer')
+                        ->modalWidth(Width::ExtraLarge)
                         ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.payout-receipt-modal', ['record' => $record]))
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Tutup'),

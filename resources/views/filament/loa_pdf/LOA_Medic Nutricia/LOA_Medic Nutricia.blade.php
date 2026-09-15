@@ -323,7 +323,7 @@
     <div class="pb-5">
         <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">
             <span class="font-montserrat text-[10pt] font-normal text-black">
-                Malang, {{ $record->created_at->format('d F Y') }}
+                Malang, {{ ($record->approved_date ?? $record->date_of_loa ?? $record->created_at ?? now())->format('d F Y') }}
             </span>
         </p>
         <p class="ml-[318.9pt] pb-[8pt] pt-0 text-left leading-[1.079]">

@@ -100,6 +100,13 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->color('primary')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('gateway')
+                    ->label('Gateway')
+                    ->badge()
+                    ->formatStateUsing(fn(?string $state) => $state === 'belibayar' ? 'Belibayar' : 'Midtrans')
+                    ->color(fn(?string $state) => $state === 'belibayar' ? 'info' : 'warning')
+                    ->icon(fn(?string $state) => $state === 'belibayar' ? 'heroicon-m-bolt' : 'heroicon-m-cube')
+                    ->sortable(),
                 TextColumn::make('paid_at')
                     ->label('Waktu Bayar')
                     ->dateTime('d M Y, H:i')

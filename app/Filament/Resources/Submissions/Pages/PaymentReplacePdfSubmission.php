@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Submissions\Pages;
 
 use App\Filament\Resources\Submissions\SubmissionResource;
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -31,7 +31,7 @@ class PaymentReplacePdfSubmission extends Page
     public function getViewData(): array
     {
         $pricingService = app(SubmissionPricingService::class);
-        $qrisService = app(MidtransQrisService::class);
+        $qrisService = app(PaymentGatewayManager::class);
 
         $user = $this->record->user ?? Auth::user();
         $pricing = $pricingService->calculateReplacePdf($user);

@@ -648,17 +648,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/payment', [\App\Http\Controllers\PaymentController::class, 'show'])->name('submissions.payment');
     Route::get('/submissions/{id}/payment/check', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('submissions.payment.check');
     Route::post('/submissions/{id}/payment/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerate'])->name('submissions.payment.regenerate');
+    Route::post('/submissions/{id}/payment/simulate-sandbox', [\App\Http\Controllers\PaymentController::class, 'simulateSandbox'])->name('submissions.payment.simulate-sandbox');
     Route::get('/submissions/{id}/payment-doi', [\App\Http\Controllers\PaymentController::class, 'showDoi'])->name('submissions.payment.doi');
     Route::get('/submissions/{id}/payment-doi/check', [\App\Http\Controllers\PaymentController::class, 'checkDoiStatus'])->name('submissions.payment.doi.check');
     Route::post('/submissions/{id}/payment-doi/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateDoi'])->name('submissions.payment.doi.regenerate');
     Route::get('/submissions/{id}/payment-replace-pdf', [\App\Http\Controllers\PaymentController::class, 'showReplacePdf'])->name('submissions.payment.replace-pdf');
     Route::get('/submissions/{id}/payment-replace-pdf/check', [\App\Http\Controllers\PaymentController::class, 'checkReplacePdfStatus'])->name('submissions.payment.replace-pdf.check');
     Route::post('/submissions/{id}/payment-replace-pdf/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateReplacePdf'])->name('submissions.payment.replace-pdf.regenerate');
-
+    Route::get('/payments/download-qris', [\App\Http\Controllers\PaymentController::class, 'downloadQris'])->name('payments.download-qris');
 });
 
 Route::post('/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
-Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle']);
+Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('payment.midtrans.notification');
+
+Route::post('/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle'])->name('belibayar.webhook');
+Route::post('/api/belibayar/webhook', [\App\Http\Controllers\BelibayarWebhookController::class, 'handle'])->name('payment.belibayar.callback');
 
 
 Route::get('/invoice/preview/{record}', function (App\Models\Submission $record) {
@@ -778,3 +782,4 @@ Route::get('/invoice/bulk/{payment}', function (App\Models\Payment $payment) {
 // Bulk Payment status check
 Route::get('/payments/{paymentId}/check-bulk', [App\Http\Controllers\PaymentController::class, 'checkBulkStatus'])->name('payments.check.bulk');
 Route::post('/payments/{paymentId}/regenerate-bulk', [App\Http\Controllers\PaymentController::class, 'regenerateBulk'])->name('payments.regenerate.bulk');
+Route::post('/payments/{paymentId}/simulate-sandbox-bulk', [App\Http\Controllers\PaymentController::class, 'simulateBulk'])->name('payments.simulate.bulk');

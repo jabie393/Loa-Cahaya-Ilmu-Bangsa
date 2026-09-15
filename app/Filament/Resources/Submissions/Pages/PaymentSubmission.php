@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Submissions\Pages;
 use App\Filament\Resources\Submissions\SubmissionResource;
 use App\Models\Payment;
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -42,16 +42,6 @@ class PaymentSubmission extends Page
             return;
         }
 
-        // If submission is already approved, publication fee is already settled
-        if ($this->record->status === 'Approved') {
-            if (!$this->record->has_doi) {
-                $this->redirect(SubmissionResource::getUrl('payment.doi', ['record' => $this->record]));
-                return;
-            }
-            $this->redirect(SubmissionResource::getUrl('view', ['record' => $this->record]));
-            return;
-        }
-
         $this->loadPaymentData();
     }
 
@@ -60,11 +50,15 @@ class PaymentSubmission extends Page
         $this->record->refresh();
         $this->isExtracting = ($this->record->review_status === 'processing');
 
-        if (!$this->isExtracting) {
-            $pricingService = app(SubmissionPricingService::class);
-            $qrisService = app(MidtransQrisService::class);
+        $pricingService = app(SubmissionPricingService::class);
+        try {
+            $this->pricing = $pricingService->calculate($this->record, Auth::user());
+        } catch (\Throwable $e) {
+            $this->pricing = null;
+        }
 
-            $this->pricing = $pricingService->calculate($this->record);
+        if (!$this->isExtracting) {
+            $qrisService = app(PaymentGatewayManager::class);
 
             try {
                 $this->payment = $qrisService->getOrCreatePayment($this->record);

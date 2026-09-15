@@ -21,13 +21,14 @@
       x-data="paymentApp({
           checkUrl: '{{ route('submissions.payment.check', $submission->id) }}',
           regenerateUrl: '{{ route('submissions.payment.regenerate', $submission->id) }}',
+          simulateUrl: '{{ route('submissions.payment.simulate-sandbox', $submission->id) }}',
           initialStatus: '{{ $payment ? $payment->payment_status : ($submission->payment_status === 'paid' ? 'paid' : 'pending') }}',
           initialExpiresAt: '{{ $payment && $payment->expired_at ? $payment->expired_at->toIso8601String() : '' }}',
           isExtracting: {{ $isExtracting ? 'true' : 'false' }},
-          initialQrisUrl: '{{ $payment ? $payment->qris_url : '' }}',
-          initialQrString: '{{ $payment ? $payment->qr_string : '' }}',
+          initialQrisUrl: @js($payment ? $payment->qris_url : ''),
+          initialQrString: @js($payment ? $payment->qr_string : ''),
           initialOrderId: '{{ $payment ? $payment->order_id : '' }}',
-          errorMessage: '{{ $errorMessage ? addslashes($errorMessage) : '' }}'
+          errorMessage: @js($errorMessage ?? null)
       })"
       x-init="initPayment()">
 
@@ -185,6 +186,11 @@
                     </div>
 
                     <!-- Pricing Breakdown Card -->
+                    @php
+                        $hasPricing = !empty($pricing) && is_array($pricing);
+                        $grossTotal = $hasPricing ? ($pricing['gross_amount'] ?? 0) : ($payment->gross_amount ?? 0);
+                        $tierName = $hasPricing ? ($pricing['tier_name'] ?? 'Standar') : 'Standar Publikasi';
+                    @endphp
                     <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
                             <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -196,11 +202,11 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between items-center text-slate-600">
                                 <span>Paket / Kategori:</span>
-                                <span class="font-semibold text-slate-800">{{ $pricing['tier_name'] ?? 'Standar' }}</span>
+                                <span class="font-semibold text-slate-800">{{ $tierName }}</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-600">
                                 <span>Biaya Layanan:</span>
-                                <span class="font-semibold text-slate-800">Rp {{ number_format($pricing['gross_amount'] ?? 0, 0, ',', '.') }}</span>
+                                <span class="font-semibold text-slate-800">Rp {{ number_format($grossTotal, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between items-center text-slate-600 text-xs">
                                 <span>Biaya Transaksi (MDR QRIS):</span>
@@ -209,7 +215,7 @@
                             <div class="pt-3 border-t border-slate-200 flex justify-between items-baseline">
                                 <span class="text-base font-bold text-slate-900">Total Pembayaran:</span>
                                 <span class="text-2xl font-black text-blue-600">
-                                    Rp {{ number_format($pricing['gross_amount'] ?? 0, 0, ',', '.') }}
+                                    Rp {{ number_format($grossTotal, 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>
@@ -265,7 +271,9 @@
                                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 mb-4 flex flex-col items-center justify-center relative">
                                     <template x-if="qrisUrl && !errorMessage">
                                         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                            <img :src="qrisUrl" alt="QRIS Midtrans" class="w-56 h-56 object-contain rounded-lg">
+                                            <img :src="qrisUrl" alt="QRIS Code"
+                                                x-on:error="if (!qrisUrl.includes('api.qrserver.com')) { qrisUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(orderId || 'QRIS'); }"
+                                                class="w-56 h-56 object-contain rounded-lg">
                                         </div>
                                     </template>
                                     <template x-if="errorMessage">
@@ -302,26 +310,44 @@
                                         Mendukung GoPay, OVO, DANA, BCA, Mandiri & Seluruh M-Banking
                                     </div>
 
-                                    @if(!config('services.midtrans.is_production', false))
+                                    @php
+                                        $activeGatewayName = app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->getActiveGatewayName();
+                                        $isBelibayar = ($payment && $payment->gateway === 'belibayar') || (!$payment && $activeGatewayName === 'belibayar');
+                                        $isSandbox = $isBelibayar ? !config('services.belibayar.is_production', false) : !config('services.midtrans.is_production', false);
+                                    @endphp
+
+                                    @if($isSandbox)
                                     <div class="mt-3 w-full p-2.5 bg-amber-50/90 rounded-xl border border-amber-200 text-[11px] text-amber-900 text-left space-y-1.5 shadow-sm">
                                         <div class="font-bold flex items-center gap-1.5 text-amber-800">
                                             <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 1-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
                                             </svg>
-                                            <span>Petunjuk Simulasi Sandbox:</span>
+                                            <span>Petunjuk Simulasi Sandbox ({{ $isBelibayar ? 'Belibayar.id' : 'Midtrans' }}):</span>
                                         </div>
                                         <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                            <button type="button" @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
-                                                class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded-md border border-amber-300 text-[10px] transition-colors">
-                                                Salin URL
-                                            </button>
-                                            <a href="https://simulator.sandbox.midtrans.com/qris/index" target="_blank"
-                                                class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
-                                                <span>Buka Simulator</span>
+                                            @if(!$isBelibayar)
+                                                <button type="button" @click="navigator.clipboard.writeText(qrisUrl); alert('URL QRIS disalin! Paste ke kolom simulator Midtrans.')"
+                                                    class="px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded-md border border-amber-300 text-[10px] transition-colors">
+                                                    Salin URL
+                                                </button>
+                                            @endif
+                                            <button type="button"
+                                                @click="simulateSandbox()"
+                                                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 shadow-sm">
                                                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                                                 </svg>
-                                            </a>
+                                                <span>Simulasi Bayar Sukses</span>
+                                            </button>
+                                            @if(!$isBelibayar)
+                                                <a href="https://simulator.sandbox.midtrans.com/v2/qris/index" target="_blank"
+                                                    class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md text-[10px] transition-colors inline-flex items-center gap-1 ml-auto">
+                                                    <span>Buka Simulator</span>
+                                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                                    </svg>
+                                                </a>
+                                            @endif
                                         </div>
                                     </div>
                                     @endif
@@ -401,6 +427,7 @@
             return {
                 checkUrl: config.checkUrl,
                 regenerateUrl: config.regenerateUrl,
+                simulateUrl: config.simulateUrl,
                 status: config.initialStatus,
                 expiresAt: config.initialExpiresAt ? new Date(config.initialExpiresAt) : null,
                 isExtracting: config.isExtracting,
@@ -480,6 +507,9 @@
                             this.status = 'pending';
                             this.isExpired = false;
                             this.isExtracting = false;
+                            if (data.qris_url && !this.qrisUrl) {
+                                this.qrisUrl = data.qris_url;
+                            }
                         }
                     } catch (e) {
                         console.error('Check status error:', e);
@@ -509,15 +539,45 @@
                             this.orderId = data.order_id;
                             this.qrisUrl = data.qris_url;
                             this.qrString = data.qr_string;
+                            this.errorMessage = null;
                             this.expiresAt = data.expired_at ? new Date(data.expired_at) : new Date(Date.now() + 15 * 60000);
                             this.updateCountdown();
                         } else {
-                            alert(data.message || 'Gagal membuat QRIS baru.');
+                            this.errorMessage = data.message || 'Gagal membuat QRIS baru.';
                         }
                     } catch (e) {
-                        alert('Terjadi kesalahan jaringan.');
+                        this.errorMessage = 'Terjadi kesalahan saat menghubungi payment gateway.';
                     } finally {
                         this.isRegenerating = false;
+                    }
+                },
+
+                async simulateSandbox() {
+                    if (!confirm('Simulasikan pembayaran QRIS sebagai LUNAS sekarang (khusus Sandbox)?')) return;
+                    this.isChecking = true;
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                        const res = await fetch(this.simulateUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            this.status = 'paid';
+                            alert(data.message || 'Pembayaran berhasil disimulasikan lunas!');
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Gagal melakukan simulasi pembayaran.');
+                        }
+                    } catch (e) {
+                        alert('Gagal menghubungi server untuk simulasi pembayaran.');
+                    } finally {
+                        this.isChecking = false;
                     }
                 }
             };

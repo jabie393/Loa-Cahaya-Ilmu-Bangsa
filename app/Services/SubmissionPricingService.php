@@ -3,19 +3,84 @@
 namespace App\Services;
 
 use App\Models\Submission;
+use App\Models\SubmissionPricing;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 
 class SubmissionPricingService
 {
     /**
-     * MDR rate for QRIS (0.7%)
+     * Default fallback MDR rate for QRIS (0.7%)
      */
     public const MDR_RATE = 0.007;
 
     /**
-     * Member discount per item / submission (Rp 10,000)
+     * Default fallback member discount per item / submission (Rp 10,000)
      */
     public const MEMBER_DISCOUNT = 10000.0;
+
+    protected static ?\Illuminate\Database\Eloquent\Collection $memoizedTiers = null;
+    protected static ?\Illuminate\Database\Eloquent\Collection $memoizedSettings = null;
+
+    public static function clearMemoized(): void
+    {
+        static::$memoizedTiers = null;
+        static::$memoizedSettings = null;
+    }
+
+    public function getActivePricingTiers()
+    {
+        if (static::$memoizedTiers === null) {
+            static::$memoizedTiers = SubmissionPricing::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        }
+        return static::$memoizedTiers;
+    }
+
+    public function getPricingSettings()
+    {
+        if (static::$memoizedSettings === null) {
+            static::$memoizedSettings = SubmissionPricing::where('category', 'setting')
+                ->get()
+                ->keyBy('key');
+        }
+        return static::$memoizedSettings;
+    }
+
+    /**
+     * Get active MDR rate (from database or default fallback).
+     */
+    public function getMdrRate(): float
+    {
+        try {
+            $settings = $this->getPricingSettings();
+            if (isset($settings['setting_mdr_rate']) && $settings['setting_mdr_rate']->is_active) {
+                return (float) $settings['setting_mdr_rate']->gross_amount;
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
+        return self::MDR_RATE;
+    }
+
+    /**
+     * Get active Member Discount (from database or default fallback).
+     */
+    public function getMemberDiscount(): float
+    {
+        try {
+            $settings = $this->getPricingSettings();
+            if (isset($settings['setting_member_discount']) && $settings['setting_member_discount']->is_active) {
+                return (float) $settings['setting_member_discount']->gross_amount;
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
+        return self::MEMBER_DISCOUNT;
+    }
 
     /**
      * Calculate exact pricing and revenue sharing for a submission.
@@ -48,13 +113,16 @@ class SubmissionPricingService
         $targetUser = $user ?? $submission->user ?? auth()->user();
         $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
 
+        $mdrRate = $this->getMdrRate();
+        $memberDiscount = $this->getMemberDiscount();
+
         $originalGross = $pricing['gross_amount'];
-        $discountAmount = $isMember ? self::MEMBER_DISCOUNT : 0.0;
+        $discountAmount = $isMember ? $memberDiscount : 0.0;
         $grossAmount = max(0.0, $originalGross - $discountAmount);
         $devGross = $pricing['developer_gross_share'];
 
-        // MDR is 0.7% of gross_amount, rounded
-        $mdr = round($grossAmount * self::MDR_RATE);
+        // MDR is calculated on gross_amount, rounded
+        $mdr = round($grossAmount * $mdrRate);
         $devNet = $devGross - $mdr;
         // Discount is fully absorbed by the journal share
         $journalShare = $grossAmount - $devGross;
@@ -105,28 +173,50 @@ class SubmissionPricingService
     }
 
     /**
-     * Map tiers based on Price List:
-     *
-     * ISSN:
-     * - 1-5 author:
-     *     without DOI: Rp 60,000 (Dev 5,000)
-     *     with DOI   : Rp 80,000 (Dev 5,000)
-     * - 6-10 author:
-     *     without DOI: Rp 100,000 (Dev 10,000)
-     *     with DOI   : Rp 120,000 (Dev 10,000)
-     * - 11-15 author (+ DOI):
-     *     Rp 150,000 (Dev 20,000)
-     * - 16-20 author (+ DOI):
-     *     Rp 200,000 (Dev 30,000)
-     *
-     * International (IJEFI / PJLS):
-     * - 1-10 author (+ DOI):
-     *     Rp 150,000 (Dev 20,000)
-     * - 11-15 author (+ DOI, or >=11):
-     *     Rp 200,000 (Dev 30,000)
+     * Map tiers based on database records, or fallback to default pricing matrix.
      */
     protected function determinePricing(bool $isInternational, bool $withDoi, int $authorCount): array
     {
+        try {
+            $tiers = $this->getActivePricingTiers();
+
+            $targetCategory = $isInternational ? 'international' : 'issn';
+
+            $matched = $tiers->first(function ($t) use ($targetCategory, $withDoi, $authorCount) {
+                if ($t->category !== $targetCategory) {
+                    return false;
+                }
+
+                if ($t->min_authors !== null && $authorCount < $t->min_authors) {
+                    return false;
+                }
+                if ($t->max_authors !== null && $authorCount > $t->max_authors) {
+                    return false;
+                }
+
+                if ($t->with_doi !== null && (bool) $t->with_doi !== (bool) $withDoi) {
+                    // Tiers for 11+ authors include DOI by default
+                    if ($t->min_authors >= 11 && $t->with_doi === true) {
+                        return true;
+                    }
+                    return false;
+                }
+
+                return true;
+            });
+
+            if ($matched) {
+                return [
+                    'tier_name' => $matched->tier_name,
+                    'gross_amount' => (float) $matched->gross_amount,
+                    'developer_gross_share' => (float) $matched->developer_gross_share,
+                ];
+            }
+        } catch (\Throwable $e) {
+            // fallback below
+        }
+
+        // Hardcoded Fallback Matrix
         if ($isInternational) {
             if ($authorCount <= 10) {
                 return [
@@ -192,27 +282,42 @@ class SubmissionPricingService
 
     /**
      * Calculate pricing specifically for DOI Addon.
-     * Price: Rp 20,000 | Dev: Rp 5,000 | MDR (0.7%)
-     * Note: Diskon membership tidak berlaku pada transaksi tambah DOI.
      *
      * @param User|null $user
      * @return array
      */
     public function calculateDoiAddon(?User $user = null): array
     {
+        $originalGross = 20000.0;
+        $devGross = 5000.0;
+        $tierName = 'Add-on DOI Repository Identifier';
+
+        try {
+            $tiers = $this->getActivePricingTiers();
+            $addon = $tiers->firstWhere('key', 'addon_doi')
+                ?: $tiers->first(fn($t) => $t->category === 'addon' && (bool) $t->with_doi === true);
+
+            if ($addon) {
+                $originalGross = (float) $addon->gross_amount;
+                $devGross = (float) $addon->developer_gross_share;
+                $tierName = $addon->tier_name;
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
         $targetUser = $user ?? auth()->user();
         $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+        $mdrRate = $this->getMdrRate();
 
-        $originalGross = 20000.0;
         $discountAmount = 0.0;
         $grossAmount = $originalGross;
-        $devGross = 5000.0;
-        $mdr = round($grossAmount * self::MDR_RATE);
+        $mdr = round($grossAmount * $mdrRate);
         $devNet = $devGross - $mdr;
         $journalShare = $grossAmount - $devGross;
 
         return [
-            'tier_name' => 'Add-on DOI Repository Identifier',
+            'tier_name' => $tierName,
             'author_count' => 0,
             'is_international' => false,
             'with_doi' => true,
@@ -229,27 +334,42 @@ class SubmissionPricingService
 
     /**
      * Calculate pricing specifically for Replace PDF service.
-     * Price: Rp 25,000 | Dev: Rp 5,000 | MDR (0.7%)
-     * Note: Diskon membership tidak berlaku pada transaksi ganti PDF.
      *
      * @param User|null $user
      * @return array
      */
     public function calculateReplacePdf(?User $user = null): array
     {
+        $originalGross = 25000.0;
+        $devGross = 5000.0;
+        $tierName = 'Ganti PDF Naskah';
+
+        try {
+            $tiers = $this->getActivePricingTiers();
+            $addon = $tiers->firstWhere('key', 'service_replace_pdf')
+                ?: $tiers->first(fn($t) => $t->category === 'addon' && !(bool) $t->with_doi);
+
+            if ($addon) {
+                $originalGross = (float) $addon->gross_amount;
+                $devGross = (float) $addon->developer_gross_share;
+                $tierName = $addon->tier_name;
+            }
+        } catch (\Throwable $e) {
+            // fallback
+        }
+
         $targetUser = $user ?? auth()->user();
         $isMember = $targetUser instanceof User ? $targetUser->isMember() : false;
+        $mdrRate = $this->getMdrRate();
 
-        $originalGross = 25000.0;
         $discountAmount = 0.0;
         $grossAmount = $originalGross;
-        $devGross = 5000.0;
-        $mdr = round($grossAmount * self::MDR_RATE);
+        $mdr = round($grossAmount * $mdrRate);
         $devNet = $devGross - $mdr;
         $journalShare = $grossAmount - $devGross;
 
         return [
-            'tier_name' => 'Ganti PDF Naskah',
+            'tier_name' => $tierName,
             'author_count' => 0,
             'is_international' => false,
             'with_doi' => false,

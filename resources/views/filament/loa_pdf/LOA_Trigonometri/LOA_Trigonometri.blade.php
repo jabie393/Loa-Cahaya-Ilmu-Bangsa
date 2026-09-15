@@ -253,7 +253,7 @@
     </div>
     <div class="ml-auto mt-8 w-fit text-left">
         <p class="font-inter mb-4 text-[10pt] font-normal text-black">
-            Malang, {{ $record->approved_date->format('d F Y') }}
+            Malang, {{ ($record->approved_date ?? $record->date_of_loa ?? now())->format('d F Y') }}
         </p>
         <div class="mb-4">
             <img alt="Signature"

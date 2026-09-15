@@ -24,7 +24,12 @@ class MyCertificates extends Page
 
     public static function canAccess(): bool
     {
-        return true;
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        return ! $user->hasRole('ryu_dev');
     }
 
     public static function getNavigationBadge(): ?string

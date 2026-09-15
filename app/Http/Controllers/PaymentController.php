@@ -3,19 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Submission;
-use App\Services\MidtransQrisService;
+use App\Services\PaymentGateways\PaymentGatewayManager;
 use App\Services\SubmissionPricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class PaymentController extends Controller
 {
-    protected MidtransQrisService $qrisService;
+    protected PaymentGatewayManager $qrisService;
     protected SubmissionPricingService $pricingService;
 
-    public function __construct(MidtransQrisService $qrisService, SubmissionPricingService $pricingService)
+    public function __construct(PaymentGatewayManager $qrisService, SubmissionPricingService $pricingService)
     {
         $this->qrisService = $qrisService;
         $this->pricingService = $pricingService;
@@ -106,6 +107,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'paid_at' => $payment->paid_at ? $payment->paid_at->format('d M Y H:i:s') : null,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
@@ -147,6 +150,52 @@ class PaymentController extends Controller
                 'message' => 'Gagal membuat QRIS baru: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Simulate successful payment in Sandbox environment.
+     */
+    public function simulateSandbox(Request $request, int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Prohibit in production
+        if (config('services.belibayar.is_production', false) && config('services.midtrans.is_production', false)) {
+            return response()->json(['message' => 'Simulasi hanya diperbolehkan pada mode Sandbox.'], 403);
+        }
+
+        $query = $submission->payments()->where('payment_status', 'pending');
+        if ($request->filled('order_id')) {
+            $query->where('order_id', $request->input('order_id'));
+        } elseif ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        $latestPayment = $query->latest()->first();
+        if (!$latestPayment) {
+            $latestPayment = $submission->payments()->where('payment_status', 'pending')->latest()->first();
+        }
+
+        if (!$latestPayment) {
+            return response()->json(['message' => 'Tidak ada transaksi pending yang dapat disimulasikan.'], 400);
+        }
+
+        $this->qrisService->fulfillment()->markAsPaid($latestPayment, 'settlement', [
+            'simulated' => true,
+            'source' => 'sandbox_button',
+            'simulated_at' => now()->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => 'paid',
+            'message' => 'Pembayaran berhasil disimulasikan sebagai LUNAS!',
+        ]);
     }
 
     /**
@@ -229,6 +278,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $payment->isPaid() ? 'Pembayaran DOI berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -291,10 +342,29 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
+        $paidPayment = $submission->payments()
+            ->where('type', 'replace_pdf')
+            ->where('payment_status', 'paid')
+            ->latest()
+            ->first();
+
         $latestPayment = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if (!$latestPayment) {
             return response()->json(['status' => 'no_payment', 'is_paid' => false]);
+        }
+
+        // If an older paid payment exists and latest payment is ghost/unpaid without a valid temp file:
+        if ($paidPayment && $latestPayment->id !== $paidPayment->id && !$latestPayment->isPaid()) {
+            $raw = is_array($latestPayment->raw_response) ? $latestPayment->raw_response : [];
+            $tempPath = $raw['new_pdf_path'] ?? null;
+            if (!$tempPath || !Storage::disk('public')->exists($tempPath) || $latestPayment->isExpired()) {
+                $latestPayment->update([
+                    'payment_status' => 'expired',
+                    'transaction_status' => 'expire',
+                ]);
+                $latestPayment = $paidPayment;
+            }
         }
 
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
@@ -313,6 +383,8 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -385,6 +457,8 @@ class PaymentController extends Controller
             'payment_id' => $payment->id,
             'is_paid' => $isPaid,
             'is_expired' => $payment->isExpired(),
+            'qris_url' => $payment->qris_url,
+            'qr_string' => $payment->qr_string,
             'message' => $isPaid ? 'Pembayaran kolektif berhasil diverifikasi!' : ($payment->isExpired() ? 'QRIS Kedaluwarsa' : 'Menunggu pembayaran...'),
         ]);
     }
@@ -446,4 +520,81 @@ class PaymentController extends Controller
         }
     }
 
+    public function simulateBulk(int $paymentId): JsonResponse
+    {
+        $payment = \App\Models\Payment::findOrFail($paymentId);
+
+        $currentUser = Auth::user();
+        if ($payment->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Prohibit in production
+        if (config('services.belibayar.is_production', false) && config('services.midtrans.is_production', false)) {
+            return response()->json(['message' => 'Simulasi hanya diperbolehkan pada mode Sandbox.'], 403);
+        }
+
+        if ($payment->isPaid()) {
+            return response()->json(['message' => 'Pembayaran sudah lunas.'], 400);
+        }
+
+        $this->qrisService->fulfillment()->markAsPaid($payment, 'settlement', [
+            'simulated' => true,
+            'source' => 'sandbox_bulk_button',
+            'simulated_at' => now()->toIso8601String(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => 'paid',
+            'message' => 'Pembayaran kolektif berhasil disimulasikan sebagai LUNAS!',
+        ]);
+    }
+
+    /**
+     * Download QRIS image directly to the user's device (proxied via backend to avoid CORS & blank tab).
+     */
+    public function downloadQris(Request $request)
+    {
+        $orderId = $request->query('order_id');
+        $url = $request->query('url');
+
+        $payment = null;
+        if ($orderId) {
+            $payment = \App\Models\Payment::where('order_id', $orderId)->first();
+        }
+
+        if ($payment && !empty($payment->qris_url)) {
+            $url = $payment->qris_url;
+        } elseif ($payment && !empty($payment->qr_string)) {
+            $url = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=15&data=' . urlencode($payment->qr_string);
+        }
+
+        if (!$url) {
+            abort(404, 'Gambar QRIS tidak ditemukan.');
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->withoutVerifying()
+                ->get($url);
+
+            if (!$response->successful() && $orderId) {
+                // Fallback QR code generator if original image URL fails
+                $fallbackUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=15&data=' . urlencode($orderId);
+                $response = \Illuminate\Support\Facades\Http::timeout(15)->withoutVerifying()->get($fallbackUrl);
+            }
+
+            $filename = 'QRIS-' . ($orderId ?: 'CIB') . '.png';
+            $contentType = $response->header('Content-Type') ?: 'image/png';
+
+            return response($response->body(), 200, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'no-cache, private',
+            ]);
+        } catch (\Exception $e) {
+            abort(500, 'Gagal mengunduh QRIS: ' . $e->getMessage());
+        }
+    }
 }

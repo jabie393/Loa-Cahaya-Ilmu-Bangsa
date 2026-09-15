@@ -67,59 +67,25 @@ class MidtransWebhookController extends Controller
             $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
         }
 
-        $updateData = [
-            'transaction_id' => $transactionId ?: $payment->transaction_id,
-            'transaction_status' => $transactionStatus,
-            'raw_response' => $mergedRaw,
-        ];
+        if ($transactionId && empty($payment->transaction_id)) {
+            $payment->update(['transaction_id' => $transactionId]);
+        }
 
         if (in_array($transactionStatus, ['capture', 'settlement'])) {
-            $updateData['payment_status'] = 'paid';
-            $updateData['paid_at'] = now();
-
-            $payment->update($updateData);
-            $payment->ensureInvoiceNumber();
-
-            if ($payment->type === 'bulk_submission') {
-                $submissions = !empty($payment->submission_ids)
-                    ? Submission::whereIn('id', $payment->submission_ids)->get()
-                    : ($payment->submission ? collect([$payment->submission]) : collect());
-
-                foreach ($submissions as $sub) {
-                    $sub->update(['payment_status' => 'paid']);
-                    $sub->approveAndProcess();
-                }
-                Log::info("Midtrans Webhook: Bulk Submissions auto-approved for Payment #{$payment->id}");
-            } elseif ($payment->type === 'doi_addon') {
-                $submission = $payment->submission;
-                if ($submission) {
-                    $this->qrisService->activateDoiForSubmission($submission);
-                    Log::info("Midtrans Webhook: Submission #{$submission->id} DOI activated successfully");
-                }
-            } elseif ($payment->type === 'replace_pdf') {
-                $submission = $payment->submission;
-                if ($submission) {
-                    $this->qrisService->applyReplacePdfForSubmission($submission, $payment);
-                    Log::info("Midtrans Webhook: Submission #{$submission->id} PDF replaced and synced to OJS successfully");
-                }
-            } else {
-                $submission = $payment->submission;
-                if ($submission) {
-                    $submission->update(['payment_status' => 'paid']);
-                    $submission->approveAndProcess();
-                    Log::info("Midtrans Webhook: Submission #{$submission->id} auto-approved after payment");
-                }
-            }
+            app(\App\Services\PaymentGateways\PaymentFulfillmentService::class)->markAsPaid($payment, $transactionStatus, $payload);
+            Log::info("Midtrans Webhook: Payment for Order ID {$orderId} marked as PAID");
         } elseif ($transactionStatus === 'expire') {
-            $updateData['payment_status'] = 'expired';
-            $payment->update($updateData);
+            app(\App\Services\PaymentGateways\PaymentFulfillmentService::class)->markAsExpired($payment, $payload);
             Log::info("Midtrans Webhook: Payment for Order ID {$orderId} has expired");
         } elseif (in_array($transactionStatus, ['deny', 'cancel'])) {
-            $updateData['payment_status'] = 'failed';
-            $payment->update($updateData);
+            app(\App\Services\PaymentGateways\PaymentFulfillmentService::class)->markAsFailed($payment, $transactionStatus, $payload);
             Log::info("Midtrans Webhook: Payment for Order ID {$orderId} failed with status {$transactionStatus}");
         } else {
-            $payment->update($updateData);
+            $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
+            $payment->update([
+                'transaction_status' => $transactionStatus,
+                'raw_response' => array_merge($existingRaw, $payload),
+            ]);
         }
 
         return response()->json(['message' => 'Webhook handled successfully'], 200);

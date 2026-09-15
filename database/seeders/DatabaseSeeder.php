@@ -44,5 +44,6 @@ class DatabaseSeeder extends Seeder
         $dev->assignRole('ryu_dev');
 
         $this->call(JournalSeeder::class);
+        $this->call(SubmissionPricingSeeder::class);
     }
 }

@@ -227,7 +227,19 @@ class SubmissionsTable
                     })
                     ->sortable(),
             ])
-            ->poll('5s')
+            ->poll(function ($livewire) {
+                // Matikan polling jika sedang ada modal/action yang terbuka (seperti 'Buat Pengajuan Baru')
+                // agar form, dropdown, dan elemen di luar tabel tidak terganggu/tertutup sendiri
+                if (
+                    !empty($livewire->mountedActions) ||
+                    !empty($livewire->mountedTableActions) ||
+                    (method_exists($livewire, 'getMountedAction') && $livewire->getMountedAction() !== null)
+                ) {
+                    return null;
+                }
+
+                return '5s';
+            })
             ->defaultSort('volume_sort_key', 'desc')
             ->filters([
                 SelectFilter::make('ojs_base_url')
@@ -336,17 +348,11 @@ class SubmissionsTable
             ->recordActions([
                 ActionGroup::make([
                     Action::make('bayar')
-                        ->label('Bayar QRIS')
+                        ->label('Proceed to Payment')
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
                         ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && !in_array($record->review_status, ['processing', 'failed'])),
-                    Action::make('review')
-                        ->label('Review')
-                        ->icon('heroicon-o-eye')
-                        ->color('warning')
-                        ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('review', ['record' => $record]))
-                        ->visible(fn(Submission $record) => Auth::user()->hasRole('super_admin') && $record->status !== 'Approved' && $record->review_status !== 'processing'),
                     Action::make('request_review_again')
                         ->label('Minta Review Lagi')
                         ->icon('heroicon-o-arrow-path')
@@ -355,7 +361,7 @@ class SubmissionsTable
                         ->visible(fn(Submission $record) => $record->review_status === 'failed' && $record->status !== 'Approved')
                         ->action(fn(Submission $record) => $record->processReviewInBackground()),
                     Action::make('tambah_doi')
-                        ->label('Tambah DOI')
+                        ->label('Add DOI')
                         ->icon('heroicon-o-plus-circle')
                         ->color('primary')
                         ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment.doi', ['record' => $record]))
@@ -434,7 +440,7 @@ class SubmissionsTable
                             }
                         }),
                     Action::make('replace_pdf')
-                        ->label('Ganti PDF')
+                        ->label('Replace PDF')
                         ->color('primary')
                         ->icon('heroicon-o-arrow-up-tray')
                         ->url(fn(Submission $record) => SubmissionResource::getUrl('replace_pdf', ['record' => $record]))
@@ -539,7 +545,7 @@ class SubmissionsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('bulk_pay_qris')
-                        ->label('Bayar QRIS Terpilih')
+                        ->label('Proceed to Payment (Selected)')
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->action(function (Collection $records) {

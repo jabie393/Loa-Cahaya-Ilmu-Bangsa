@@ -53,7 +53,7 @@ class GenerateDailyDevPayout extends Command
             'amount' => $available,
             'reference_no' => null,
             'proof_file' => null,
-            'notes' => 'Payout Otomatis Harian (Pukul 17:00)',
+            'notes' => 'Payout Otomatis Harian (Pukul 17:30)',
             'status' => 'waiting_payout',
         ]);
 

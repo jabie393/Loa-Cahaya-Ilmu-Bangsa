@@ -311,7 +311,7 @@
             <div class="border-primary/10 mt-2 flex items-end justify-end border-t pt-2">
                 <div class="text-center">
                     <p class="text-primary/70 font-inter mb-4 text-[10pt] font-semibold">
-                        Malang, {{ $record->created_at->format('d F Y') }}
+                        Malang, {{ ($record->approved_date ?? $record->date_of_loa ?? $record->created_at ?? now())->format('d F Y') }}
                     </p>
                     <div class="mb-4 flex justify-end pr-10">
                         <img alt="Signature"
