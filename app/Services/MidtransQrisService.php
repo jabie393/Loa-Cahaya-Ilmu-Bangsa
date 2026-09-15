@@ -375,10 +375,10 @@ class MidtransQrisService implements PaymentGatewayInterface
                 'payer_name' => $submission->author_name ?: 'Author',
                 'payer_email' => $submission->email ?: '',
                 'gross_amount' => 20000.00,
-                'journal_share' => 15000.00,
+                'journal_share' => 14860.00,
                 'developer_gross_share' => 5000.00,
                 'mdr_amount' => 140.00,
-                'developer_net_share' => 4860.00,
+                'developer_net_share' => 5000.00,
                 'transaction_status' => 'settlement',
                 'payment_status' => 'paid',
                 'paid_at' => now(),
@@ -390,10 +390,10 @@ class MidtransQrisService implements PaymentGatewayInterface
                 'item_type' => 'doi_addon',
                 'item_name' => 'Add-on Repository Identifier (DOI Resmi) - ' . ($submission->journal?->name ?? 'Jurnal CIB'),
                 'gross_amount' => 20000.00,
-                'journal_share' => 15000.00,
+                'journal_share' => 14860.00,
                 'developer_gross_share' => 5000.00,
                 'mdr_amount' => 140.00,
-                'developer_net_share' => 4860.00,
+                'developer_net_share' => 5000.00,
             ]);
 
             $payment->ensureInvoiceNumber();

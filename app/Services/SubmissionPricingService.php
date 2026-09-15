@@ -123,9 +123,10 @@ class SubmissionPricingService
 
         // MDR is calculated on gross_amount, rounded
         $mdr = round($grossAmount * $mdrRate);
-        $devNet = $devGross - $mdr;
-        // Discount is fully absorbed by the journal share
-        $journalShare = $grossAmount - $devGross;
+        // MDR dibebankan ke jurnal, developer mendapatkan porsi penuh (tanpa potongan MDR)
+        $devNet = $devGross;
+        // Discount dan MDR dibebankan sepenuhnya ke porsi jurnal
+        $journalShare = $grossAmount - $devGross - $mdr;
 
         return [
             'tier_name' => $pricing['tier_name'],
@@ -313,8 +314,8 @@ class SubmissionPricingService
         $discountAmount = 0.0;
         $grossAmount = $originalGross;
         $mdr = round($grossAmount * $mdrRate);
-        $devNet = $devGross - $mdr;
-        $journalShare = $grossAmount - $devGross;
+        $devNet = $devGross;
+        $journalShare = $grossAmount - $devGross - $mdr;
 
         return [
             'tier_name' => $tierName,
@@ -365,8 +366,8 @@ class SubmissionPricingService
         $discountAmount = 0.0;
         $grossAmount = $originalGross;
         $mdr = round($grossAmount * $mdrRate);
-        $devNet = $devGross - $mdr;
-        $journalShare = $grossAmount - $devGross;
+        $devNet = $devGross;
+        $journalShare = $grossAmount - $devGross - $mdr;
 
         return [
             'tier_name' => $tierName,
