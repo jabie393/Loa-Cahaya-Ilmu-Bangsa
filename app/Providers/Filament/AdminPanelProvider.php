@@ -74,8 +74,8 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->navigationGroup(' Settings')
-                    ->navigationSort(4),
+                    ->navigationGroup(fn () => null)
+                    ->navigationSort(100),
                 AuthUIEnhancerPlugin::make()
                     ->formPanelPosition('right')
                     ->formPanelWidth('50%')

@@ -12,64 +12,72 @@ class RolePolicy
 {
     use HandlesAuthorization;
     
+    /**
+     * Pre-authorization: Hanya role 'ryu_dev' yang diizinkan mengakses & mengatur Role.
+     */
+    public function before(AuthUser $authUser, string $ability): ?bool
+    {
+        return $authUser->hasRole('ryu_dev') ? true : false;
+    }
+
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ViewAny:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function view(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('View:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('Create:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function update(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('Update:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function delete(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('Delete:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('DeleteAny:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function restore(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('Restore:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function forceDelete(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('ForceDelete:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('ForceDeleteAny:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('RestoreAny:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function replicate(AuthUser $authUser, Role $role): bool
     {
-        return $authUser->can('Replicate:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
     public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('Reorder:Role');
+        return $authUser->hasRole('ryu_dev');
     }
 
 }
