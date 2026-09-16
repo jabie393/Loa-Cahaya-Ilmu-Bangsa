@@ -229,8 +229,8 @@ class GeminiReviewService implements AiReviewContract
             $name = preg_replace('/\b([A-Za-z])\.\s*\.\s*/u', '$1. ', $name);
             $name = preg_replace('/(?<!\.)\.\.(?!\.)/u', '.', $name);
 
-            // Clean academic titles if prefix (e.g. "Prof. Dr. Ir. Budi" -> "Budi")
-            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|H|Hj)\.?\s*)+/iu', '', $name);
+            // Clean academic titles if prefix (e.g. "Prof. Dr. Ir. Budi" -> "Budi", but keep names like "Hilmi")
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj)\b\.?\s*|H\.\s+)+/iu', '', $name);
 
             // Clean academic degree suffixes if present (e.g. ", M.Kom, Ph.D")
             $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
@@ -266,11 +266,41 @@ class GeminiReviewService implements AiReviewContract
             ];
         }
 
-        // 2b. If authors are empty after sanitization, run deterministic heuristic fallback on text
-        if (empty($cleanedAuthors) && !empty($sourceText)) {
+        // 2b. Heuristic validation & enrichment:
+        // If Gemini missed authors or truncated (e.g. document has 31 authors but Gemini only returned 18),
+        // or if Gemini returned empty authors, use the deterministic heuristic author extraction.
+        if (!empty($sourceText)) {
             $heuristicAuthors = $this->extractAuthorsFromText($sourceText, $results['detected_title'] ?? null);
             if (!empty($heuristicAuthors)) {
-                $cleanedAuthors = $heuristicAuthors;
+                if (empty($cleanedAuthors) || count($heuristicAuthors) > count($cleanedAuthors)) {
+                    $geminiAffilMap = [];
+                    foreach ($cleanedAuthors as $ga) {
+                        $lower = strtolower(trim($ga['name'] ?? ''));
+                        if (!empty($ga['institution'])) {
+                            $geminiAffilMap[$lower] = $ga['institution'];
+                        }
+                    }
+
+                    $commonAffil = '';
+                    foreach ($cleanedAuthors as $ga) {
+                        if (!empty($ga['institution'])) {
+                            $commonAffil = $ga['institution'];
+                            break;
+                        }
+                    }
+
+                    foreach ($heuristicAuthors as &$ha) {
+                        $lower = strtolower(trim($ha['name'] ?? ''));
+                        if (isset($geminiAffilMap[$lower])) {
+                            $ha['institution'] = $geminiAffilMap[$lower];
+                        } elseif (empty($ha['institution']) && !empty($commonAffil)) {
+                            $ha['institution'] = $commonAffil;
+                        }
+                    }
+                    unset($ha);
+
+                    $cleanedAuthors = $heuristicAuthors;
+                }
             }
         }
 
@@ -382,10 +412,15 @@ class GeminiReviewService implements AiReviewContract
 
         foreach ($rawCandidates as $candidate) {
             $name = trim($candidate, " \t\n\r\0\x0B,.;-");
-            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|H|Hj)\.?\s*)+/iu', '', $name);
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj)\b\.?\s*|H\.\s+)+/iu', '', $name);
             $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
             $name = preg_replace('/\s+/u', ' ', $name);
             $name = trim($name);
+
+            // Format to Title Case if lowercase
+            if (!empty($name) && strtolower($name) === $name) {
+                $name = ucwords($name);
+            }
 
             if (mb_strlen($name) >= 3 && preg_match('/^[A-Za-z\s\.\'\-]+$/u', $name)) {
                 if (!preg_match('/^(author|penulis|abstract|abstrak|keywords|e-?mail|copyright|publish|issn|vol|volume)/iu', $name)) {
@@ -502,6 +537,7 @@ PANDUAN PENTING EKSTRAKSI & RESTORASI TEKS:
 3. NAMA PENULIS & AFILIASI (detected_authors) - SANGAT PENTING:
    - Lokasi Penulis: Penulis terletak di halaman 1 naskah, tepat di bawah Judul Artikel dan di atas Abstrak/Afiliasi.
    - Pada teks PDF yang diekstrak, nama penulis seringkali diikuti oleh angka superskrip footnote di baris baru (contoh: "Nichar F. Aruperes\n1\n, Ivonne S. Saerang\n2\n, Rudy S. Wenas\n3"). Anda WAJIB mengekstrak SEMUA nama penulis ini satu per satu! Hapus angka 1, 2, 3 tersebut.
+   - PENTING: Jika terdapat BANYAK penulis (misalnya 15, 20, 30, hingga 35+ penulis), Anda WAJIB mengekstrak SEMUA nama penulis tanpa terkecuali dari nama pertama hingga nama terakhir! JANGAN PERNAH berhenti di tengah jalan atau menyingkat daftar penulis.
    - Bersihkan tanda footnote/bintang (*) atau simbol lainnya yang menempel pada nama.
    - Hilangkan gelar akademik (Prof., Dr., Drs., Ir., M.Kom, S.T., Ph.D, SE, MM, dsb).
    - Nama harus dalam format penulisan EYD/Title Case yang benar.

@@ -53,14 +53,23 @@ class EditSubmission extends EditRecord
             $this->getSaveFormAction(),
         ];
 
-        // Tombol cepat ke Pembayaran QRIS sejajar dengan tombol Save Changes (Simpan & Langsung Buka Pembayaran)
-        if ($this->record->status !== 'Approved' && $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed'])) {
+        if ($this->record->status !== 'Approved' && $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed', 'rejected'])) {
             $actions[] = Action::make('bayar_qris')
                 ->label('Proceed to Payment')
                 ->icon('heroicon-o-credit-card')
                 ->color('primary')
                 ->extraAttributes($this->getLoadingProtectionAttributes())
                 ->action(function () {
+                    $pricingService = app(\App\Services\SubmissionPricingService::class);
+                    if ($pricingService->getAuthorCount($this->record) > 30) {
+                        Notification::make()
+                            ->title('Jumlah Penulis Melebihi Batas')
+                            ->body('Jumlah penulis pada naskah ini melebihi batas maksimal yang diizinkan (maksimal 30 author). Pembayaran tidak dapat diproses.')
+                            ->danger()
+                            ->persistent()
+                            ->send();
+                        return;
+                    }
                     $this->save(shouldRedirect: false);
                     return redirect()->to(SubmissionResource::getUrl('payment', ['record' => $this->record]));
                 });

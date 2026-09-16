@@ -65,6 +65,7 @@ class SubmissionsTable
                             'processing' => 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800/50',
                             'reviewed' => 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800/50',
                             'failed' => 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800/50',
+                            'rejected' => 'text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950/30 dark:border-rose-800/50',
                             'N/A' => 'text-gray-500 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50',
                             default => 'text-gray-700 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-800/30 dark:border-gray-700/50'
                         };
@@ -295,6 +296,7 @@ class SubmissionsTable
                         'processing' => 'Processing',
                         'reviewed' => 'Reviewed',
                         'failed' => 'Failed',
+                        'rejected' => 'Rejected',
                         'N/A' => 'N/A',
                     ])
                     ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data) {
@@ -351,8 +353,20 @@ class SubmissionsTable
                         ->label('Proceed to Payment')
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
-                        ->url(fn(Submission $record): string => SubmissionResource::getUrl('payment', ['record' => $record]))
-                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && !in_array($record->review_status, ['processing', 'failed'])),
+                        ->action(function (Submission $record) {
+                            $pricingService = app(\App\Services\SubmissionPricingService::class);
+                            if ($pricingService->getAuthorCount($record) > 30) {
+                                Notification::make()
+                                    ->title('Jumlah Penulis Melebihi Batas')
+                                    ->body("Naskah ID {$record->id} memiliki lebih dari 30 penulis (maksimal 30 author). Pembayaran tidak dapat diproses.")
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                                return;
+                            }
+                            return redirect()->to(SubmissionResource::getUrl('payment', ['record' => $record]));
+                        })
+                        ->visible(fn(Submission $record) => $record->status !== 'Approved' && $record->payment_status !== 'paid' && !in_array($record->review_status, ['processing', 'failed', 'rejected'])),
                     Action::make('request_review_again')
                         ->label('Minta Review Lagi')
                         ->icon('heroicon-o-arrow-path')
@@ -452,7 +466,7 @@ class SubmissionsTable
                         ->url(fn(Submission $record): ?string => SubmissionResource::getUrl('view', ['record' => $record]))
                         ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
                     EditAction::make()
-                        ->label(fn(Submission $record): string => $record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
+                        ->label(fn(Submission $record): string => in_array($record->status, ['Rejected']) || $record->review_status === 'rejected' ? 'Revise Submission' : 'Edit Submission')
                         ->visible(fn(Submission $record) => $record->review_status !== 'processing'),
                     Action::make('Troubleshoot Call Center')
                         ->label('Troubleshoot Call Center')
@@ -549,15 +563,29 @@ class SubmissionsTable
                         ->icon('heroicon-o-credit-card')
                         ->color('primary')
                         ->action(function (Collection $records) {
-                            // 1. Check if any selected submission is still processing or failed review
-                            $invalidRecords = $records->filter(fn(Submission $r) => in_array($r->review_status, ['processing', 'failed']) || empty($r->title));
+                            // 1. Check if any selected submission is still processing or failed/rejected review
+                            $invalidRecords = $records->filter(fn(Submission $r) => in_array($r->review_status, ['processing', 'failed', 'rejected']) || empty($r->title));
 
                             if ($invalidRecords->isNotEmpty()) {
                                 $invalidIds = $invalidRecords->pluck('id')->implode(', ');
                                 Notification::make()
                                     ->warning()
                                     ->title('Naskah Belum Selesai Direview')
-                                    ->body("Terdapat naskah ({$invalidIds}) yang masih dalam proses atau gagal peninjauan (review). Mohon lakukan review ulang terlebih dahulu sebelum melakukan pembayaran.")
+                                    ->body("Terdapat naskah ({$invalidIds}) yang masih dalam proses, ditolak, atau gagal peninjauan (review). Mohon sesuaikan kembali naskah terlebih dahulu sebelum melakukan pembayaran.")
+                                    ->persistent()
+                                    ->send();
+                                return;
+                            }
+
+                            // 1b. Check if any selected submission exceeds max 30 authors
+                            $pricingService = app(\App\Services\SubmissionPricingService::class);
+                            $excessRecords = $records->filter(fn(Submission $r) => $pricingService->getAuthorCount($r) > 30);
+                            if ($excessRecords->isNotEmpty()) {
+                                $excessIds = $excessRecords->pluck('id')->implode(', ');
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Jumlah Penulis Melebihi Batas')
+                                    ->body("Terdapat naskah ({$excessIds}) yang memiliki lebih dari 30 penulis. Batas maksimal yang diizinkan adalah 30 author. Pembayaran kolektif tidak dapat diproses.")
                                     ->persistent()
                                     ->send();
                                 return;

@@ -42,7 +42,7 @@ class PaymentBulkSubmission extends Page
         $this->submissions = Submission::with(['journal', 'user'])
             ->whereIn('id', $this->selectedIds)
             ->where('payment_status', '<>', 'paid')
-            ->whereNotIn('review_status', ['processing', 'failed'])
+            ->whereNotIn('review_status', ['processing', 'failed', 'rejected'])
             ->get();
 
         // Jika hanya ada 1 naskah yang belum dibayar, redirect ke pembayaran single
@@ -65,16 +65,28 @@ class PaymentBulkSubmission extends Page
             $this->submissions = $allSubmissions;
         }
 
-        $bulkPricing = $pricingService->calculateBulk($this->submissions, Auth::user());
-        $this->pricing = $bulkPricing;
-        $this->itemsPricing = $bulkPricing['items'];
+        try {
+            $bulkPricing = $pricingService->calculateBulk($this->submissions, Auth::user());
+            $this->pricing = $bulkPricing;
+            $this->itemsPricing = $bulkPricing['items'];
 
-        // Get or charge QRIS
-        $this->payment = $qrisService->getOrCreateBulkPayment($this->submissions);
+            // Get or charge QRIS
+            $this->payment = $qrisService->getOrCreateBulkPayment($this->submissions);
 
-        // If payment is pending, query Midtrans once synchronously to catch up if paid in simulator/tab
-        if ($this->payment && !$this->payment->isPaid()) {
-            $this->payment = $qrisService->checkStatusFromMidtrans($this->payment);
+            // If payment is pending, query Midtrans once synchronously to catch up if paid in simulator/tab
+            if ($this->payment && !$this->payment->isPaid()) {
+                $this->payment = $qrisService->checkStatusFromMidtrans($this->payment);
+            }
+        } catch (\Throwable $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('Gagal Memproses Pembayaran Kolektif')
+                ->body($e->getMessage())
+                ->danger()
+                ->persistent()
+                ->send();
+
+            $this->redirect(SubmissionResource::getUrl('index'));
+            return;
         }
     }
 

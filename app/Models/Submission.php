@@ -338,6 +338,41 @@ class Submission extends Model
                 $updates['email'] = $this->user?->email;
             }
 
+            // Validasi batas maksimal 30 author & otomatis aktifkan want_doi jika >= 11 author
+            $extractedAuthors = $updates['authors'] ?? $this->authors ?? [];
+            $validAuthorCount = 0;
+            if (is_array($extractedAuthors)) {
+                foreach ($extractedAuthors as $authorItem) {
+                    if (is_array($authorItem) && !empty(trim($authorItem['name'] ?? ''))) {
+                        $validAuthorCount++;
+                    }
+                }
+            }
+            if ($validAuthorCount === 0 && !empty($updates['author_name'] ?? $this->author_name)) {
+                $names = preg_split('/[,;]+/', $updates['author_name'] ?? $this->author_name);
+                $validAuthorCount = count(array_filter(array_map('trim', $names)));
+            }
+
+            if ($validAuthorCount >= 11) {
+                $updates['want_doi'] = true;
+            }
+
+            if ($validAuthorCount > 30) {
+                $updates['review_status'] = 'rejected';
+                $updates['review_error_message'] = "Jumlah penulis ({$validAuthorCount} author) melebihi batas maksimal yang diizinkan (maksimal 30 author). Silakan sesuaikan kembali naskah Anda.";
+                $this->update($updates);
+
+                if (!app()->runningInConsole()) {
+                    \Filament\Notifications\Notification::make()
+                        ->title('Pengajuan Ditolak (Maksimal 30 Author)')
+                        ->body($updates['review_error_message'])
+                        ->danger()
+                        ->persistent()
+                        ->send();
+                }
+                return;
+            }
+
             $this->update($updates);
 
             // Send Pre-Submission Review Email (Only for internal journals)
@@ -351,7 +386,7 @@ class Submission extends Model
                 'review_error_message' => $e->getMessage(),
             ]);
 
-            $errorMessage = (config('app.env') === 'local' || env('APP_ENV') === 'local')
+            $errorMessage = ($e instanceof \DomainException || config('app.env') === 'local' || env('APP_ENV') === 'local')
                 ? $e->getMessage()
                 : 'Mohon maaf reviewer sedang sibuk, coba request ulang naskah ini dalam beberapa menit dengan menekan tombol "Request Again"';
 

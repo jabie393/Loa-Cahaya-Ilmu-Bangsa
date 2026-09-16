@@ -105,8 +105,18 @@ class SubmissionPricingService
     public function calculate(Submission $submission, ?User $user = null): array
     {
         $authorCount = $this->getAuthorCount($submission);
+
+        if ($authorCount > 30) {
+            throw new \DomainException("Jumlah penulis ({$authorCount} author) melebihi batas maksimal yang diizinkan (maksimal 30 author). Silakan hubungi admin atau sesuaikan kembali naskah Anda.");
+        }
+
         $isInternational = $submission->isExternal();
         $withDoi = (bool) $submission->want_doi;
+
+        // Untuk 11 author ke atas, otomatis include DOI
+        if ($authorCount >= 11) {
+            $withDoi = true;
+        }
 
         $pricing = $this->determinePricing($isInternational, $withDoi, $authorCount);
 
@@ -178,6 +188,10 @@ class SubmissionPricingService
      */
     protected function determinePricing(bool $isInternational, bool $withDoi, int $authorCount): array
     {
+        if ($authorCount >= 11) {
+            $withDoi = true;
+        }
+
         try {
             $tiers = $this->getActivePricingTiers();
 
@@ -217,24 +231,48 @@ class SubmissionPricingService
             // fallback below
         }
 
-        // Hardcoded Fallback Matrix
+        // Hardcoded Fallback Matrix (Kelipatan 5, Maks 30 Author)
         if ($isInternational) {
-            if ($authorCount <= 10) {
+            if ($authorCount <= 5) {
                 return [
-                    'tier_name' => 'International 1-10 Author + DOI',
-                    'gross_amount' => 150000.0,
+                    'tier_name' => 'International 1-5 Author + DOI',
+                    'gross_amount' => 130000.0,
+                    'developer_gross_share' => 15000.0,
+                ];
+            } elseif ($authorCount <= 10) {
+                return [
+                    'tier_name' => 'International 6-10 Author + DOI',
+                    'gross_amount' => 170000.0,
                     'developer_gross_share' => 20000.0,
                 ];
-            } else {
+            } elseif ($authorCount <= 15) {
                 return [
                     'tier_name' => 'International 11-15 Author + DOI',
                     'gross_amount' => 200000.0,
                     'developer_gross_share' => 30000.0,
                 ];
+            } elseif ($authorCount <= 20) {
+                return [
+                    'tier_name' => 'International 16-20 Author + DOI',
+                    'gross_amount' => 250000.0,
+                    'developer_gross_share' => 40000.0,
+                ];
+            } elseif ($authorCount <= 25) {
+                return [
+                    'tier_name' => 'International 21-25 Author + DOI',
+                    'gross_amount' => 300000.0,
+                    'developer_gross_share' => 50000.0,
+                ];
+            } else {
+                return [
+                    'tier_name' => 'International 26-30 Author + DOI',
+                    'gross_amount' => 350000.0,
+                    'developer_gross_share' => 60000.0,
+                ];
             }
         }
 
-        // ISSN Journals
+        // Jurnal Nasional (ISSN)
         if ($authorCount <= 5) {
             if ($withDoi) {
                 return [
@@ -273,11 +311,27 @@ class SubmissionPricingService
             ];
         }
 
-        // 16-20 author or more
+        if ($authorCount <= 20) {
+            return [
+                'tier_name' => 'ISSN + DOI (16-20 Author)',
+                'gross_amount' => 200000.0,
+                'developer_gross_share' => 30000.0,
+            ];
+        }
+
+        if ($authorCount <= 25) {
+            return [
+                'tier_name' => 'ISSN + DOI (21-25 Author)',
+                'gross_amount' => 250000.0,
+                'developer_gross_share' => 40000.0,
+            ];
+        }
+
+        // 26-30 author
         return [
-            'tier_name' => 'ISSN + DOI (16-20 Author)',
-            'gross_amount' => 200000.0,
-            'developer_gross_share' => 30000.0,
+            'tier_name' => 'ISSN + DOI (26-30 Author)',
+            'gross_amount' => 300000.0,
+            'developer_gross_share' => 50000.0,
         ];
     }
 
