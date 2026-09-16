@@ -65,42 +65,7 @@ class BelibayarWebhookController extends Controller
             ], 200);
         }
 
-        // 2. Verify Signature (check against webhook_secret and secret_key fallback)
-        $signatureMatches = false;
-        if (!empty($signature)) {
-            $sig1 = !empty($webhookSecret) ? hash_hmac('sha256', $rawContent, $webhookSecret) : '';
-            $sig2 = !empty($secretKey) ? hash_hmac('sha256', $rawContent, $secretKey) : '';
-
-            if ((!empty($sig1) && hash_equals($sig1, $signature)) || (!empty($sig2) && hash_equals($sig2, $signature))) {
-                $signatureMatches = true;
-            }
-        }
-
-        if (!empty($webhookSecret) || !empty($secretKey)) {
-            if (!$signatureMatches) {
-                Log::warning('Belibayar Webhook: Invalid signature', [
-                    'received' => $signature,
-                    'is_production' => $isProduction,
-                ]);
-
-                if ($isProduction) {
-                    return response()->json([
-                        'success' => false,
-                        'messages' => 'Invalid signature',
-                    ], 401);
-                } else {
-                    Log::info('Belibayar Webhook (Sandbox): Continuing despite signature mismatch for development/simulator testing.');
-                }
-            }
-        }
-
-        // 2. Filter out withdrawal events if any
-        if (isset($payload['event']) && is_string($payload['event']) && str_starts_with($payload['event'], 'withdrawal.')) {
-            Log::info("Belibayar Webhook: Withdrawal notification ignored: {$payload['event']}");
-            return response()->json(['success' => true, 'messages' => 'Withdrawal event acknowledged'], 200);
-        }
-
-        // 3. Extract payment data (handle potential nested 'data' wrapper)
+        // 2. Extract payment data early
         $data = (isset($payload['data']) && is_array($payload['data'])) ? $payload['data'] : $payload;
 
         $orderId = $data['reference'] 
@@ -111,6 +76,83 @@ class BelibayarWebhookController extends Controller
 
         $status = strtolower($data['status'] ?? ($payload['status'] ?? ''));
         $transactionId = $data['transaction_id'] ?? ($payload['transaction_id'] ?? null);
+
+        // 3. Verify Signature (check against webhook_secret, secret_key, api_key with trimmed variations)
+        $apiKey = $this->belibayarService->getApiKey();
+        $candidateKeys = array_filter(array_unique([
+            $webhookSecret,
+            $secretKey,
+            $apiKey,
+        ]));
+
+        $signatureMatches = false;
+        if (!empty($signature) && !empty($candidateKeys)) {
+            $candidateBodies = [
+                $rawContent,
+                trim($rawContent),
+                rtrim($rawContent, "\r\n"),
+            ];
+
+            foreach ($candidateKeys as $key) {
+                foreach ($candidateBodies as $body) {
+                    $calc = hash_hmac('sha256', $body, $key);
+                    if (hash_equals($calc, $signature)) {
+                        $signatureMatches = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (!$signatureMatches && (!empty($webhookSecret) || !empty($secretKey))) {
+            Log::warning('Belibayar Webhook: Signature mismatch', [
+                'received_signature' => $signature,
+                'is_production' => $isProduction,
+                'order_id' => $orderId,
+            ]);
+
+            // FALLBACK SAFETY NET:
+            // If signature verification fails (e.g. rotated secret or outdated .env on server),
+            // verify legitimacy directly with Belibayar via Status Inquiry API.
+            $verifiedViaInquiry = false;
+            if ($orderId) {
+                $candidatePayment = Payment::where('order_id', $orderId)->first();
+                if ($candidatePayment) {
+                    try {
+                        Log::info("Belibayar Webhook: Verifying order {$orderId} directly via Belibayar Status Inquiry API");
+                        $refreshedPayment = $this->belibayarService->checkStatus($candidatePayment);
+                        if ($refreshedPayment && $refreshedPayment->isPaid()) {
+                            $verifiedViaInquiry = true;
+                            Log::info("Belibayar Webhook: Verified and fulfilled via direct status inquiry for order {$orderId}");
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Belibayar Webhook: Fallback status inquiry failed: " . $e->getMessage());
+                    }
+                }
+            }
+
+            if ($verifiedViaInquiry) {
+                return response()->json([
+                    'success' => true,
+                    'messages' => 'Webhook verified via direct Belibayar status inquiry',
+                ], 200);
+            }
+
+            if ($isProduction) {
+                return response()->json([
+                    'success' => false,
+                    'messages' => 'Invalid signature',
+                ], 401);
+            } else {
+                Log::info('Belibayar Webhook (Sandbox): Continuing despite signature mismatch for development/simulator testing.');
+            }
+        }
+
+        // 4. Filter out withdrawal events if any
+        if (isset($payload['event']) && is_string($payload['event']) && str_starts_with($payload['event'], 'withdrawal.')) {
+            Log::info("Belibayar Webhook: Withdrawal notification ignored: {$payload['event']}");
+            return response()->json(['success' => true, 'messages' => 'Withdrawal event acknowledged'], 200);
+        }
 
         if (!$orderId) {
             Log::warning('Belibayar Webhook: Missing reference / order_id in payload');
