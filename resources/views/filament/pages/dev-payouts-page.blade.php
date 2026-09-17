@@ -1,13 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
-        @php
-            $devTotalEarned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-            $devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-            $devTotalCommitted = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
-            $devUnpaidBalance = max(0, $devTotalEarned - $devTotalCommitted);
-            $unpaidPayoutCount = \App\Models\DevPayout::where('status', 'waiting_payout')->count();
-            $unpaidPayoutTotal = (float) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
-        @endphp
+    <div class="space-y-6" wire:poll.5s="refreshBalances">
 
         {{-- DEVELOPER BALANCE WIDGET CARDS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
