@@ -157,10 +157,22 @@ class ReviewSubmission extends Page
                     ->label('Proceed to Payment')
                     ->icon('heroicon-m-credit-card')
                     ->color('success')
-                    ->url(fn(): string => static::$resource::getUrl('payment', ['record' => $this->record]))
-                    ->visible(fn(): bool => $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed'])),
+                    ->action(function () {
+                        $pricingService = app(\App\Services\SubmissionPricingService::class);
+                        if ($pricingService->getAuthorCount($this->record) > 30) {
+                            Notification::make()
+                                ->title('Jumlah Penulis Melebihi Batas')
+                                ->body('Jumlah penulis pada naskah ini melebihi batas maksimal yang diizinkan (maksimal 30 author). Pembayaran tidak dapat diproses.')
+                                ->danger()
+                                ->persistent()
+                                ->send();
+                            return;
+                        }
+                        return redirect()->to(static::$resource::getUrl('payment', ['record' => $this->record]));
+                    })
+                    ->visible(fn(): bool => $this->record->payment_status !== 'paid' && !in_array($this->record->review_status, ['processing', 'failed', 'rejected'])),
                 EditAction::make()
-                    ->label(fn() => $this->record->status === 'Rejected' ? 'Revise Submission' : 'Edit Submission')
+                    ->label(fn() => in_array($this->record->status, ['Rejected']) || $this->record->review_status === 'rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square')
                     ->disabled(fn() => $this->record->review_status === 'processing'),
                 Action::make('request_review_again')

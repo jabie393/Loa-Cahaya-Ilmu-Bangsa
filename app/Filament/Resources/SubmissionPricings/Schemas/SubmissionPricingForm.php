@@ -94,8 +94,9 @@ class SubmissionPricingForm
                         }
 
                         $mdrAmount = round($gross * $mdrRate);
-                        $devNet = $devGross - $mdrAmount;
-                        $journalShare = max(0, $gross - $devGross);
+                        // MDR dibebankan ke jurnal, developer mendapatkan porsi penuh
+                        $devNet = $devGross;
+                        $journalShare = max(0, $gross - $devGross - $mdrAmount);
 
                         $mdrPercentLabel = ($mdrRate * 100) . '%';
                         $formattedJournal = 'Rp ' . number_format($journalShare, 0, ',', '.');
@@ -109,13 +110,16 @@ class SubmissionPricingForm
                                 <!-- Card Hak Jurnal -->
                                 <div class=\"p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex flex-col justify-between\">
                                     <div>
-                                        <div class=\"text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300\">Estimasi Hak Jurnal</div>
+                                        <div class=\"flex items-center justify-between\">
+                                            <span class=\"text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300\">Estimasi Hak Jurnal</span>
+                                            <span class=\"text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800\">MDR {$mdrPercentLabel}</span>
+                                        </div>
                                         <div class=\"text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1\">
                                             {$formattedJournal}
                                         </div>
                                     </div>
                                     <div class=\"text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-2 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40\">
-                                        Rumus: {$formattedGross} − {$formattedDevGross}
+                                        Rumus: {$formattedGross} − {$formattedDevGross} − MDR ({$formattedMdr})
                                     </div>
                                 </div>
 
@@ -124,14 +128,14 @@ class SubmissionPricingForm
                                     <div>
                                         <div class=\"flex items-center justify-between\">
                                             <span class=\"text-xs font-bold uppercase tracking-wider text-sky-800 dark:text-sky-300\">Estimasi Bersih Dev</span>
-                                            <span class=\"text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800\">MDR {$mdrPercentLabel}</span>
+                                            <span class=\"text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800\">100% Utuh</span>
                                         </div>
                                         <div class=\"text-xl font-black text-sky-600 dark:text-sky-400 mt-1\">
                                             {$formattedDevNet}
                                         </div>
                                     </div>
                                     <div class=\"text-[11px] text-sky-700/80 dark:text-sky-400/80 mt-2 pt-2 border-t border-sky-200/60 dark:border-sky-800/40\">
-                                        Hak Kotor ({$formattedDevGross}) − MDR ({$formattedMdr})
+                                        Porsi Kotor Penuh (MDR ditanggung Jurnal)
                                     </div>
                                 </div>
                             </div>

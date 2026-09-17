@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/midtrans/webhook',
             'belibayar/webhook',
             'api/belibayar/webhook',
+            'midtrans/webhook*',
+            'api/midtrans/webhook*',
+            'belibayar/webhook*',
+            'api/belibayar/webhook*',
+            '*/belibayar/webhook*',
+            '*/midtrans/webhook*',
         ]);
 
         $middleware->append(\App\Http\Middleware\TrustProxies::class);

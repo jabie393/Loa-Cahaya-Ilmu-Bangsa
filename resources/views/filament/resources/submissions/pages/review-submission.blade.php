@@ -93,7 +93,7 @@
                     <p class="text-amber-900 dark:text-amber-100 text-sm font-medium">Silakan selesaikan pembayaran.
                     </p>
                 </div>
-                @if (!in_array($record->review_status, ['processing', 'failed']))
+                @if (!in_array($record->review_status, ['processing', 'failed', 'rejected']))
                     <a href="{{ \App\Filament\Resources\Submissions\SubmissionResource::getUrl('payment', ['record' => $record]) }}"
                         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 hover:bg-primary-500 text-white rounded-lg text-xs font-semibold shadow-sm transition shrink-0">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -109,6 +109,31 @@
         <div class="grid grid-cols-1 gap-6 pb-6 md:grid-cols-5">
             <!-- Review Data Left Column -->
             <div class="space-y-4 md:col-span-3">
+                @if ($record->review_status === 'rejected')
+                    <!-- Hasil Review Naskah (Rejected) -->
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400">Hasil Peninjauan Naskah (Rejected)</h4>
+                    <div
+                        class="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm ring-1 ring-gray-950/5 dark:border-rose-900/40 dark:bg-rose-950/30">
+                        <div class="flex items-start gap-3">
+                            <div class="rounded-lg bg-rose-100 dark:bg-rose-900/50 p-2 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"></path>
+                                </svg>
+                            </div>
+                            <div class="space-y-1.5">
+                                <h5 class="text-sm font-bold text-rose-900 dark:text-rose-100">Pengajuan Naskah Ditolak</h5>
+                                <p class="text-xs text-rose-800 dark:text-rose-200 leading-relaxed">
+                                    {{ $record->review_error_message ?: 'Jumlah penulis pada naskah melebihi batas maksimal yang diizinkan (maksimal 30 author).' }}
+                                </p>
+                                <p class="text-[11px] text-rose-600 dark:text-rose-400 pt-1">
+                                    Silakan perbaiki dan sesuaikan kembali berkas naskah Anda melalui tombol <strong>Revise Submission</strong> di menu Actions.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($record->review_status === 'failed')
                     <!-- Hasil Review Naskah (Failed) -->
                     <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">Hasil Review

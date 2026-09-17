@@ -49,7 +49,7 @@ class SubmissionPricingsTable
                     ->sortable(),
 
                 TextColumn::make('developer_gross_share')
-                    ->label('Hak Dev (Kotor)')
+                    ->label('Hak Dev')
                     ->formatStateUsing(function ($state, SubmissionPricing $record): string {
                         if ($record->category === 'setting') {
                             return '-';
@@ -62,6 +62,7 @@ class SubmissionPricingsTable
 
                 TextColumn::make('journal_share')
                     ->label('Hak Jurnal')
+                    ->description(fn (SubmissionPricing $record): ?string => $record->category !== 'setting' ? 'Setelah potong MDR' : null)
                     ->formatStateUsing(function ($state, SubmissionPricing $record): string {
                         if ($record->category === 'setting') {
                             return '-';

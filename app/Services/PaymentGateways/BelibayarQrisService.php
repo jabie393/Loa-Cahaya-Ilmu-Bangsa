@@ -351,7 +351,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'gateway' => 'belibayar',
             'payment_method' => 'qris',
             'type' => 'submission',
-            'payer_name' => $customerName,
+            'payer_name' => $rawName,
             'payer_email' => $customerEmail,
             'original_amount' => $pricing['original_amount'] ?? $grossAmount,
             'discount_amount' => $pricing['discount_amount'] ?? 0,
@@ -488,7 +488,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'gateway' => 'belibayar',
             'payment_method' => 'qris',
             'type' => 'doi_addon',
-            'payer_name' => $customerName,
+            'payer_name' => $rawName,
             'payer_email' => $customerEmail,
             'original_amount' => $pricing['original_amount'] ?? $grossAmount,
             'discount_amount' => $pricing['discount_amount'] ?? 0,
@@ -674,7 +674,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'gateway' => 'belibayar',
             'payment_method' => 'qris',
             'type' => 'replace_pdf',
-            'payer_name' => $customerName,
+            'payer_name' => $rawName,
             'payer_email' => $customerEmail,
             'original_amount' => $pricing['original_amount'] ?? $grossAmount,
             'discount_amount' => $pricing['discount_amount'] ?? 0,
@@ -806,7 +806,8 @@ class BelibayarQrisService implements PaymentGatewayInterface
         $firstId = $submissionIds[0] ?? 0;
 
         $orderId = 'BYR-BULK-' . count($submissionIds) . 'SUB-' . $firstId . '-' . time() . '-' . Str::upper(Str::random(4));
-        $payerName = $this->sanitizeCustomerName($payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif'));
+        $rawPayerName = $payerUser?->name ?? ($submissions->first()->author_name ?: 'Author Kolektif');
+        $payerName = $this->sanitizeCustomerName($rawPayerName);
         $payerEmail = $payerUser?->email ?? ($submissions->first()->email ?: 'author@example.com');
 
         $grossAmount = (int) round($pricingData['gross_amount']);
@@ -841,7 +842,7 @@ class BelibayarQrisService implements PaymentGatewayInterface
             'gateway' => 'belibayar',
             'payment_method' => 'qris',
             'type' => 'bulk_submission',
-            'payer_name' => $payerName,
+            'payer_name' => $rawPayerName,
             'payer_email' => $payerEmail,
             'original_amount' => $pricingData['original_amount'] ?? $grossAmount,
             'discount_amount' => $pricingData['discount_amount'] ?? 0,

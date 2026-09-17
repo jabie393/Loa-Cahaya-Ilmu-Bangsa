@@ -63,26 +63,31 @@
                 </div>
             </div>
 
-            {{-- CARD 4: SISA HAK DEV (ACTION / ELEGANT INDIGO WITH NON-COLLIDING BADGE) --}}
+            {{-- CARD 4: SISA HAK DEV (ACTION / ELEGANT INDIGO FULLY UNIFORM) --}}
             <div class="bg-gradient-to-br from-indigo-50/50 via-white to-white dark:from-indigo-950/30 dark:via-gray-900 dark:to-gray-900 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-5 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex flex-col justify-between h-full">
                 <div class="flex items-start justify-between gap-3">
                     <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 min-w-0 flex-1 leading-snug">
                         Sisa Hak Dev Belum Cair
                     </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider shrink-0 whitespace-nowrap {{ $devUnpaidBalance > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 shadow-xs' : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60' }}">
-                        @if($devUnpaidBalance > 0)
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        @endif
-                        Siap Dicairkan
+                    <span class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <x-filament::icon icon="heroicon-o-banknotes" class="w-5 h-5" />
                     </span>
                 </div>
                 <div class="mt-4 pt-1">
                     <div class="text-2xl font-black font-mono tracking-tight text-indigo-700 dark:text-indigo-300">
                         Rp {{ number_format($devUnpaidBalance, 0, ',', '.') }}
                     </div>
-                    <span class="text-xs text-indigo-600/80 dark:text-indigo-400/80 mt-1.5 block leading-relaxed">
-                        Saldo outstanding yang dapat dibayarkan
-                    </span>
+                    <div class="mt-1.5 flex items-center justify-between gap-2 text-xs">
+                        <span class="text-indigo-600/80 dark:text-indigo-400/80 truncate">Saldo siap bayar</span>
+                        @if($devUnpaidBalance > 0)
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/80 whitespace-nowrap shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Siap Cair
+                            </span>
+                        @else
+                            <span class="text-xs font-semibold text-indigo-600/80 dark:text-indigo-400/80 whitespace-nowrap">Lunas</span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

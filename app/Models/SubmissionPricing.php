@@ -55,11 +55,19 @@ class SubmissionPricing extends Model
     }
 
     /**
-     * Calculated journal gross share: gross_amount - developer_gross_share
+     * Calculated journal net share (after QRIS MDR absorbed by journal):
+     * gross_amount - developer_gross_share - mdr
      */
     public function getJournalShareAttribute(): float
     {
-        return max(0.0, (float) $this->gross_amount - (float) $this->developer_gross_share);
+        $mdrRate = 0.007;
+        try {
+            $mdrRate = app(\App\Services\SubmissionPricingService::class)->getMdrRate();
+        } catch (\Throwable $e) {
+            $mdrRate = 0.007;
+        }
+        $mdr = round((float) $this->gross_amount * $mdrRate);
+        return max(0.0, (float) $this->gross_amount - (float) $this->developer_gross_share - $mdr);
     }
 
     /**

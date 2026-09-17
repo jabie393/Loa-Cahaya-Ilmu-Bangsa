@@ -123,37 +123,37 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
 
-    <body class="font-body text-on-surface selection:bg-primary/20 bg-surface flex h-[100dvh] min-h-screen flex-col justify-between overflow-hidden antialiased">
-        <!-- TopNavBar -->
-        <nav class="anim-nav fixed top-0 z-50 w-full bg-white/20 shadow-[0_20px_40px_rgba(0,74,198,0.05)] backdrop-blur-xl dark:bg-slate-950/80">
-            <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-8 py-4">
+    <body class="font-body text-on-surface selection:bg-primary/20 bg-surface flex h-screen h-[100dvh] max-h-screen flex-col justify-between overflow-hidden antialiased">
+        <!-- TopNavBar (Flex-none: naturally placed above main with zero overlap) -->
+        <nav class="anim-nav relative z-50 w-full flex-none border-b border-slate-200/70 bg-white/80 shadow-[0_4px_24px_rgba(0,74,198,0.06)] backdrop-blur-xl dark:border-slate-800/70 dark:bg-slate-950/80 transition-all">
+            <div class="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-3 sm:px-8 sm:py-3.5">
                 <div class="font-headline text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
-                    <a href="{{ url('/') }}" class="flex items-center gap-2">
+                    <a href="{{ url('/') }}" class="flex items-center gap-2.5 transition-transform hover:scale-105 active:scale-95">
                         <img src="https://aset.warunayama.org/images/logo.png" alt="" class="h-8 w-8">
-                        <span>LOA</span>
+                        <span class="tracking-tight">LOA</span>
                     </a>
                 </div>
 
                 <div class="flex items-center gap-4">
                     @if (Route::has('login'))
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 sm:gap-4">
                             <!-- Auth Container -->
                             <div id="sso-auth-container" style="display: {{ Auth::check() ? 'block' : 'none' }};">
                                 <a href="/journal"
-                                    class="bg-primary text-on-primary shadow-primary/20 font-headline scale-95 rounded-xl px-5 py-2 text-xs font-semibold shadow-lg transition-transform active:scale-90 sm:px-6 sm:py-2.5 sm:text-sm">
+                                    class="font-headline inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all">
                                     Dashboard
                                 </a>
                             </div>
 
                             <!-- Guest Container -->
                             <div id="sso-guest-container" class="flex items-center gap-3 sm:gap-4" style="display: {{ Auth::check() ? 'none' : 'flex' }};">
-                                <a href="/login" class="font-headline hover:text-primary text-xs font-bold text-slate-600 sm:text-sm dark:text-slate-400">
+                                <a href="/login" class="font-headline text-xs font-bold text-slate-600 hover:text-blue-600 sm:text-sm dark:text-slate-400 dark:hover:text-blue-400 transition-colors">
                                     Log in
                                 </a>
 
                                 @if (Route::has('register'))
                                     <a href="/register"
-                                        class="bg-primary text-on-primary shadow-primary/20 font-headline scale-95 rounded-xl px-5 py-2 text-xs font-semibold shadow-lg transition-transform active:scale-90 sm:px-6 sm:py-2.5 sm:text-sm">
+                                        class="font-headline inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2 sm:px-6 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 transition-all">
                                         Register
                                     </a>
                                 @endif
@@ -164,19 +164,20 @@
             </div>
         </nav>
 
-        <main class="relative flex w-full flex-1 flex-col justify-center overflow-hidden">
+        <!-- Main Content (Takes exactly 100% of remaining height between nav and footer) -->
+        <main class="relative flex w-full flex-1 min-h-0 flex-col justify-center overflow-hidden">
             <!-- Hero Section -->
-            <section class="relative flex h-full w-full items-center overflow-hidden pt-16 sm:pt-20 lg:pt-0">
+            <section class="relative flex h-full w-full items-center overflow-hidden py-4 sm:py-6">
                 <!-- Right Side Building Artwork for large screens (flushed to right edge) -->
                 <div class="anim-image pointer-events-none absolute bottom-0 right-0 top-0 z-0 hidden w-[50%] select-none items-center justify-end overflow-hidden lg:flex xl:w-[52%] 2xl:w-[50%]">
                     <div class="relative flex h-full w-full items-center justify-end">
                         <img src="{{ asset('assets/bg.png') }}" alt="Building Architecture" class="h-full w-full object-cover object-right-bottom" />
 
                         <!-- Soft bottom fade to dissolve street into ground -->
-                        <div class="from-surface pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t via-white/80 to-transparent"></div>
+                        <div class="from-surface pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t via-white/80 to-transparent"></div>
 
                         <!-- Soft left fade matching left bg color to blend seamlessly -->
-                        <div class="from-surface pointer-events-none absolute inset-y-0 left-0 w-36 bg-gradient-to-r via-[#edf4fa]/60 to-transparent"></div>
+                        <div class="from-surface pointer-events-none absolute inset-y-0 left-0 w-48 xl:w-64 bg-gradient-to-r via-[#edf4fa]/70 to-transparent"></div>
                     </div>
                 </div>
 
@@ -188,37 +189,49 @@
                     <div class="from-surface via-surface/60 to-surface/40 pointer-events-none absolute inset-0 bg-gradient-to-t"></div>
                 </div>
 
-                <div class="relative z-10 mx-auto my-auto w-full max-w-7xl px-4 py-3 sm:px-8 sm:py-6 md:py-8">
+                <div class="relative z-10 mx-auto my-auto w-full max-w-7xl px-6 sm:px-8">
                     <div class="grid grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-8">
                         <!-- Left Column (Full width on mobile): Typography & CTAs -->
                         <div class="col-span-1 flex flex-col justify-center text-left lg:col-span-7 xl:col-span-6">
                             <!-- Badge -->
                             <div
-                                class="anim-badge border-primary/20 mb-2.5 inline-flex items-center gap-1.5 self-start rounded-full border bg-white/80 px-3 py-1 shadow-sm backdrop-blur-sm sm:mb-4 sm:gap-2 sm:px-4 sm:py-1.5 lg:mb-6">
-                                <span class="bg-primary flex h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2"></span>
-                                <span class="font-headline text-primary text-[10px] font-bold uppercase tracking-widest sm:text-xs md:text-xs">Portal
-                                    Terpadu LOA &amp; Repositori</span>
+                                class="anim-badge mb-2.5 sm:mb-3.5 lg:mb-4 inline-flex items-center gap-2 self-start rounded-full border border-blue-200/90 bg-white/90 px-3.5 py-1.5 shadow-xs backdrop-blur-md dark:border-blue-900/60 dark:bg-slate-900/80">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                                    <span class="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
+                                </span>
+                                <span class="font-headline text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                                    Portal Terpadu LOA &amp; Repositori
+                                </span>
                             </div>
 
                             <!-- Main Headline -->
-                            <h1 class="anim-title font-headline mb-3 text-2xl font-extrabold leading-[1.15] tracking-tight text-slate-900 xs:text-3xl sm:mb-4 sm:text-4xl sm:leading-[1.1] sm:tracking-tighter md:mb-6 md:text-5xl lg:text-6xl xl:text-7xl">
+                            <h1 class="anim-title font-headline mb-3 text-3xl font-extrabold leading-[1.12] tracking-tight text-slate-900 sm:mb-3.5 sm:text-4xl md:text-5xl lg:text-[3.15rem] xl:text-[3.5rem] dark:text-white">
                                 Sistem Terpadu <br />
-                                <span class="bg-linear-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">Publikasi
-                                    &amp; Repositori</span>
+                                <span class="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 bg-clip-text text-transparent">
+                                    Publikasi &amp; Repositori
+                                </span>
                             </h1>
 
                             <!-- Subheading / Description -->
-                            <p class="anim-desc mb-4 max-w-xs text-xs font-medium leading-relaxed text-slate-700 sm:mb-6 sm:max-w-md sm:text-sm md:mb-8 md:max-w-lg md:text-base lg:max-w-xl lg:text-lg xl:text-xl">
-                                Akses satu pintu untuk pengajuan <strong>Letter of Acceptance (LOA)</strong>, layanan penerbitan jurnal, dan pengarsipan repositori karya ilmiah Cahaya Ilmu Bangsa.
+                            <p class="anim-desc mb-5 max-w-lg text-sm sm:text-base font-normal leading-relaxed text-slate-600 dark:text-slate-300">
+                                Akses satu pintu untuk pengajuan <strong class="font-semibold text-slate-900 dark:text-white">Letter of Acceptance (LOA)</strong>, layanan penerbitan jurnal, dan pengarsipan repositori karya ilmiah Cahaya Ilmu Bangsa.
                             </p>
 
-                            <!-- CTA Button Container -->
-                            <div class="anim-cta flex flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+                            <!-- CTA Button Container (Refined, stylish, proportional) -->
+                            <div class="anim-cta flex flex-wrap items-center gap-3.5 sm:gap-4">
                                 <a href="{{ auth()->check() ? '/journal' : '/register' }}"
-                                    class="editorial-gradient font-headline shadow-primary/30 group flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-all hover:scale-105 hover:shadow-xl sm:w-auto sm:gap-3 sm:rounded-2xl sm:px-7 sm:py-3.5 sm:text-sm md:px-8 md:py-4 md:text-base lg:text-lg">
-                                    Ajukan LOA Sekarang
-                                    <span class="material-symbols-outlined text-base transition-transform group-hover:translate-x-1 sm:text-lg md:text-xl lg:text-2xl">arrow_forward</span>
+                                    class="editorial-gradient font-headline group inline-flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl px-6 py-3 sm:px-7 sm:py-3 text-sm sm:text-base font-bold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-500/35 active:translate-y-0">
+                                    <span>Ajukan LOA Sekarang</span>
+                                    <span class="material-symbols-outlined text-lg sm:text-xl transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
                                 </a>
+
+                                <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                        <span class="material-symbols-outlined text-sm font-bold">check</span>
+                                    </span>
+                                    <span>Layanan Resmi &amp; Terverifikasi</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -229,15 +242,15 @@
         <!-- Mascot Helper -->
         <x-mascot />
 
-        <!-- Footer -->
-        <footer class="anim-footer relative z-10 w-full flex-none border-t border-slate-200/50 bg-white/40 px-6 py-3 backdrop-blur-md sm:px-12 sm:py-4 dark:bg-slate-900/40">
+        <!-- Footer (Flex-none: neatly pinned to the bottom) -->
+        <footer class="anim-footer relative z-10 w-full flex-none border-t border-slate-200/50 bg-white/50 px-6 py-2.5 sm:px-12 sm:py-3 backdrop-blur-md dark:bg-slate-900/50">
             <div class="mx-auto flex w-full max-w-7xl flex-row items-center justify-between text-xs font-semibold uppercase tracking-widest text-slate-500">
                 <div class="flex items-center gap-2">
                     <span class="font-headline text-sm font-black text-slate-900 dark:text-white">LOA</span>
                     <span class="hidden sm:inline">|</span>
                     <span class="hidden sm:inline">© 2026 Cahaya Ilmu Bangsa.</span>
                 </div>
-                <div>Developed by <a href="https://instagram.com/ryudevs" class="hover:text-primary transition-colors hover:underline">RyuDevs</a></div>
+                <div>Developed by <a href="https://ryudevs.id" target="_blank" rel="noopener noreferrer" class="hover:text-primary transition-colors hover:underline">RyuDevs</a></div>
             </div>
         </footer>
         <script src="{{ asset('js/mascot.js') }}" defer></script>

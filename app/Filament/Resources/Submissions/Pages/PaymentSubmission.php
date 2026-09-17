@@ -36,8 +36,8 @@ class PaymentSubmission extends Page
             abort(403, 'Anda tidak memiliki akses ke halaman pembayaran naskah ini.');
         }
 
-        // If review failed, redirect to view page so user can request review again
-        if ($this->record->review_status === 'failed') {
+        // If review failed or rejected, redirect to view page
+        if (in_array($this->record->review_status, ['failed', 'rejected'])) {
             $this->redirect(SubmissionResource::getUrl('view', ['record' => $this->record]));
             return;
         }
@@ -55,6 +55,8 @@ class PaymentSubmission extends Page
             $this->pricing = $pricingService->calculate($this->record, Auth::user());
         } catch (\Throwable $e) {
             $this->pricing = null;
+            $this->errorMessage = $e->getMessage();
+            return;
         }
 
         if (!$this->isExtracting) {
