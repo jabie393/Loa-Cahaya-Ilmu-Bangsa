@@ -2,90 +2,95 @@
     <div class="space-y-6" wire:poll.5s="refreshBalances">
 
         {{-- DEVELOPER BALANCE WIDGET CARDS --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
             {{-- CARD 1: TOTAL TERKUMPUL --}}
-            <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between h-full">
+            <div
+                class="shadow-xs flex h-full flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-gray-900 dark:hover:border-slate-700">
                 <div class="flex items-start justify-between gap-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 min-w-0 flex-1 leading-snug">
+                    <span class="min-w-0 flex-1 text-xs font-bold uppercase leading-snug tracking-wider text-slate-500 dark:text-slate-400">
                         Total Hak Dev Terkumpul
                     </span>
-                    <span class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
-                        <x-filament::icon icon="heroicon-o-chart-bar" class="w-5 h-5" />
+                    <span class="shrink-0 rounded-xl bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <x-filament::icon icon="heroicon-o-chart-bar" class="h-5 w-5" />
                     </span>
                 </div>
                 <div class="mt-4 pt-1">
-                    <div class="text-2xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
+                    <div class="font-mono text-2xl font-black tracking-tight text-slate-900 dark:text-white">
                         Rp {{ number_format($devTotalEarned, 0, ',', '.') }}
                     </div>
-                    <span class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 block leading-relaxed">
+                    <span class="mt-1.5 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">
                         Akumulasi seluruh transaksi lunas
                     </span>
                 </div>
             </div>
 
             {{-- CARD 2: SUDAH DITRANSFER (SUCCESS / EMERALD) --}}
-            <div class="bg-white dark:bg-gray-900 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-5 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700 transition-all flex flex-col justify-between h-full">
+            <div
+                class="shadow-xs flex h-full flex-col justify-between rounded-2xl border border-emerald-200/80 bg-white p-5 transition-all hover:border-emerald-300 dark:border-emerald-800/60 dark:bg-gray-900 dark:hover:border-emerald-700">
                 <div class="flex items-start justify-between gap-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 min-w-0 flex-1 leading-snug">
+                    <span class="min-w-0 flex-1 text-xs font-bold uppercase leading-snug tracking-wider text-emerald-700 dark:text-emerald-400">
                         Sudah Ditransfer ke Dev
                     </span>
-                    <span class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 shrink-0">
-                        <x-filament::icon icon="heroicon-o-check-badge" class="w-5 h-5" />
+                    <span class="shrink-0 rounded-xl bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                        <x-filament::icon icon="heroicon-o-check-badge" class="h-5 w-5" />
                     </span>
                 </div>
                 <div class="mt-4 pt-1">
-                    <div class="text-2xl font-black font-mono tracking-tight text-emerald-700 dark:text-emerald-300">
+                    <div class="font-mono text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-300">
                         Rp {{ number_format($devTotalPaid, 0, ',', '.') }}
                     </div>
-                    <span class="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1.5 block leading-relaxed">
+                    <span class="mt-1.5 block text-xs leading-relaxed text-emerald-600/80 dark:text-emerald-400/80">
                         {{ \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->count() }} Kali Pencairan Berhasil
                     </span>
                 </div>
             </div>
 
             {{-- CARD 3: MENUNGGU PAYOUT (WARNING / AMBER) --}}
-            <div class="bg-white dark:bg-gray-900 border border-amber-200/80 dark:border-amber-800/60 rounded-2xl p-5 shadow-xs hover:border-amber-300 dark:hover:border-amber-700 transition-all flex flex-col justify-between h-full">
+            <div
+                class="shadow-xs flex h-full flex-col justify-between rounded-2xl border border-amber-200/80 bg-white p-5 transition-all hover:border-amber-300 dark:border-amber-800/60 dark:bg-gray-900 dark:hover:border-amber-700">
                 <div class="flex items-start justify-between gap-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 min-w-0 flex-1 leading-snug">
+                    <span class="min-w-0 flex-1 text-xs font-bold uppercase leading-snug tracking-wider text-amber-700 dark:text-amber-400">
                         Menunggu Payout
                     </span>
-                    <span class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shrink-0">
-                        <x-filament::icon icon="heroicon-o-clock" class="w-5 h-5" />
+                    <span class="shrink-0 rounded-xl bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                        <x-filament::icon icon="heroicon-o-clock" class="h-5 w-5" />
                     </span>
                 </div>
                 <div class="mt-4 pt-1">
-                    <div class="text-2xl font-black font-mono tracking-tight text-amber-700 dark:text-amber-300">
+                    <div class="font-mono text-2xl font-black tracking-tight text-amber-700 dark:text-amber-300">
                         {{ $unpaidPayoutCount }} Tagihan
                     </div>
-                    <span class="text-xs text-amber-600/80 dark:text-amber-400/80 mt-1.5 block leading-relaxed">
+                    <span class="mt-1.5 block text-xs leading-relaxed text-amber-600/80 dark:text-amber-400/80">
                         Rp {{ number_format($unpaidPayoutTotal, 0, ',', '.') }} siap dibayar via QRIS
                     </span>
                 </div>
             </div>
 
-            {{-- CARD 4: SISA HAK DEV (ACTION / ELEGANT INDIGO FULLY UNIFORM) --}}
-            <div class="bg-gradient-to-br from-indigo-50/50 via-white to-white dark:from-indigo-950/30 dark:via-gray-900 dark:to-gray-900 border border-indigo-200/80 dark:border-indigo-800/60 rounded-2xl p-5 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-700 transition-all flex flex-col justify-between h-full">
+            {{-- CARD 4: HAK DEV (ACTION / ELEGANT INDIGO FULLY UNIFORM) --}}
+            <div
+                class="shadow-xs flex h-full flex-col justify-between rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/50 via-white to-white p-5 transition-all hover:border-indigo-300 dark:border-indigo-800/60 dark:from-indigo-950/30 dark:via-gray-900 dark:to-gray-900 dark:hover:border-indigo-700">
                 <div class="flex items-start justify-between gap-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 min-w-0 flex-1 leading-snug">
-                        Sisa Hak Dev Belum Cair
+                    <span class="min-w-0 flex-1 text-xs font-bold uppercase leading-snug tracking-wider text-indigo-700 dark:text-indigo-400">
+                        Hak Dev Hari ini
                     </span>
-                    <span class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 shrink-0">
-                        <x-filament::icon icon="heroicon-o-banknotes" class="w-5 h-5" />
+                    <span class="shrink-0 rounded-xl bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+                        <x-filament::icon icon="heroicon-o-banknotes" class="h-5 w-5" />
                     </span>
                 </div>
                 <div class="mt-4 pt-1">
-                    <div class="text-2xl font-black font-mono tracking-tight text-indigo-700 dark:text-indigo-300">
+                    <div class="font-mono text-2xl font-black tracking-tight text-indigo-700 dark:text-indigo-300">
                         Rp {{ number_format($devUnpaidBalance, 0, ',', '.') }}
                     </div>
                     <div class="mt-1.5 flex items-center justify-between gap-2 text-xs">
-                        <span class="text-indigo-600/80 dark:text-indigo-400/80 truncate">Saldo siap bayar</span>
-                        @if($devUnpaidBalance > 0)
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800/80 whitespace-nowrap shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="truncate text-indigo-600/80 dark:text-indigo-400/80">Saldo siap bayar</span>
+                        @if ($devUnpaidBalance > 0)
+                            <span
+                                class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200/80 bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 dark:border-emerald-800/80 dark:bg-emerald-900/60 dark:text-emerald-200">
+                                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"></span>
                                 Siap Cair
                             </span>
                         @else
-                            <span class="text-xs font-semibold text-indigo-600/80 dark:text-indigo-400/80 whitespace-nowrap">Lunas</span>
+                            <span class="whitespace-nowrap text-xs font-semibold text-indigo-600/80 dark:text-indigo-400/80">Lunas</span>
                         @endif
                     </div>
                 </div>
