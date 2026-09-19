@@ -4,12 +4,15 @@ namespace App\Filament\Resources\Submissions\Schemas;
 
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Textarea;
 use Closure;
+use Filament\Forms\Components\TagsInput;
 
 class SubmissionForm
 {
@@ -160,6 +163,43 @@ class SubmissionForm
                             ->nullable()
                             ->visible(fn($record) => $record !== null && ($record->status === 'Approved' || in_array($record->ojs_status, ['submitted', 'published']))),
                     ]),
+
+                Section::make("Edit Submission")
+                    ->visible(fn() => Auth::user()?->hasRole('ryu_dev'))
+                    ->columnSpanFull()
+                    ->schema([
+                        Textarea::make('title')
+                            ->label('Title'),
+                        Repeater::make('authors')
+                            ->label('Authors')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Name')
+                                    ->required(),
+                                TextInput::make('institution')
+                                    ->label('Institution')
+                                    ->required(),
+                            ])
+                            ->columns(2)
+                            ->addActionLabel('Add Author')
+                            ->defaultItems(1),
+                        Textarea::make('abstract')
+                            ->autosize()
+                            ->label('Abstract'),
+                        TagsInput::make('keywords')
+                            ->label('Keywords')
+                            ->separator(', ')
+                            ->splitKeys(['Tab', 'Enter', ','])
+                            ->afterStateHydrated(function (TagsInput $component, $state) {
+                                if (is_string($state)) {
+                                    $items = array_filter(array_map('trim', explode(',', $state)));
+                                    $component->state(array_values($items));
+                                }
+                            }),
+                        Textarea::make('references')
+                            ->autosize()
+                            ->label('References'),
+                    ])
             ])
             ->columns(1);
     }
