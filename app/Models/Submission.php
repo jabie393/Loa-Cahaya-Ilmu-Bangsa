@@ -338,7 +338,7 @@ class Submission extends Model
                 $updates['email'] = $this->user?->email;
             }
 
-            // Validasi batas maksimal 30 author & otomatis aktifkan want_doi jika >= 11 author
+            // Validasi batas maksimal 30 author
             $extractedAuthors = $updates['authors'] ?? $this->authors ?? [];
             $validAuthorCount = 0;
             if (is_array($extractedAuthors)) {
@@ -351,10 +351,6 @@ class Submission extends Model
             if ($validAuthorCount === 0 && !empty($updates['author_name'] ?? $this->author_name)) {
                 $names = preg_split('/[,;]+/', $updates['author_name'] ?? $this->author_name);
                 $validAuthorCount = count(array_filter(array_map('trim', $names)));
-            }
-
-            if ($validAuthorCount >= 11) {
-                $updates['want_doi'] = true;
             }
 
             if ($validAuthorCount > 30) {
