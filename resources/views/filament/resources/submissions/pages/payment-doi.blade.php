@@ -308,7 +308,7 @@
                                     $isSandbox = $isBelibayar ? !config('services.belibayar.is_production', false) : !config('services.midtrans.is_production', false);
                                 @endphp
 
-                                @if($isSandbox)
+                                @if(false && $isSandbox)
                                     <div
                                         class="mt-3 w-full p-2.5 bg-amber-50/90 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 text-left space-y-1.5 shadow-sm">
                                         <div class="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
