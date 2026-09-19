@@ -113,11 +113,6 @@ class SubmissionPricingService
         $isInternational = $submission->isExternal();
         $withDoi = (bool) $submission->want_doi;
 
-        // Untuk 11 author ke atas, otomatis include DOI
-        if ($authorCount >= 11) {
-            $withDoi = true;
-        }
-
         $pricing = $this->determinePricing($isInternational, $withDoi, $authorCount);
 
         $targetUser = $user ?? $submission->user ?? auth()->user();
@@ -235,39 +230,39 @@ class SubmissionPricingService
         if ($isInternational) {
             if ($authorCount <= 5) {
                 return [
-                    'tier_name' => 'International 1-5 Author + DOI',
-                    'gross_amount' => 130000.0,
-                    'developer_gross_share' => 15000.0,
+                    'tier_name' => 'International 1-5 Author (Free DOI)',
+                    'gross_amount' => 150000.0,
+                    'developer_gross_share' => 20000.0,
                 ];
             } elseif ($authorCount <= 10) {
                 return [
-                    'tier_name' => 'International 6-10 Author + DOI',
-                    'gross_amount' => 170000.0,
-                    'developer_gross_share' => 20000.0,
-                ];
-            } elseif ($authorCount <= 15) {
-                return [
-                    'tier_name' => 'International 11-15 Author + DOI',
+                    'tier_name' => 'International 6-10 Author (Free DOI)',
                     'gross_amount' => 200000.0,
                     'developer_gross_share' => 30000.0,
                 ];
-            } elseif ($authorCount <= 20) {
+            } elseif ($authorCount <= 15) {
                 return [
-                    'tier_name' => 'International 16-20 Author + DOI',
+                    'tier_name' => 'International 11-15 Author (Free DOI)',
                     'gross_amount' => 250000.0,
                     'developer_gross_share' => 40000.0,
                 ];
-            } elseif ($authorCount <= 25) {
+            } elseif ($authorCount <= 20) {
                 return [
-                    'tier_name' => 'International 21-25 Author + DOI',
+                    'tier_name' => 'International 16-20 Author (Free DOI)',
                     'gross_amount' => 300000.0,
                     'developer_gross_share' => 50000.0,
                 ];
-            } else {
+            } elseif ($authorCount <= 25) {
                 return [
-                    'tier_name' => 'International 26-30 Author + DOI',
+                    'tier_name' => 'International 21-25 Author (Free DOI)',
                     'gross_amount' => 350000.0,
                     'developer_gross_share' => 60000.0,
+                ];
+            } else {
+                return [
+                    'tier_name' => 'International 26-30 Author (Free DOI)',
+                    'gross_amount' => 400000.0,
+                    'developer_gross_share' => 70000.0,
                 ];
             }
         }
