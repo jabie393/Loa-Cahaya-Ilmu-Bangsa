@@ -47,6 +47,13 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     // Active Tab: 'transactions', 'payouts'
     public string $activeTab = 'transactions';
 
+    // Top cards stats overview
+    public float $totalGross = 0;
+    public float $totalQris = 0;
+    public float $totalDev = 0;
+    public float $totalAdmin = 0;
+    public int $countPayments = 0;
+
     // Dev balance tracking
     public float $devTotalEarned = 0;
     public float $devTotalPaid = 0;
@@ -66,7 +73,13 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
 
     public function refreshBalances(): void
     {
-        $this->devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
+        $this->totalGross = (float) Payment::where('payment_status', 'paid')->sum('gross_amount');
+        $this->totalQris = (float) Payment::where('payment_status', 'paid')->sum('mdr_amount');
+        $this->totalDev = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
+        $this->totalAdmin = (float) Payment::where('payment_status', 'paid')->sum('journal_share');
+        $this->countPayments = Payment::where('payment_status', 'paid')->count();
+
+        $this->devTotalEarned = $this->totalDev;
         $this->devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $devTotalCommitted = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
@@ -75,6 +88,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     }
 
     #[\Livewire\Attributes\On('payout-created')]
+    #[\Livewire\Attributes\On('payout-updated')]
     public function onPayoutCreated(): void
     {
         $this->refreshBalances();
@@ -86,6 +100,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     public function table(Table $table): Table
     {
         return $table
+            ->poll('5s')
             ->query(
                 Payment::query()
                     ->where('payment_status', 'paid')

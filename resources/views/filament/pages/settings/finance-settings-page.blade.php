@@ -1,15 +1,7 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
+    <div class="space-y-6" wire:poll.5s="refreshBalances">
 
         {{-- TOP STAT CARDS: FINANCIAL OVERVIEW --}}
-        @php
-            $totalGross = \App\Models\Payment::where('payment_status', 'paid')->sum('gross_amount');
-            $totalQris = \App\Models\Payment::where('payment_status', 'paid')->sum('mdr_amount');
-            $totalDev = \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-            $totalAdmin = \App\Models\Payment::where('payment_status', 'paid')->sum('journal_share');
-            $countPayments = \App\Models\Payment::where('payment_status', 'paid')->count();
-        @endphp
-
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
             {{-- GROSS REVENUE --}}
             <div class="bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all flex flex-col justify-between h-full">
