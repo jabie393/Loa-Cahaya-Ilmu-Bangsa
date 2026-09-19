@@ -26,10 +26,36 @@ class SubmissionResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'id';
 
+    public static function getNavigationLabel(): string
+    {
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            return 'Quick Submit';
+        }
+
+        return static::$navigationLabel ?? '3. Quick Submit';
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            return null;
+        }
+
+        return static::$navigationGroup;
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            return 0;
+        }
+
+        return static::$navigationSort;
+    }
 
     public static function getNavigationBadge(): ?string
     {
-        if (Auth::user()->hasRole('super_admin')) {
+        if (Auth::user()?->hasAnyRole(['super_admin', 'ryu_dev'])) {
             $count = static::getModel()::where('status', 'pending')->count();
         } else {
             $count = static::getModel()::where('user_id', Auth::id())
@@ -49,7 +75,7 @@ class SubmissionResource extends Resource
             ELSE CONCAT('1_', volume)
         END AS volume_sort_key";
 
-        if (Auth::user()->hasRole('super_admin')) {
+        if (Auth::user()?->hasAnyRole(['super_admin', 'ryu_dev'])) {
             $query->where(function ($q) {
                 $q->where('status', '!=', 'Draft')
                     ->orWhere('user_id', Auth::id());
