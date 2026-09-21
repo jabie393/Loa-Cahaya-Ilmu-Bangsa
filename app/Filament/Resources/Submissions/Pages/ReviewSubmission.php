@@ -174,7 +174,19 @@ class ReviewSubmission extends Page
                 EditAction::make()
                     ->label(fn() => in_array($this->record->status, ['Rejected']) || $this->record->review_status === 'rejected' ? 'Revise Submission' : 'Edit Submission')
                     ->icon('heroicon-m-pencil-square')
-                    ->disabled(fn() => $this->record->review_status === 'processing'),
+                    ->disabled(fn() => $this->record->review_status === 'processing')
+                    ->modalSubmitActionLabel(fn() => Auth::user()?->hasRole('ryu_dev') ? 'Save & Sync' : null)
+                    ->after(function (Submission $record) {
+                        if (Auth::user()?->hasRole('ryu_dev') && ($record->ojs_status === 'submitted' || !empty($record->ojs_submission_id))) {
+                            \App\Services\OjsSubmissionService::submitInBackground($record);
+                        }
+                    })
+                    ->successNotificationTitle(function () {
+                        if (Auth::user()?->hasRole('ryu_dev') && ($this->record->ojs_status === 'submitted' || !empty($this->record->ojs_submission_id))) {
+                            return 'Perubahan Disimpan & Disinkronkan ke OJS';
+                        }
+                        return __('filament-actions::edit.single.notifications.saved.title');
+                    }),
                 Action::make('request_review_again')
                     ->label('Minta Review Lagi')
                     ->icon('heroicon-m-arrow-path')

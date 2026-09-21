@@ -37,8 +37,14 @@ class EditSubmission extends EditRecord
 
     protected function getSaveFormAction(): Action
     {
-        return parent::getSaveFormAction()
+        $action = parent::getSaveFormAction()
             ->extraAttributes($this->getLoadingProtectionAttributes());
+
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            $action->label('Save & Sync');
+        }
+
+        return $action;
     }
 
     protected function getCancelFormAction(): Action
@@ -128,10 +134,27 @@ class EditSubmission extends EditRecord
                     'transaction_status' => 'expire',
                 ]);
         }
+
+        // Khusus role ryu_dev: sinkronkan seluruh input ke OJS jika naskah sudah tersubmit
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            if ($this->record->ojs_status === 'submitted' || !empty($this->record->ojs_submission_id)) {
+                \App\Services\OjsSubmissionService::submitInBackground($this->record);
+            }
+        }
     }
 
     protected function getSavedNotification(): ?Notification
     {
+        $isRyuDev = Auth::user()?->hasRole('ryu_dev');
+        $isSubmitted = $this->record->ojs_status === 'submitted' || !empty($this->record->ojs_submission_id);
+
+        if ($isRyuDev && $isSubmitted) {
+            return Notification::make()
+                ->success()
+                ->title('Perubahan Disimpan & Disinkronkan ke OJS')
+                ->body('Data pengajuan berhasil diperbarui dan sinkronisasi ke OJS sedang diproses di latar belakang.');
+        }
+
         return Notification::make()
             ->success()
             ->title('Perubahan Disimpan')

@@ -194,7 +194,20 @@ class SubmissionForm
                                 if (is_string($state)) {
                                     $items = array_filter(array_map('trim', explode(',', $state)));
                                     $component->state(array_values($items));
+                                } elseif (blank($state)) {
+                                    $component->state([]);
                                 }
+                            })
+                            ->dehydrateStateUsing(function ($state) {
+                                if (is_array($state)) {
+                                    return implode(', ', array_filter(array_map('trim', $state)));
+                                }
+
+                                if (is_string($state)) {
+                                    return trim($state);
+                                }
+
+                                return null;
                             }),
                         Textarea::make('references')
                             ->autosize()
