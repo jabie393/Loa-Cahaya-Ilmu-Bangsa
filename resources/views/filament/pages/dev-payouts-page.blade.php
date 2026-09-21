@@ -1,6 +1,13 @@
 <x-filament-panels::page>
     <div class="space-y-6" wire:poll.5s="refreshBalances">
 
+        {{-- DEVELOPER PAYOUTS AMOUNT CHART (FULL WIDTH - RYU_DEV ONLY) --}}
+        @if (auth()->user()?->hasRole('ryu_dev'))
+            <div class="w-full min-w-0 overflow-hidden [&_.fi-section]:rounded-2xl [&_.fi-section]:border [&_.fi-section]:border-slate-200/80 [&_.fi-section]:shadow-xs dark:[&_.fi-section]:border-slate-800 dark:[&_.fi-section]:bg-gray-900">
+                @livewire(\App\Filament\Widgets\DevPayoutsChartWidget::class)
+            </div>
+        @endif
+
         {{-- DEVELOPER BALANCE WIDGET CARDS --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
             {{-- CARD 1: TOTAL TERKUMPUL --}}
