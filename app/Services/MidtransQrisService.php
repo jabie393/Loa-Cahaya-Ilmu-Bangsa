@@ -64,7 +64,11 @@ class MidtransQrisService implements PaymentGatewayInterface
     public function cancelAndExpirePendingPayment(Payment $payment): void
     {
         try {
-            $this->cancelPayment($payment);
+            if (($payment->gateway ?: 'midtrans') === 'midtrans') {
+                $this->cancelPayment($payment);
+            } else {
+                app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->forPayment($payment)->cancelPayment($payment);
+            }
         } catch (\Throwable $e) {
             Log::warning("Midtrans cancelPayment error during expiration: " . $e->getMessage());
         }
@@ -103,8 +107,8 @@ class MidtransQrisService implements PaymentGatewayInterface
         if ($latestPayment && $latestPayment->payment_status === 'pending') {
             $paymentGross = (int) round($latestPayment->gross_amount);
 
-            // Check if expired OR if the amount no longer matches current pricing (e.g. DOI changed or authors changed)
-            if (($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) || $paymentGross !== $currentGross) {
+            // Check if expired OR if the amount no longer matches current pricing OR if gateway changed
+            if (($latestPayment->expired_at && now()->greaterThanOrEqualTo($latestPayment->expired_at)) || $paymentGross !== $currentGross || ($latestPayment->gateway ?: 'midtrans') !== 'midtrans') {
                 $this->cancelAndExpirePendingPayment($latestPayment);
             } else {
                 // Still active and valid single QRIS with matching amount
@@ -408,7 +412,7 @@ class MidtransQrisService implements PaymentGatewayInterface
         $latestDoi = $submission->payments()->where('type', 'doi_addon')->latest()->first();
 
         if ($latestDoi && $latestDoi->payment_status === 'pending') {
-            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== $currentGross) {
+            if (($latestDoi->expired_at && now()->greaterThanOrEqualTo($latestDoi->expired_at)) || (int) $latestDoi->gross_amount !== $currentGross || ($latestDoi->gateway ?: 'midtrans') !== 'midtrans') {
                 $this->cancelAndExpirePendingPayment($latestDoi);
             } else {
                 if (empty($latestDoi->qris_url) && !empty($latestDoi->qr_string)) {
@@ -659,7 +663,7 @@ class MidtransQrisService implements PaymentGatewayInterface
         $latest = $submission->payments()->where('type', 'replace_pdf')->latest()->first();
 
         if ($latest && $latest->payment_status === 'pending') {
-            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== $currentGross) {
+            if (($latest->expired_at && now()->greaterThanOrEqualTo($latest->expired_at)) || (int) $latest->gross_amount !== $currentGross || ($latest->gateway ?: 'midtrans') !== 'midtrans') {
                 $this->cancelAndExpirePendingPayment($latest);
             } else {
                 if ($tempFilePath) {
@@ -927,7 +931,7 @@ class MidtransQrisService implements PaymentGatewayInterface
 
         if ($pendingPayment) {
             $paymentGross = (int) round($pendingPayment->gross_amount);
-            if ($paymentGross !== $currentGross) {
+            if ($paymentGross !== $currentGross || ($pendingPayment->gateway ?: 'midtrans') !== 'midtrans') {
                 $this->cancelAndExpirePendingPayment($pendingPayment);
             } else {
                 return $pendingPayment;

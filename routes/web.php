@@ -648,10 +648,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/{id}/payment', [\App\Http\Controllers\PaymentController::class, 'show'])->name('submissions.payment');
     Route::get('/submissions/{id}/payment/check', [\App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('submissions.payment.check');
     Route::post('/submissions/{id}/payment/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerate'])->name('submissions.payment.regenerate');
+    Route::post('/submissions/{id}/payment/switch-gateway', [\App\Http\Controllers\PaymentController::class, 'switchGateway'])->name('submissions.payment.switch-gateway');
     Route::post('/submissions/{id}/payment/simulate-sandbox', [\App\Http\Controllers\PaymentController::class, 'simulateSandbox'])->name('submissions.payment.simulate-sandbox');
     Route::get('/submissions/{id}/payment-doi', [\App\Http\Controllers\PaymentController::class, 'showDoi'])->name('submissions.payment.doi');
     Route::get('/submissions/{id}/payment-doi/check', [\App\Http\Controllers\PaymentController::class, 'checkDoiStatus'])->name('submissions.payment.doi.check');
     Route::post('/submissions/{id}/payment-doi/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateDoi'])->name('submissions.payment.doi.regenerate');
+    Route::post('/submissions/{id}/payment-doi/switch-gateway', [\App\Http\Controllers\PaymentController::class, 'switchDoiGateway'])->name('submissions.payment.doi.switch-gateway');
     Route::get('/submissions/{id}/payment-replace-pdf', [\App\Http\Controllers\PaymentController::class, 'showReplacePdf'])->name('submissions.payment.replace-pdf');
     Route::get('/submissions/{id}/payment-replace-pdf/check', [\App\Http\Controllers\PaymentController::class, 'checkReplacePdfStatus'])->name('submissions.payment.replace-pdf.check');
     Route::post('/submissions/{id}/payment-replace-pdf/regenerate', [\App\Http\Controllers\PaymentController::class, 'regenerateReplacePdf'])->name('submissions.payment.replace-pdf.regenerate');

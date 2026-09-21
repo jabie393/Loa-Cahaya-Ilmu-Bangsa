@@ -598,7 +598,12 @@
                             this.status = 'pending';
                             this.isExpired = false;
                             this.isExtracting = false;
-                            if (data.qris_url && !this.qrisUrl) {
+                            if (data.gateway_changed || (data.order_id && data.order_id !== this.orderId)) {
+                                this.orderId = data.order_id;
+                                this.qrisUrl = data.qris_url;
+                                this.expiresAt = data.expired_at ? new Date(data.expired_at) : null;
+                                this.updateCountdown();
+                            } else if (data.qris_url && !this.qrisUrl) {
                                 this.qrisUrl = data.qris_url;
                             }
                         }

@@ -240,7 +240,11 @@ class BelibayarQrisService implements PaymentGatewayInterface
     public function cancelAndExpirePendingPayment(Payment $payment): void
     {
         try {
-            $this->cancelPayment($payment);
+            if ($payment->gateway === 'belibayar') {
+                $this->cancelPayment($payment);
+            } else {
+                app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->forPayment($payment)->cancelPayment($payment);
+            }
         } catch (\Throwable $e) {
             Log::warning("Belibayar cancelPayment error during expiration: " . $e->getMessage());
         }

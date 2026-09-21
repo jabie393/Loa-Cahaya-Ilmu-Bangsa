@@ -91,7 +91,7 @@ class PaymentController extends Controller
             ]);
         }
 
-        $latestPayment = $submission->payments()->latest()->first();
+        $latestPayment = $submission->payments()->where('type', 'submission')->latest()->first();
 
         if (!$latestPayment) {
             return response()->json([
@@ -100,15 +100,40 @@ class PaymentController extends Controller
             ]);
         }
 
-        // Check status directly with Midtrans to ensure instant sync
+        // Check if gateway has changed while this payment is still pending
+        $activeGateway = $this->qrisService->getActiveGatewayName();
+        if ($latestPayment->payment_status === 'pending' && ($latestPayment->gateway ?: 'midtrans') !== $activeGateway) {
+            $this->qrisService->cancelAndExpirePayment($latestPayment);
+
+            $newPayment = $this->qrisService->getOrCreatePayment($submission);
+
+            return response()->json([
+                'status' => 'pending',
+                'is_paid' => false,
+                'is_expired' => false,
+                'gateway' => $newPayment->gateway,
+                'gateway_changed' => true,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'paid_at' => null,
+                'message' => 'Platform gateway diubah. QRIS baru berhasil digenerate otomatis.',
+            ]);
+        }
+
+        // Check status directly with gateway to ensure instant sync
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
 
         return response()->json([
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'gateway' => $payment->gateway ?: 'midtrans',
+            'order_id' => $payment->order_id,
             'qris_url' => $payment->qris_url,
             'qr_string' => $payment->qr_string,
+            'expired_at' => $payment->expired_at ? $payment->expired_at->toIso8601String() : null,
             'paid_at' => $payment->paid_at ? $payment->paid_at->format('d M Y H:i:s') : null,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
@@ -256,6 +281,27 @@ class PaymentController extends Controller
             return response()->json(['status' => 'no_payment', 'is_paid' => false]);
         }
 
+        // Check if gateway has changed while this DOI payment is still pending
+        $activeGateway = $this->qrisService->getActiveGatewayName();
+        if ($latestPayment->payment_status === 'pending' && ($latestPayment->gateway ?: 'midtrans') !== $activeGateway) {
+            $this->qrisService->cancelAndExpirePayment($latestPayment);
+
+            $newPayment = $this->qrisService->getOrCreateDoiPayment($submission);
+
+            return response()->json([
+                'status' => 'pending',
+                'is_paid' => false,
+                'is_expired' => false,
+                'gateway' => $newPayment->gateway,
+                'gateway_changed' => true,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'message' => 'Platform gateway diubah. QRIS DOI baru berhasil digenerate otomatis.',
+            ]);
+        }
+
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
 
         // If payment is paid, ensure DOI is activated on submission
@@ -278,8 +324,11 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'gateway' => $payment->gateway ?: 'midtrans',
+            'order_id' => $payment->order_id,
             'qris_url' => $payment->qris_url,
             'qr_string' => $payment->qr_string,
+            'expired_at' => $payment->expired_at ? $payment->expired_at->toIso8601String() : null,
             'message' => $payment->isPaid() ? 'Pembayaran DOI berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -367,6 +416,27 @@ class PaymentController extends Controller
             }
         }
 
+        // Check if gateway has changed while Replace PDF payment is pending
+        $activeGateway = $this->qrisService->getActiveGatewayName();
+        if ($latestPayment->payment_status === 'pending' && ($latestPayment->gateway ?: 'midtrans') !== $activeGateway) {
+            $this->qrisService->cancelAndExpirePayment($latestPayment);
+
+            $newPayment = $this->qrisService->getOrCreateReplacePdfPayment($submission);
+
+            return response()->json([
+                'status' => 'pending',
+                'is_paid' => false,
+                'is_expired' => false,
+                'gateway' => $newPayment->gateway,
+                'gateway_changed' => true,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'message' => 'Platform gateway diubah. QRIS ganti PDF baru berhasil digenerate otomatis.',
+            ]);
+        }
+
         $payment = $this->qrisService->checkStatusFromMidtrans($latestPayment);
 
         if ($payment->isPaid()) {
@@ -383,8 +453,11 @@ class PaymentController extends Controller
             'status' => $payment->payment_status,
             'is_paid' => $payment->isPaid(),
             'is_expired' => $payment->isExpired(),
+            'gateway' => $payment->gateway ?: 'midtrans',
+            'order_id' => $payment->order_id,
             'qris_url' => $payment->qris_url,
             'qr_string' => $payment->qr_string,
+            'expired_at' => $payment->expired_at ? $payment->expired_at->toIso8601String() : null,
             'message' => $payment->isPaid() ? 'Pembayaran berhasil!' : ($payment->isExpired() ? 'QRIS kedaluwarsa.' : 'Menunggu pembayaran.'),
         ]);
     }
@@ -446,6 +519,31 @@ class PaymentController extends Controller
     {
         $payment = \App\Models\Payment::findOrFail($paymentId);
 
+        // Check if gateway has changed while this bulk payment is pending
+        $activeGateway = $this->qrisService->getActiveGatewayName();
+        if ($payment->payment_status === 'pending' && ($payment->gateway ?: 'midtrans') !== $activeGateway) {
+            $submissionIds = $payment->submission_ids ?: ($payment->submission_id ? [$payment->submission_id] : []);
+            $submissions = \App\Models\Submission::whereIn('id', $submissionIds)->get();
+
+            $this->qrisService->cancelAndExpirePayment($payment);
+
+            $newPayment = $this->qrisService->getOrCreateBulkPayment($submissions);
+
+            return response()->json([
+                'status' => 'pending',
+                'payment_id' => $newPayment->id,
+                'is_paid' => false,
+                'is_expired' => false,
+                'gateway' => $newPayment->gateway,
+                'gateway_changed' => true,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'message' => 'Platform gateway diubah. QRIS kolektif baru berhasil digenerate otomatis.',
+            ]);
+        }
+
         if (!$payment->isPaid()) {
             $payment = $this->qrisService->checkStatusFromMidtrans($payment);
         }
@@ -457,8 +555,11 @@ class PaymentController extends Controller
             'payment_id' => $payment->id,
             'is_paid' => $isPaid,
             'is_expired' => $payment->isExpired(),
+            'gateway' => $payment->gateway ?: 'midtrans',
+            'order_id' => $payment->order_id,
             'qris_url' => $payment->qris_url,
             'qr_string' => $payment->qr_string,
+            'expired_at' => $payment->expired_at ? $payment->expired_at->toIso8601String() : null,
             'message' => $isPaid ? 'Pembayaran kolektif berhasil diverifikasi!' : ($payment->isExpired() ? 'QRIS Kedaluwarsa' : 'Menunggu pembayaran...'),
         ]);
     }
@@ -595,6 +696,105 @@ class PaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             abort(500, 'Gagal mengunduh QRIS: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Switch payment gateway on the fly from QRIS page and immediately regenerate fresh QRIS.
+     */
+    public function switchGateway(Request $request, int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $gateway = $request->input('gateway');
+        if (!in_array($gateway, ['midtrans', 'belibayar'], true)) {
+            return response()->json(['message' => 'Gateway tidak didukung.'], 400);
+        }
+
+        $this->qrisService->setActiveGateway($gateway);
+
+        // Cancel and expire current pending submission payment
+        $latestPayment = $submission->payments()
+            ->where('type', 'submission')
+            ->where('payment_status', 'pending')
+            ->latest()
+            ->first();
+
+        if ($latestPayment) {
+            $this->qrisService->cancelAndExpirePayment($latestPayment);
+        }
+
+        try {
+            $newPayment = $this->qrisService->getOrCreatePayment($submission);
+
+            return response()->json([
+                'success' => true,
+                'gateway' => $newPayment->gateway,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'message' => 'Gateway berhasil dialihkan ke ' . ($gateway === 'belibayar' ? 'Belibayar.id' : 'Midtrans') . '. QRIS sebelumnya telah dibuat expired.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate QRIS gateway baru: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Switch payment gateway on the fly for DOI Add-on page.
+     */
+    public function switchDoiGateway(Request $request, int $id): JsonResponse
+    {
+        $submission = Submission::with(['payments'])->findOrFail($id);
+
+        $currentUser = Auth::user();
+        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin', 'admin'])) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $gateway = $request->input('gateway');
+        if (!in_array($gateway, ['midtrans', 'belibayar'], true)) {
+            return response()->json(['message' => 'Gateway tidak didukung.'], 400);
+        }
+
+        $this->qrisService->setActiveGateway($gateway);
+
+        $latestPayment = $submission->payments()
+            ->where('type', 'doi_addon')
+            ->where('payment_status', 'pending')
+            ->latest()
+            ->first();
+
+        if ($latestPayment) {
+            $this->qrisService->cancelAndExpirePayment($latestPayment);
+        }
+
+        try {
+            $newPayment = $this->qrisService->getOrCreateDoiPayment($submission);
+
+            return response()->json([
+                'success' => true,
+                'gateway' => $newPayment->gateway,
+                'order_id' => $newPayment->order_id,
+                'qris_url' => $newPayment->qris_url,
+                'qr_string' => $newPayment->qr_string,
+                'expired_at' => $newPayment->expired_at ? $newPayment->expired_at->toIso8601String() : null,
+                'message' => 'Gateway berhasil dialihkan ke ' . ($gateway === 'belibayar' ? 'Belibayar.id' : 'Midtrans') . '. QRIS sebelumnya telah dibuat expired.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal generate QRIS DOI: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

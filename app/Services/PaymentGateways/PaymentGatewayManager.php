@@ -86,12 +86,57 @@ class PaymentGatewayManager
         return $this->fulfillmentService;
     }
 
+    /**
+     * Cancel and mark a payment as expired in database to avoid double payment.
+     */
+    public function cancelAndExpirePayment(Payment $payment): void
+    {
+        try {
+            $this->cancelPayment($payment);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Cancel payment API error during expiration: " . $e->getMessage());
+        }
+
+        $payment->update([
+            'payment_status' => 'expired',
+            'transaction_status' => 'expire',
+        ]);
+    }
+
     // -------------------------------------------------------------------------
     // Proxy Methods for Seamless Replacement of MidtransQrisService in UI Pages
     // -------------------------------------------------------------------------
 
     public function getOrCreatePayment(Submission $submission): Payment
     {
+        $activeGateway = $this->getActiveGatewayName();
+
+        // Check if already paid
+        $paidPayment = $submission->payments()
+            ->where('payment_status', 'paid')
+            ->where('type', 'submission')
+            ->first();
+
+        if ($paidPayment) {
+            $paidPayment->ensureInvoiceNumber();
+            return $paidPayment;
+        }
+
+        // Check latest pending payment for gateway mismatch
+        $latestPayment = $submission->payments()
+            ->where('type', 'submission')
+            ->latest()
+            ->first();
+
+        if ($latestPayment && $latestPayment->payment_status === 'pending') {
+            $paymentGateway = $latestPayment->gateway ?: self::GATEWAY_MIDTRANS;
+            if ($paymentGateway !== $activeGateway) {
+                // Gateway changed! Cancel & expire old payment to prevent double payment
+                $this->cancelAndExpirePayment($latestPayment);
+                return $this->driver()->chargeQris($submission);
+            }
+        }
+
         return $this->driver()->getOrCreatePayment($submission);
     }
 
@@ -107,6 +152,31 @@ class PaymentGatewayManager
 
     public function getOrCreateDoiPayment(Submission $submission): Payment
     {
+        $activeGateway = $this->getActiveGatewayName();
+
+        $paidDoi = $submission->payments()
+            ->where('type', 'doi_addon')
+            ->where('payment_status', 'paid')
+            ->first();
+
+        if ($paidDoi) {
+            $paidDoi->ensureInvoiceNumber();
+            return $paidDoi;
+        }
+
+        $latestDoi = $submission->payments()
+            ->where('type', 'doi_addon')
+            ->latest()
+            ->first();
+
+        if ($latestDoi && $latestDoi->payment_status === 'pending') {
+            $paymentGateway = $latestDoi->gateway ?: self::GATEWAY_MIDTRANS;
+            if ($paymentGateway !== $activeGateway) {
+                $this->cancelAndExpirePayment($latestDoi);
+                return $this->driver()->chargeDoiAddonQris($submission);
+            }
+        }
+
         return $this->driver()->getOrCreateDoiPayment($submission);
     }
 
@@ -127,6 +197,21 @@ class PaymentGatewayManager
 
     public function getOrCreateReplacePdfPayment(Submission $submission, ?string $tempFilePath = null): Payment
     {
+        $activeGateway = $this->getActiveGatewayName();
+
+        $latest = $submission->payments()
+            ->where('type', 'replace_pdf')
+            ->latest()
+            ->first();
+
+        if ($latest && $latest->payment_status === 'pending') {
+            $paymentGateway = $latest->gateway ?: self::GATEWAY_MIDTRANS;
+            if ($paymentGateway !== $activeGateway) {
+                $this->cancelAndExpirePayment($latest);
+                return $this->driver()->chargeReplacePdfQris($submission, $tempFilePath ?: '');
+            }
+        }
+
         return $this->driver()->getOrCreateReplacePdfPayment($submission, $tempFilePath);
     }
 
@@ -142,6 +227,26 @@ class PaymentGatewayManager
 
     public function getOrCreateBulkPayment($submissions): Payment
     {
+        $activeGateway = $this->getActiveGatewayName();
+        $submissionIds = $submissions->pluck('id')->sort()->values()->toArray();
+
+        $pendingPayment = Payment::where('type', 'bulk_submission')
+            ->where('payment_status', 'pending')
+            ->get()
+            ->first(function ($p) use ($submissionIds) {
+                $ids = is_array($p->submission_ids) ? $p->submission_ids : [];
+                sort($ids);
+                return $ids === $submissionIds;
+            });
+
+        if ($pendingPayment) {
+            $paymentGateway = $pendingPayment->gateway ?: self::GATEWAY_MIDTRANS;
+            if ($paymentGateway !== $activeGateway) {
+                $this->cancelAndExpirePayment($pendingPayment);
+                return $this->driver()->chargeBulkQris($submissions);
+            }
+        }
+
         return $this->driver()->getOrCreateBulkPayment($submissions);
     }
 
