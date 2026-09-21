@@ -175,7 +175,7 @@ class DevPayoutsChartWidget extends ChartWidget
                     'label' => 'Total Payout Cair (Rp)',
                     'data' => $data,
                     'fill' => 'start',
-                    'tension' => 0.4,
+                    'tension' => 0,
                     'borderColor' => '#3b82f6',
                     'backgroundColor' => 'rgba(59, 130, 246, 0.15)',
                     'pointBackgroundColor' => '#3b82f6',
