@@ -14,7 +14,7 @@ class DevPayoutsChartWidget extends ChartWidget
 {
     protected ?string $heading = 'Tren Pencairan';
     protected ?string $maxHeight = '360px';
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
     protected ?string $pollingInterval = '10s';
     protected string $color = 'info';
 
@@ -40,7 +40,7 @@ class DevPayoutsChartWidget extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'all' => 'Semua Waktu (Dari Awal)',
+            'all' => 'Semua',
             '30d' => '30 Hari Terakhir',
             '7d' => '7 Hari Terakhir',
             'month' => 'Bulan Ini',
@@ -64,8 +64,8 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->whereIn('status', ['confirmed', 'completed'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get(['amount', 'created_at'])
-                ->groupBy(fn ($item) => $item->created_at->format('Y-m-d'))
-                ->map(fn ($group) => (float) $group->sum('amount'));
+                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
@@ -81,8 +81,8 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->whereIn('status', ['confirmed', 'completed'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get(['amount', 'created_at'])
-                ->groupBy(fn ($item) => $item->created_at->format('Y-m-d'))
-                ->map(fn ($group) => (float) $group->sum('amount'));
+                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
@@ -98,8 +98,8 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->whereIn('status', ['confirmed', 'completed'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get(['amount', 'created_at'])
-                ->groupBy(fn ($item) => $item->created_at->format('Y-m-d'))
-                ->map(fn ($group) => (float) $group->sum('amount'));
+                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
@@ -115,8 +115,8 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->whereIn('status', ['confirmed', 'completed'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->get(['amount', 'created_at'])
-                ->groupBy(fn ($item) => $item->created_at->format('Y-m'))
-                ->map(fn ($group) => (float) $group->sum('amount'));
+                ->groupBy(fn($item) => $item->created_at->format('Y-m'))
+                ->map(fn($group) => (float) $group->sum('amount'));
 
             for ($m = 1; $m <= 12; $m++) {
                 $monthDate = Carbon::create($now->year, $m, 1);
@@ -142,8 +142,8 @@ class DevPayoutsChartWidget extends ChartWidget
                     ->whereIn('status', ['confirmed', 'completed'])
                     ->whereBetween('created_at', [$startDate, $endDate])
                     ->get(['amount', 'created_at'])
-                    ->groupBy(fn ($item) => $item->created_at->format('Y-m-d'))
-                    ->map(fn ($group) => (float) $group->sum('amount'));
+                    ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                    ->map(fn($group) => (float) $group->sum('amount'));
 
                 $period = CarbonPeriod::create($startDate, '1 day', $endDate);
                 foreach ($period as $date) {
@@ -157,8 +157,8 @@ class DevPayoutsChartWidget extends ChartWidget
                     ->whereIn('status', ['confirmed', 'completed'])
                     ->whereBetween('created_at', [$startDate, $endDate])
                     ->get(['amount', 'created_at'])
-                    ->groupBy(fn ($item) => $item->created_at->format('Y-m'))
-                    ->map(fn ($group) => (float) $group->sum('amount'));
+                    ->groupBy(fn($item) => $item->created_at->format('Y-m'))
+                    ->map(fn($group) => (float) $group->sum('amount'));
 
                 $period = CarbonPeriod::create($startDate->copy()->startOfMonth(), '1 month', $endDate->copy()->endOfMonth());
                 foreach ($period as $date) {
@@ -191,7 +191,7 @@ class DevPayoutsChartWidget extends ChartWidget
         ];
     }
 
-    protected function getOptions(): array | RawJs | null
+    protected function getOptions(): array|RawJs|null
     {
         return RawJs::make(<<<'JS'
         {

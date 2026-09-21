@@ -47,7 +47,7 @@ class SubmissionResource extends Resource
     public static function getNavigationSort(): ?int
     {
         if (Auth::user()?->hasRole('ryu_dev')) {
-            return 0;
+            return 2;
         }
 
         return static::$navigationSort;
@@ -55,7 +55,11 @@ class SubmissionResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        if (Auth::user()?->hasAnyRole(['super_admin', 'ryu_dev'])) {
+        if (Auth::user()?->hasRole('ryu_dev')) {
+            return null;
+        }
+
+        if (Auth::user()?->hasRole('super_admin')) {
             $count = static::getModel()::where('status', 'pending')->count();
         } else {
             $count = static::getModel()::where('user_id', Auth::id())
