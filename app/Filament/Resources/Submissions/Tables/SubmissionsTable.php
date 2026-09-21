@@ -425,8 +425,8 @@ class SubmissionsTable
                         ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
                         ->visible(function (Submission $record) {
                             $user = Auth::user();
-                            $isOwnerOrAdmin = $user && ($record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
-                            if (!$isOwnerOrAdmin || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
+                            $isAdminOrDev = $user && $user->hasAnyRole(['super_admin', 'admin', 'ryu_dev']);
+                            if (!$isAdminOrDev || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
                                 return false;
                             }
                             if (!empty($record->publication_link)) {
