@@ -2,6 +2,7 @@
     $amountValue = (float) ($record->amount ?? 0);
     $payload = $amountValue > 0 ? \App\Services\DynamicQrisService::makeDynamic($amountValue) : null;
     $qrSvg = $payload ? \App\Services\DynamicQrisService::renderQrSvg($payload) : null;
+    $qrPng = $payload ? \App\Services\DynamicQrisService::renderQrPng($payload) : null;
 @endphp
 
 <div>
@@ -19,12 +20,74 @@
             </p>
         </div>
 
-        @if ($qrSvg)
-            <!-- Dynamic QR Code Container -->
-            <div class="p-4 bg-white rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center">
-                <img src="{{ $qrSvg }}" 
-                     alt="Developer QRIS Payout {{ $record->payout_no }}" 
-                     class="w-44 sm:w-52 h-auto object-contain rounded-lg mx-auto" />
+        @if ($qrSvg && $qrPng)
+            <!-- Dynamic QR Code & Actions Section -->
+            <div x-data="{
+                isDownloading: false,
+                downloadQris() {
+                    this.isDownloading = true;
+                    const base64Data = @js($qrPng);
+                    const filename = @js('QRIS-' . $record->payout_no . '.png');
+
+                    fetch(base64Data)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const blobUrl = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = blobUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+                        })
+                        .catch(err => {
+                            const a = document.createElement('a');
+                            a.href = base64Data;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        })
+                        .finally(() => {
+                            setTimeout(() => {
+                                this.isDownloading = false;
+                            }, 600);
+                        });
+                }
+            }" class="flex flex-col items-center gap-3">
+                <!-- QR Code Container -->
+                <div class="p-4 bg-white rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center">
+                    <img src="{{ $qrSvg }}" 
+                         alt="Developer QRIS Payout {{ $record->payout_no }}" 
+                         class="w-44 sm:w-52 h-auto object-contain rounded-lg mx-auto" />
+                </div>
+
+                <!-- Download QRIS Button (matching payment-submission.blade style) -->
+                <button type="button" 
+                        @click="downloadQris()" 
+                        :disabled="isDownloading"
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
+                    <template x-if="isDownloading">
+                        <svg class="w-3.5 h-3.5 animate-spin text-indigo-600 dark:text-indigo-400"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                    </template>
+                    <template x-if="!isDownloading">
+                        <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"
+                            fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                    </template>
+                    <span x-text="isDownloading ? 'Mengunduh...' : 'Download QRIS'"></span>
+                </button>
             </div>
 
             <!-- Read-only Locked Amount Display -->
