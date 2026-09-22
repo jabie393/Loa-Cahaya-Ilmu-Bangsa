@@ -313,48 +313,10 @@
                                     </div>
 
                                     @php
-                                        $canSwitchGateway = Auth::user()?->hasAnyRole(['ryu_dev', 'super_admin', 'admin']);
                                         $activeGatewayName = app(\App\Services\PaymentGateways\PaymentGatewayManager::class)->getActiveGatewayName();
                                         $isBelibayar = ($payment && $payment->gateway === 'belibayar') || (!$payment && $activeGatewayName === 'belibayar');
                                         $isSandbox = $isBelibayar ? !config('services.belibayar.is_production', false) : !config('services.midtrans.is_production', false);
                                     @endphp
-
-                                    @if($canSwitchGateway)
-                                        <div class="mt-3 w-full p-2.5 bg-slate-100/80 rounded-xl border border-slate-200 text-left shadow-xs">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <div class="flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                                    </svg>
-                                                    <span class="text-[11px] font-bold text-slate-700">Gateway:</span>
-                                                    <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                                                          :class="gateway === 'belibayar' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'"
-                                                          x-text="gateway === 'belibayar' ? 'Belibayar.id' : 'Midtrans'">
-                                                    </span>
-                                                </div>
-                                                <div class="flex items-center gap-1">
-                                                    <button type="button"
-                                                        @click="switchGateway('midtrans')"
-                                                        :disabled="isSwitchingGateway || gateway === 'midtrans'"
-                                                        class="px-2 py-0.5 rounded text-[10px] font-bold transition-all"
-                                                        :class="gateway === 'midtrans' ? 'bg-amber-500 text-white shadow-xs cursor-default' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'">
-                                                        Midtrans
-                                                    </button>
-                                                    <button type="button"
-                                                        @click="switchGateway('belibayar')"
-                                                        :disabled="isSwitchingGateway || gateway === 'belibayar'"
-                                                        class="px-2 py-0.5 rounded text-[10px] font-bold transition-all"
-                                                        :class="gateway === 'belibayar' ? 'bg-blue-600 text-white shadow-xs cursor-default' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'">
-                                                        Belibayar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div x-show="isSwitchingGateway" class="mt-1.5 text-[10px] text-blue-600 font-medium flex items-center gap-1">
-                                                <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                                <span>Mengalihkan gateway & meregenerasi QRIS...</span>
-                                            </div>
-                                        </div>
-                                    @endif
 
                                     @if(false && $isSandbox)
                                     <div class="mt-3 w-full p-2.5 bg-amber-50/90 rounded-xl border border-amber-200 text-[11px] text-amber-900 text-left space-y-1.5 shadow-sm">
