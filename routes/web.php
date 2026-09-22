@@ -22,7 +22,7 @@ Route::get('/loa/preview/{record}', function (App\Models\Submission $record) {
         $appendix = view('filament.resources.submissions.pages.loa-appendix', ['record' => $record])->render();
         $content .= "\n" . $appendix;
     }
-    
+
     $overrideScript = '
     <script>
         (function() {
@@ -139,7 +139,7 @@ Route::get('/loa/preview/{record}', function (App\Models\Submission $record) {
             }
         })();
     </script>';
-    
+
     $content .= $overrideScript;
 
     return view('layouts.public-loa', [
@@ -165,7 +165,7 @@ Route::get('/ac/preview/{record}', function (App\Models\Submission $record) {
         $appendix = view('filament.resources.submissions.pages.ac-appendix', ['record' => $record])->render();
         $content .= "\n" . $appendix;
     }
-    
+
     $overrideScript = '
     <script>
         (function() {
@@ -282,7 +282,7 @@ Route::get('/ac/preview/{record}', function (App\Models\Submission $record) {
             }
         })();
     </script>';
-    
+
     $content .= $overrideScript;
 
     return view('layouts.public-loa', [
@@ -308,7 +308,7 @@ Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
         $appendix = view('filament.resources.submissions.pages.pfc-appendix', ['record' => $record])->render();
         $content .= "\n" . $appendix;
     }
-    
+
     $overrideScript = '
     <script>
         (function() {
@@ -425,7 +425,7 @@ Route::get('/pfc/preview/{record}', function (App\Models\Submission $record) {
             }
         })();
     </script>';
-    
+
     $content .= $overrideScript;
 
     return view('layouts.public-loa', [
@@ -524,7 +524,7 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
     $origin = urldecode($origin);
 
     $user = \Illuminate\Support\Facades\Auth::user();
-    
+
     \Illuminate\Support\Facades\Log::info('SSO Iframe check debug', [
         'has_loa_session_cookie' => $request->hasCookie('loa_session'),
         'cookies_received' => array_keys($request->cookies->all()),
@@ -569,12 +569,12 @@ Route::get('/sso/iframe-check', function (\Illuminate\Http\Request $request) {
         </body>
         </html>
     " : "")
-    ->header('Content-Type', 'text/html')
-    ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001 " . $allowedOrigins)
-    ->header('X-Frame-Options', 'ALLOWALL');
+        ->header('Content-Type', 'text/html')
+        ->header('Content-Security-Policy', "frame-ancestors 'self' http://127.0.0.1:8001 http://localhost:8001 " . $allowedOrigins)
+        ->header('X-Frame-Options', 'ALLOWALL');
 })->name('sso.iframe-check');
 
- 
+
 // SSO AJAX Synchronization Routes (from Repository)
 Route::post('/sso/callback-ajax', function (\Illuminate\Http\Request $request) {
     $userId = $request->input('user_id');
@@ -603,7 +603,12 @@ Route::post('/sso/callback-ajax', function (\Illuminate\Http\Request $request) {
 
     \Illuminate\Support\Facades\Auth::login($user, true);
 
-    return response()->json(['success' => true]);
+    $redirectUrl = $user->hasAnyRole(['ryu_dev']) ? '/dev-payouts' : '/journal';
+
+    return response()->json([
+        'success' => true,
+        'redirect_url' => $redirectUrl,
+    ]);
 });
 
 Route::post('/sso/logout-ajax', function () {
@@ -635,8 +640,10 @@ Route::get('/sso/logout', function (\Illuminate\Http\Request $request) {
 
 // SSO Local Session Check Route
 Route::post('/sso/local-check', function () {
+    $user = \Illuminate\Support\Facades\Auth::user();
     return response()->json([
-        'logged_in' => \Illuminate\Support\Facades\Auth::check()
+        'logged_in' => $user !== null,
+        'redirect_url' => $user?->hasAnyRole(['ryu_dev']) ? '/dev-payouts' : '/journal',
     ]);
 })->name('sso.local-check');
 
