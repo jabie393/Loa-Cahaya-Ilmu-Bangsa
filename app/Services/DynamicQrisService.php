@@ -73,6 +73,20 @@ class DynamicQrisService
     }
 
     /**
+     * Render QR code as PNG data URI (base64) for high-resolution file downloads.
+     */
+    public static function renderQrPng(string $payload, int $scale = 10): string
+    {
+        $options = new QROptions([
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'scale' => $scale,
+            'imageBase64' => true,
+        ]);
+
+        return (new QRCode($options))->render($payload);
+    }
+
+    /**
      * Compute CRC-16/CCITT-FALSE (Polynomial 0x1021, Initial 0xFFFF).
      */
     public static function crc16(string $data): string
