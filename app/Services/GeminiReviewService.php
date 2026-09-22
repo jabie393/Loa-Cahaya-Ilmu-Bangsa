@@ -208,7 +208,13 @@ class GeminiReviewService implements AiReviewContract
         $blacklistedNames = [
             'author', 'penulis', 'copyright', 'publish by', 'published by', 'plagiarism checker',
             'reviewer', 'abstract', 'abstrak', 'keywords', 'kata kunci', 'e-mail', 'email',
-            'issn', 'vol', 'volume', 'anonymous', 'null', 'none', 'n/a', 'tanpa nama'
+            'issn', 'vol', 'volume', 'anonymous', 'null', 'none', 'n/a', 'tanpa nama',
+            'design', 'development', 'implementation', 'analysis', 'study', 'evaluation',
+            'framework', 'approach', 'optimization', 'system', 'method', 'application',
+            'classification', 'algorithm', 'model', 'management', 'information', 'planning',
+            'rancang', 'bangun', 'pengembangan', 'analisis', 'implementasi', 'penerapan',
+            'pengaruh', 'efektivitas', 'sistem', 'metode', 'penilaian', 'kinerja', 'evaluasi',
+            'public', 'complaint'
         ];
 
         foreach ($authorList as $author) {
@@ -222,22 +228,24 @@ class GeminiReviewService implements AiReviewContract
             // Clean leading and trailing footnote numbers, asterisks, symbols from author name
             $name = preg_replace('/^[\d\s,\*\#\†\‡\§\^]+/u', '', $name);
             $name = preg_replace('/[\d\*\#\†\‡\§\^]+$/u', '', $name);
-            $name = preg_replace('/(?<=[a-zA-Z])\s*\d+\s*(?=,|$|\s)/u', '', $name);
-            $name = trim($name, " ,;\t\n\r\0\x0B");
+            $name = preg_replace('/(?<=[\p{L}])\s*\d+\s*(?=,|$|\s|،)/u', '', $name);
+            $name = trim($name, " \t\n\r\0\x0B,.;-");
+            $name = preg_replace('/^[\s,.;\-،]+|[\s,.;\-،]+$/u', '', $name);
 
             // Clean double dots and weird initial spacing in names (e.g. "M. . W." -> "M. W.")
-            $name = preg_replace('/\b([A-Za-z])\.\s*\.\s*/u', '$1. ', $name);
+            $name = preg_replace('/\b([\p{L}])\.\s*\.\s*/u', '$1. ', $name);
             $name = preg_replace('/(?<!\.)\.\.(?!\.)/u', '.', $name);
 
-            // Clean academic titles if prefix (e.g. "Prof. Dr. Ir. Budi" -> "Budi", but keep names like "Hilmi")
-            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj)\b\.?\s*|H\.\s+)+/iu', '', $name);
+            // Clean academic & religious titles if prefix (e.g. "Prof. Dr. Ir. Budi", "Ust. Ahmad", "K.H. Mustofa", "الشيخ...")
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj|Ust|Ustadz|Kyai|K\.H|Habib|Syekh|Syaikh)\b\.?\s*|H\.\s+|(?:الشيخ|الدكتور|الأستاذ)\s+)+/iu', '', $name);
 
-            // Clean academic degree suffixes if present (e.g. ", M.Kom, Ph.D")
-            $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
+            // Clean academic degree suffixes if present (e.g. ", M.Kom, Ph.D, Lc, M.Ag, S.Ag, M.Pd.I")
+            $name = preg_replace('/(?:,\s*(?:M\.[A-Za-z\.]+|S\.[A-Za-z\.]+|Ph\.?D|Dr\.[A-Za-z\.]*|Lc\.?|M\.?Ag|S\.?Ag|M\.?Pd\.?I|S\.?Pd\.?I|M\.?Th\.?I|S\.?Th\.?I|M\.?H\.?I|S\.?H\.?I|M\.?S\.?I|M\.?Hum|S\.?Hum|SE|MM|Ak|CA|CPA|Sp\.[A-Za-z\.]*))+$/iu', '', $name);
 
             // Collapse whitespace
             $name = preg_replace('/\s+/u', ' ', $name);
-            $name = trim($name, " ,;\t\n\r\0\x0B");
+            $name = trim($name, " \t\n\r\0\x0B,.;-");
+            $name = preg_replace('/^[\s,.;\-،]+|[\s,.;\-،]+$/u', '', $name);
 
             if (mb_strlen($name) < 2) {
                 continue;
@@ -250,6 +258,17 @@ class GeminiReviewService implements AiReviewContract
 
             // Filter out names that look like filenames or emails
             if (preg_match('/\.[a-z0-9]{2,5}$/i', $name) || str_contains($name, '@')) {
+                continue;
+            }
+
+            // Filter out names that are suspiciously long or have too many words (human names rarely exceed 5 words / 45 chars)
+            $wordCount = count(preg_split('/\s+/u', $name));
+            if ($wordCount > 5 || mb_strlen($name) > 45) {
+                continue;
+            }
+
+            // Filter out candidates containing academic title stop words / prepositions
+            if (preg_match('/\b(of|at|the|for|using|with|from|between|toward|towards|berbasis|terhadap|berdasarkan|menggunakan)\b/i', $name)) {
                 continue;
             }
 
@@ -272,7 +291,23 @@ class GeminiReviewService implements AiReviewContract
         if (!empty($sourceText)) {
             $heuristicAuthors = $this->extractAuthorsFromText($sourceText, $results['detected_title'] ?? null);
             if (!empty($heuristicAuthors)) {
-                if (empty($cleanedAuthors) || count($heuristicAuthors) > count($cleanedAuthors)) {
+                // Sanity check: Ensure all heuristic authors look like valid human names
+                $heuristicIsValid = true;
+                foreach ($heuristicAuthors as $ha) {
+                    $haName = trim($ha['name'] ?? '');
+                    $haLower = strtolower($haName);
+                    $haWords = count(preg_split('/\s+/u', $haName));
+                    if (empty($haName) || in_array($haLower, $blacklistedNames) || $haWords > 5 || mb_strlen($haName) > 45) {
+                        $heuristicIsValid = false;
+                        break;
+                    }
+                    if (preg_match('/\b(of|at|the|for|using|with|from|between|toward|towards|berbasis|terhadap|berdasarkan|menggunakan)\b/i', $haName)) {
+                        $heuristicIsValid = false;
+                        break;
+                    }
+                }
+
+                if ($heuristicIsValid && (empty($cleanedAuthors) || count($heuristicAuthors) > count($cleanedAuthors))) {
                     $geminiAffilMap = [];
                     foreach ($cleanedAuthors as $ga) {
                         $lower = strtolower(trim($ga['name'] ?? ''));
@@ -334,9 +369,9 @@ class GeminiReviewService implements AiReviewContract
     {
         $text = str_replace(["\r\n", "\r"], "\n", $text);
 
-        // Limit to first section up to Abstrak / Abstract
+        // Limit to first section up to Abstrak / Abstract / ملخص
         $target = $text;
-        if (preg_match('/\b(abstrak|abstract)\b/iu', $text, $m, PREG_OFFSET_CAPTURE)) {
+        if (preg_match('/\b(abstrak|abstract)\b|ملخص|المستخلص/iu', $text, $m, PREG_OFFSET_CAPTURE)) {
             $target = substr($text, 0, $m[0][1]);
         }
 
@@ -369,11 +404,14 @@ class GeminiReviewService implements AiReviewContract
         $affilPatterns = [
             '/jurusan/i', '/fakultas/i', '/universitas/i', '/prodi/i', '/program studi/i',
             '/institut/i', '/sekolah tinggi/i', '/politeknik/i', '/akademi/i',
+            '/uin/i', '/iain/i', '/stain/i', '/pesantren/i', '/ma\'?had/i',
             '/department/i', '/faculty/i', '/university/i', '/institute/i', '/college/i',
+            '/school of/i', '/center for/i', '/laboratory/i',
+            '/جامعة/u', '/كلية/u', '/قسم/u', '/معهد/u',
             '/e-?mail/i', '/@/'
         ];
 
-        $authorLines = [];
+        $preAffilLines = [];
         $affilLines = [];
         $foundAffil = false;
 
@@ -395,34 +433,98 @@ class GeminiReviewService implements AiReviewContract
                     }
                 }
             } else {
-                $authorLines[] = $line;
+                $preAffilLines[] = $line;
             }
         }
 
         $commonAffiliation = implode(', ', array_unique($affilLines));
 
+        // Common title keywords (English & Indonesian)
+        $titleKeywordsRegex = '/\b(design|development|implementation|analysis|study|evaluation|framework|approach|optimization|based|system|method|application|classification|algorithm|model|management|information|planning|effect|impact|review|comparative|assessment|investigation|rancang|bangun|pengembangan|analisis|implementasi|penerapan|pengaruh|efektivitas|berbasis|studi|sistem|metode|penilaian|kinerja|evaluasi|survei|tinjauan)\b/iu';
+
+        // Academic stop words / prepositions common in titles
+        $titleStopWordsRegex = '/\b(of|at|the|for|using|with|from|between|toward|towards|dalam|pada|di|dari|dengan|untuk|terhadap|berdasarkan|menggunakan)\b/iu';
+
+        // Filter out secondary / translated title lines from $preAffilLines
+        // In bilingual national journals (ISSN/SINTA), religious journals, or international journals, a translated secondary title sits between the primary title and authors.
+        $authorLines = [];
+        $pastSecondaryTitle = false;
+
+        foreach ($preAffilLines as $line) {
+            if (!$pastSecondaryTitle) {
+                $hasFootnoteDigit = preg_match('/[\p{L}]\s*\d+\s*(?:,|$|،)/u', $line) || preg_match('/[,\x{060C}]\s*[\p{L}]+/u', $line);
+                $hasTitleKeywords = preg_match($titleKeywordsRegex, $line) || preg_match($titleStopWordsRegex, $line);
+                $isAllCapsOrTitleCaseLong = (mb_strlen($line) > 30 && (strtoupper($line) === $line || preg_match_all('/\b[\p{Lu}][\p{Ll}]+/u', $line) >= 4));
+
+                if (!$hasFootnoteDigit && ($hasTitleKeywords || $isAllCapsOrTitleCaseLong)) {
+                    // Line belongs to secondary / translated title, skip it!
+                    continue;
+                } else {
+                    $pastSecondaryTitle = true;
+                }
+            }
+
+            $authorLines[] = $line;
+        }
+
+        // Single-word nouns that are title words, never author names
+        $blacklistedSingleWords = [
+            'design', 'development', 'implementation', 'analysis', 'study', 'evaluation',
+            'framework', 'approach', 'optimization', 'system', 'method', 'application',
+            'classification', 'algorithm', 'model', 'management', 'information', 'planning',
+            'rancang', 'bangun', 'pengembangan', 'analisis', 'implementasi', 'penerapan',
+            'pengaruh', 'efektivitas', 'sistem', 'metode', 'penilaian', 'kinerja', 'evaluasi',
+            'author', 'penulis', 'abstract', 'abstrak', 'keywords', 'kata kunci', 'e-mail', 'email',
+            'copyright', 'publish', 'published', 'issn', 'vol', 'volume', 'review', 'reviewer'
+        ];
+
         $authorBlock = implode(' ', $authorLines);
         // Replace superscript numbers and symbols
-        $authorBlock = preg_replace('/(?<=[a-zA-Z])\s*\d+\s*(?=,|$|\s)/u', '', $authorBlock);
+        $authorBlock = preg_replace('/(?<=[\p{L}])\s*\d+\s*(?=,|$|\s|،)/u', '', $authorBlock);
         $authorBlock = preg_replace('/\b\d+\b/u', '', $authorBlock);
         $authorBlock = preg_replace('/[\*\#\†\‡\§\^]+/u', '', $authorBlock);
 
-        $rawCandidates = preg_split('/,|;|\s+dan\s+|\s+and\s+|\s+&\s+/iu', $authorBlock);
+        $rawCandidates = preg_split('/,|;|،|\s+dan\s+|\s+and\s+|\s+&\s+|\s+و\s+/iu', $authorBlock);
         $authors = [];
 
         foreach ($rawCandidates as $candidate) {
             $name = trim($candidate, " \t\n\r\0\x0B,.;-");
-            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj)\b\.?\s*|H\.\s+)+/iu', '', $name);
-            $name = preg_replace('/(?:,\s*(?:M\.?[A-Za-z]+|S\.?[A-Za-z]+|Ph\.?D|Dr\.?[A-Za-z]*|SE|MM|Ak|CA|CPA|Sp\.?[A-Za-z]*))+$/iu', '', $name);
+            $name = preg_replace('/^[\s,.;\-،]+|[\s,.;\-،]+$/u', '', $name);
+            $name = preg_replace('/^(?:(?:Prof|Dr|Drs|Ir|Hj|Ust|Ustadz|Kyai|K\.H|Habib|Syekh|Syaikh)\b\.?\s*|H\.\s+|(?:الشيخ|الدكتور|الأستاذ)\s+)+/iu', '', $name);
+            $name = preg_replace('/(?:,\s*(?:M\.[A-Za-z\.]+|S\.[A-Za-z\.]+|Ph\.?D|Dr\.[A-Za-z\.]*|Lc\.?|M\.?Ag|S\.?Ag|M\.?Pd\.?I|S\.?Pd\.?I|M\.?Th\.?I|S\.?Th\.?I|M\.?H\.?I|S\.?H\.?I|M\.?S\.?I|M\.?Hum|S\.?Hum|SE|MM|Ak|CA|CPA|Sp\.[A-Za-z\.]*))+$/iu', '', $name);
             $name = preg_replace('/\s+/u', ' ', $name);
-            $name = trim($name);
+            $name = trim($name, " \t\n\r\0\x0B,.;-");
+            $name = preg_replace('/^[\s,.;\-،]+|[\s,.;\-،]+$/u', '', $name);
 
-            // Format to Title Case if lowercase
-            if (!empty($name) && strtolower($name) === $name) {
-                $name = ucwords($name);
+            if (empty($name)) {
+                continue;
             }
 
-            if (mb_strlen($name) >= 3 && preg_match('/^[A-Za-z\s\.\'\-]+$/u', $name)) {
+            $lower = strtolower($name);
+            $wordCount = count(preg_split('/\s+/u', $name));
+
+            // 1. Cannot be in single-word title blacklist
+            if (in_array($lower, $blacklistedSingleWords)) {
+                continue;
+            }
+
+            // 2. Cannot exceed 5 words or 45 characters (human names rarely exceed this)
+            if ($wordCount > 5 || mb_strlen($name) > 45) {
+                continue;
+            }
+
+            // 3. Cannot contain academic title stop words / prepositions
+            if (preg_match('/\b(of|at|the|for|using|with|from|between|toward|towards|berbasis|terhadap|berdasarkan|menggunakan)\b/iu', $name)) {
+                continue;
+            }
+
+            // Format to Title Case if Latin uppercase or lowercase
+            if (preg_match('/^[a-z\s\.\'\-]+$/i', $name) && (strtoupper($name) === $name || strtolower($name) === $name)) {
+                $name = ucwords(strtolower($name));
+            }
+
+            // Matches Latin, Arabic, and other Unicode letters and diacritics
+            if (mb_strlen($name) >= 2 && preg_match('/^[\p{L}\p{M}\s\.\'\-]+$/u', $name)) {
                 if (!preg_match('/^(author|penulis|abstract|abstrak|keywords|e-?mail|copyright|publish|issn|vol|volume)/iu', $name)) {
                     $authors[] = [
                         'name' => $name,
@@ -536,14 +638,27 @@ PANDUAN PENTING EKSTRAKSI & RESTORASI TEKS:
    - Ambil maksimal 20 entri pertama daftar pustaka formal di akhir naskah. JANGAN mengambil kutipan di dalam paragraf (in-text citation seperti \'Kotler (2022)\').
 3. NAMA PENULIS & AFILIASI (detected_authors) - SANGAT PENTING:
    - Lokasi Penulis: Penulis terletak di halaman 1 naskah, tepat di bawah Judul Artikel dan di atas Abstrak/Afiliasi.
+   - PENTING (DUAL / MULTILINGUAL TITLE): Banyak jurnal ilmiah (jurnal nasional ber-ISSN, jurnal agama/studi Islam, maupun jurnal internasional) memiliki DUA atau TIGA JUDUL sekaligus di halaman awal (misalnya Judul Bahasa Indonesia dengan terjemahan Bahasa Inggris di bawahnya, atau Judul Bahasa Arab dengan terjemahan Indonesia/Inggris).
+   - JANGAN PERNAH menganggap teks terjemahan judul kedua/ketiga tersebut sebagai nama penulis! Judul terjemahan BUKAN nama penulis.
+   - Deteksi nama penulis selalu dimulai setelah seluruh judul artikel selesai, ditandai dengan nama orang asli yang biasanya diikuti nomor superskrip footnote atau afiliasi (contoh: "Rizky Esa Putra Darmawan 1", "أحمد سيف الدين", dsb).
+   - Nama penulis bisa berupa nama beraksara Latin maupun beraksara Arab. Ekstrak nama penulis apa adanya sesuai teks naskah.
    - Pada teks PDF yang diekstrak, nama penulis seringkali diikuti oleh angka superskrip footnote di baris baru (contoh: "Nichar F. Aruperes\n1\n, Ivonne S. Saerang\n2\n, Rudy S. Wenas\n3"). Anda WAJIB mengekstrak SEMUA nama penulis ini satu per satu! Hapus angka 1, 2, 3 tersebut.
    - PENTING: Jika terdapat BANYAK penulis (misalnya 15, 20, 30, hingga 35+ penulis), Anda WAJIB mengekstrak SEMUA nama penulis tanpa terkecuali dari nama pertama hingga nama terakhir! JANGAN PERNAH berhenti di tengah jalan atau menyingkat daftar penulis.
    - Bersihkan tanda footnote/bintang (*) atau simbol lainnya yang menempel pada nama.
-   - Hilangkan gelar akademik (Prof., Dr., Drs., Ir., M.Kom, S.T., Ph.D, SE, MM, dsb).
-   - Nama harus dalam format penulisan EYD/Title Case yang benar.
+   - Hilangkan gelar akademik/keagamaan (Prof., Dr., Drs., Ir., Ust., Ustadz, Kyai, K.H., Habib, Syekh, M.Kom, S.T., Ph.D, Lc., M.Ag, S.Ag, M.Pd.I, SE, MM, dsb).
+   - Nama Latin harus dalam format penulisan EYD/Title Case yang benar.
    - JANGAN PERNAH mengembalikan array kosong untuk detected_authors jika terdapat nama penulis di bawah judul artikel!
    - JANGAN mengambil teks metadata penerbitan atau footer/sidebar (seperti \'Copyright : author\', \'Publish by\', \'Plagiarism checker\', atau \'Article History\') sebagai nama penulis.
-   - Afiliasi/instansi ditulis lengkap (jangan disingkat jika memungkinkan). Jika beberapa penulis memiliki afiliasi yang sama, cantumkan afiliasi tersebut pada masing-masing penulis.';
+   - Afiliasi/instansi ditulis lengkap (jangan disingkat jika memungkinkan, contoh: \'Universitas Islam Negeri Sunan Kalijaga\', \'UIN Syarif Hidayatullah\'). Jika beberapa penulis memiliki afiliasi yang sama, cantumkan afiliasi tersebut pada masing-masing penulis.
+4. JUDUL ARTIKEL (detected_title):
+   - Naskah dapat berupa jurnal umum (nasional/internasional) atau jurnal keagamaan (studi Islam/Arab).
+   - Jika naskah memiliki lebih dari satu judul (misal: Indonesia & Inggris, atau Arab & Indonesia/Inggris):
+     - PILIHLAH JUDUL YANG SESUAI DENGAN BAHASA UTAMA ISI NASKAH (bahasa badan artikel / body text):
+       * Jika isi artikel ditulis dalam Bahasa Indonesia: Ambil Judul Bahasa Indonesia sebagai detected_title.
+       * Jika isi artikel ditulis dalam Bahasa Inggris: Ambil Judul Bahasa Inggris sebagai detected_title.
+       * Jika isi artikel ditulis dalam Bahasa Arab: Ambil Judul Bahasa Arab sebagai detected_title.
+     - Jika bahasa naskah sulit ditentukan, prioritaskan Judul Utama yang terletak paling atas/paling pertama sebelum nama penulis.
+   - Bersihkan dari nomor volume, nama jurnal, atau header/footer yang mungkin menempel di atas judul.';
 
         if ($isExternal) {
             return 'Anda adalah asisten AI dari \'Cahaya Ilmu Bangsa\'.

@@ -25,7 +25,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     protected static string | UnitEnum | null $navigationGroup = 'Settings';
     protected static ?string $navigationLabel = 'Finance & Payouts';
     protected static ?string $title = 'Finance, Revenue Split & Dev Payouts';
-    protected static ?string $slug = 'settings/finance';
+    protected static ?string $slug = 'finance';
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
     protected static ?int $navigationSort = 1;
     protected string $view = 'filament.pages.settings.finance-settings-page';

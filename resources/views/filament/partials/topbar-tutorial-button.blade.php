@@ -1,6 +1,6 @@
 <div x-data="{ 
     open: false, 
-    videoUrl: 'https://www.youtube.com/embed/WWLTLepPDic?si=dzZyc4Qdj5Zr4iT9' 
+    videoUrl: 'https://www.youtube.com/embed/PrKwXTuTLEw?si=D4grM3UsL1ns-QrC' 
 }" class="flex items-center">
     <!-- Topbar Tutorial Button -->
     <button type="button" @click="open = true"
