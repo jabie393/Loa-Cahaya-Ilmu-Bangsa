@@ -30,6 +30,42 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     protected static ?int $navigationSort = 1;
     protected string $view = 'filament.pages.settings.finance-settings-page';
 
+    public static function getNavigationLabel(): string
+    {
+        if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
+            return 'Riwayat Transaksi';
+        }
+
+        return static::$navigationLabel ?? 'Finance & Payouts';
+    }
+
+    public static function getNavigationGroup(): string | UnitEnum | null
+    {
+        if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
+            return null;
+        }
+
+        return static::$navigationGroup;
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
+            return 2;
+        }
+
+        return static::$navigationSort;
+    }
+
+    public function getTitle(): string | \Illuminate\Contracts\Support\Htmlable
+    {
+        if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
+            return 'Riwayat Transaksi Pembayaran';
+        }
+
+        return static::$title ?? 'Finance, Revenue Split & Dev Payouts';
+    }
+
     public static function getNavigationBadge(): ?string
     {
         $devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
@@ -63,7 +99,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
 
     public static function canAccess(): bool
     {
-        return Auth::user()?->hasRole('super_admin') ?? true;
+        return Auth::user()?->hasAnyRole('super_admin','ryu_dev') ?? true;
     }
 
     public function mount(): void
@@ -124,6 +160,7 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                     ->sortable(),
                 TextColumn::make('paid_at')
                     ->label('Waktu Bayar')
+                    ->searchable()
                     ->dateTime('d M Y, H:i')
                     ->sortable(),
                 TextColumn::make('type')
@@ -174,6 +211,27 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
                         return $record->submission?->journal?->name ?? 'Jurnal CIB';
                     })
                     ->limit(20)
+                    ->searchable(query: function ($query, string $search) {
+                        return $query->where(function ($q) use ($search) {
+                            $q->whereHas('submission.journal', fn($j) => $j->where('name', 'like', "%{$search}%"))
+                                ->orWhereHas('items.submission.journal', fn($j) => $j->where('name', 'like', "%{$search}%"))
+                                ->orWhereHas('items', fn($itemQ) => $itemQ->where('item_name', 'like', "%{$search}%"));
+
+                            $lowerSearch = strtolower($search);
+                            if (str_contains('repository cib (doi)', $lowerSearch) || str_contains('doi', $lowerSearch)) {
+                                $q->orWhere('type', 'doi_addon');
+                            }
+                            if (str_contains('pembaruan file pdf', $lowerSearch) || str_contains('ganti pdf', $lowerSearch) || str_contains('pdf', $lowerSearch)) {
+                                $q->orWhere('type', 'replace_pdf');
+                            }
+                            if (str_contains('target jurnal', $lowerSearch) || str_contains('bulk', $lowerSearch) || str_contains('kolektif', $lowerSearch)) {
+                                $q->orWhere('type', 'bulk_submission');
+                            }
+                            if (str_contains('jurnal cib', $lowerSearch) || str_contains('cib', $lowerSearch)) {
+                                $q->orWhereNull('submission_id');
+                            }
+                        });
+                    })
                     ->badge(fn(Payment $record) => $record->type === 'bulk_submission')
                     ->color(fn(Payment $record) => $record->type === 'bulk_submission' ? 'info' : null),
                 TextColumn::make('gross_amount')
