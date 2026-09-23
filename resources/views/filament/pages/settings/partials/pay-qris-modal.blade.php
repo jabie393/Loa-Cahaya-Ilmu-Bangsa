@@ -75,7 +75,7 @@
                 
                 {{-- Header / Merchant Info --}}
                 <div class="space-y-1 text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-2">
+                    <div class="flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-2">
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300/60 shadow-2xs">
                             DEVELOPER QRIS RESMI
                         </span>
