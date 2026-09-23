@@ -30,6 +30,15 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     protected static ?int $navigationSort = 1;
     protected string $view = 'filament.pages.settings.finance-settings-page';
 
+    public static function getNavigationIcon(): string | \BackedEnum | null
+    {
+        if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
+            return 'heroicon-o-credit-card';
+        }
+
+        return static::$navigationIcon;
+    }
+
     public static function getNavigationLabel(): string
     {
         if (Auth::user()?->hasRole('ryu_dev') && !Auth::user()?->hasRole('super_admin')) {
@@ -109,6 +118,14 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
 
     public function refreshBalances(): void
     {
+        if (
+            !empty($this->mountedActions) ||
+            !empty($this->mountedTableActions) ||
+            (method_exists($this, 'getMountedAction') && $this->getMountedAction() !== null)
+        ) {
+            return;
+        }
+
         $this->totalGross = (float) Payment::where('payment_status', 'paid')->sum('gross_amount');
         $this->totalQris = (float) Payment::where('payment_status', 'paid')->sum('mdr_amount');
         $this->totalDev = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
@@ -136,7 +153,17 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     public function table(Table $table): Table
     {
         return $table
-            ->poll('5s')
+            ->poll(function ($livewire) {
+                if (
+                    !empty($livewire->mountedActions) ||
+                    !empty($livewire->mountedTableActions) ||
+                    (method_exists($livewire, 'getMountedAction') && $livewire->getMountedAction() !== null)
+                ) {
+                    return null;
+                }
+
+                return '5s';
+            })
             ->query(
                 Payment::query()
                     ->where('payment_status', 'paid')

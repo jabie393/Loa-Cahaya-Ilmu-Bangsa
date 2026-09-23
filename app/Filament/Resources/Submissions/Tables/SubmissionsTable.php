@@ -387,7 +387,7 @@ class SubmissionsTable
                         ->requiresConfirmation()
                         ->visible(function (Submission $record) {
                             $user = Auth::user();
-                            $isOwnerOrAdmin = $user && ($record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                            $isOwnerOrAdmin = $user && ($record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'ryu_dev']));
                             if (!$isOwnerOrAdmin || $record->status !== 'Approved' || in_array($record->ojs_status, ['submitted', 'published']) || $record->review_status === 'processing') {
                                 return false;
                             }
@@ -425,7 +425,7 @@ class SubmissionsTable
                         ->modalDescription('Apakah Anda yakin ingin melakukan sinkronisasi ulang data (termasuk DOI jika ada) ke OJS?')
                         ->visible(function (Submission $record) {
                             $user = Auth::user();
-                            $isAdminOrDev = $user && $user->hasAnyRole(['super_admin', 'admin', 'ryu_dev']);
+                            $isAdminOrDev = $user && $user->hasAnyRole(['super_admin', 'ryu_dev']);
                             if (!$isAdminOrDev || $record->status !== 'Approved' || $record->ojs_status !== 'submitted' || $record->review_status === 'processing') {
                                 return false;
                             }

@@ -12,7 +12,8 @@
 /* Container States */
 #mascot-container[data-minimized="true"] #mascot-bubble,
 #mascot-container[data-minimized="true"] #mascot-panel,
-#mascot-container[data-minimized="true"] #mascot-actions {
+#mascot-container[data-minimized="true"] #mascot-actions,
+#mascot-container[data-minimized="true"] #mascot-minimize-btn {
     display: none !important;
 }
 

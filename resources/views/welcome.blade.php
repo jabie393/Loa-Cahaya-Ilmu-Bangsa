@@ -293,7 +293,7 @@
                     class="hover:text-primary transition-colors hover:underline">RyuDevs</a></div>
         </div>
     </footer>
-    <script src="{{ asset('js/mascot.js') }}" defer></script>
+    <script src="{{ asset('js/mascot.js') }}?v={{ file_exists(public_path('js/mascot.js')) ? filemtime(public_path('js/mascot.js')) : time() }}" defer></script>
 </body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

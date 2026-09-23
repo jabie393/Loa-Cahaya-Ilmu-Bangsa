@@ -18,12 +18,12 @@ class PaymentDoiSubmission extends Page
 
     protected string $view = 'filament.resources.submissions.pages.payment-doi';
 
-    public function mount(int | string $record): void
+    public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
 
         $currentUser = Auth::user();
-        if ($this->record->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($this->record->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
     }

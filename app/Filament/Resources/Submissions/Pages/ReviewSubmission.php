@@ -59,7 +59,7 @@ class ReviewSubmission extends Page
                 ->disabled(fn() => $this->record->ojs_status === 'pending')
                 ->visible(function () {
                     $user = Auth::user();
-                    $isOwnerOrAdmin = $user && ($this->record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'admin']));
+                    $isOwnerOrAdmin = $user && ($this->record->user_id === $user->id || $user->hasAnyRole(['super_admin', 'ryu_dev']));
                     if (!$isOwnerOrAdmin || $this->record->status !== 'Approved' || in_array($this->record->ojs_status, ['submitted', 'published'])) {
                         return false;
                     }
@@ -98,7 +98,7 @@ class ReviewSubmission extends Page
                 })
                 ->visible(function () {
                     $user = Auth::user();
-                    $isAdminOrDev = $user && $user->hasAnyRole(['super_admin', 'admin', 'ryu_dev']);
+                    $isAdminOrDev = $user && $user->hasAnyRole(['super_admin', 'ryu_dev']);
                     if (!$isAdminOrDev || $this->record->status !== 'Approved' || $this->record->ojs_status !== 'submitted') {
                         return false;
                     }

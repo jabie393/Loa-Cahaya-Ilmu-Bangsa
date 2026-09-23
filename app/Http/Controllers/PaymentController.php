@@ -31,7 +31,7 @@ class PaymentController extends Controller
 
         // Authorization: only the owner or super_admin / admin can view
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman pembayaran naskah ini.');
         }
 
@@ -69,7 +69,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -147,7 +147,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -185,7 +185,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -231,7 +231,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['journal', 'user', 'payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }
 
@@ -261,7 +261,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -341,7 +341,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -387,7 +387,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -470,7 +470,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($submission->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -626,7 +626,7 @@ class PaymentController extends Controller
         $payment = \App\Models\Payment::findOrFail($paymentId);
 
         $currentUser = Auth::user();
-        if ($payment->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'admin'])) {
+        if ($payment->user_id !== $currentUser->id && !$currentUser->hasAnyRole(['super_admin', 'ryu_dev'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -707,7 +707,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin', 'admin'])) {
+        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -757,7 +757,7 @@ class PaymentController extends Controller
         $submission = Submission::with(['payments'])->findOrFail($id);
 
         $currentUser = Auth::user();
-        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin', 'admin'])) {
+        if (!$currentUser || !$currentUser->hasAnyRole(['ryu_dev', 'super_admin'])) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

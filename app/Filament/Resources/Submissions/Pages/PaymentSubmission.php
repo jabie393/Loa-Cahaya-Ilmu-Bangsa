@@ -32,7 +32,7 @@ class PaymentSubmission extends Page
 
         // Authorization check
         $user = Auth::user();
-        if ($this->record->user_id !== $user->id && !$user->hasAnyRole(['super_admin', 'admin'])) {
+        if ($this->record->user_id !== $user->id && !$user->hasAnyRole(['super_admin', 'ryu_dev'])) {
             abort(403, 'Anda tidak memiliki akses ke halaman pembayaran naskah ini.');
         }
 

@@ -16,10 +16,24 @@
         -webkit-backface-visibility: hidden;
     }
 
+    #kanda-putra-mascot-root button,
+    #kanda-putra-mascot-root button:disabled,
+    #kanda-putra-mascot-root button[disabled],
+    #mascot-container button,
+    #mascot-container button:disabled,
+    #mascot-container button[disabled],
+    #mascot-panel button,
+    #mascot-panel button:disabled,
+    #mascot-panel button[disabled],
+    #chatbot-submit,
+    #chatbot-submit:disabled,
+    #chatbot-submit[disabled],
     #kanda-putra-mascot-root [wire\:loading],
     #kanda-putra-mascot-root button[wire\:loading],
     #mascot-container [wire\:loading] {
         opacity: 1 !important;
+        pointer-events: auto !important;
+        transition: none !important;
     }
 </style>
 
@@ -31,7 +45,7 @@
 </div>
 
 <div id="mascot-container"
-    class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end md:flex-row md:items-end gap-3 transition-all duration-500 ease-in-out"
+    class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] flex flex-col items-end md:flex-row md:items-end gap-3 transition-all duration-500 ease-in-out"
     data-minimized="false">
     
     <!-- Wrapper for Bubble and Avatar to keep them stacked vertically -->
@@ -41,9 +55,9 @@
             class="hidden max-w-[250px] transform rounded-2xl bg-white/80 p-4 text-sm font-medium text-slate-800 shadow-lg backdrop-blur-md transition-all duration-300 md:text-base">
             <div class="relative">
                 <span id="mascot-message">Halo! Saya Kanda Putra. Ada yang bisa saya bantu?</span>
-                <button onclick="Mascot.hideBubble()"
-                    class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
-                    <span class="material-symbols-outlined !text-[14px]">close</span>
+                <button type="button" onclick="Mascot.hideBubble()"
+                    class="group/bclose absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 transition-all hover:scale-110 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined !text-[14px] transition-transform duration-200 group-hover/bclose:rotate-90">close</span>
                 </button>
             </div>
             <!-- Bubble Arrow -->
@@ -52,14 +66,19 @@
 
         <!-- Mascot Wrapper -->
         <div class="group relative flex items-end">
-            <!-- Action Buttons (Visible on hover/click) -->
-            <div id="mascot-actions"
-                class="absolute -left-12 bottom-0 flex flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <button onclick="Mascot.toggleMinimize()" title="Minimize"
-                    class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110">
-                    <span class="material-symbols-outlined text-slate-600" id="minimize-icon">collapse_all</span>
-                </button>
-            </div>
+            <!-- Sleek Minimize Button (Docked on top-left of mascot, always visible on mobile) -->
+            <button type="button" 
+                onclick="event.stopPropagation(); Mascot.toggleMinimize()" 
+                id="mascot-minimize-btn"
+                aria-label="Sembunyikan Kanda Putra"
+                class="group/btn absolute -top-1 -left-2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-gray-800/95 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-950/40 shadow-md border border-slate-200/90 dark:border-slate-700 backdrop-blur-md transition-all duration-200 hover:scale-110 active:scale-95 opacity-90 sm:opacity-75 sm:hover:opacity-100 cursor-pointer">
+                <span class="material-symbols-outlined !text-[15px] sm:!text-[16px] transition-transform duration-200 group-hover/btn:rotate-90">close</span>
+                
+                <!-- Modern Micro-Tooltip (Desktop only, replaces ugly native browser tooltip) -->
+                <span class="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-md opacity-0 transition-opacity duration-150 group-hover/btn:opacity-100 hidden sm:block">
+                    Sembunyikan
+                </span>
+            </button>
 
             <!-- Mascot Image -->
             <div id="mascot-avatar" onclick="Mascot.togglePanel()"
@@ -102,8 +121,10 @@
                         </p>
                     </div>
                 </div>
-                <button onclick="Mascot.togglePanel()" class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/90 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white">
-                    <span class="material-symbols-outlined !text-[18px]">close</span>
+                <button type="button" onclick="Mascot.closePanel()" 
+                    aria-label="Tutup Chat"
+                    class="group/close flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/90 backdrop-blur-sm transition-all duration-300 hover:bg-white/25 hover:text-white hover:scale-110 active:scale-95 cursor-pointer">
+                    <span class="material-symbols-outlined !text-[18px] transition-transform duration-300 group-hover/close:rotate-90">close</span>
                 </button>
             </div>
         </div>
@@ -147,7 +168,7 @@
             <form id="chatbot-form" class="flex items-end gap-2 relative" onsubmit="Mascot.sendMessage(event)">
                 <input type="hidden" name="_token" value="{{ csrf_token() }}" id="chatbot-csrf">
                 <textarea id="chatbot-input" rows="1" class="w-full resize-none rounded-2xl border-0 bg-slate-100 py-3.5 pl-4 pr-12 text-sm text-slate-700 focus:bg-slate-50 focus:ring-2 focus:ring-primary/20 transition-all shadow-inner" placeholder="Ketik pesan..." onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); Mascot.sendMessage(event); }"></textarea>
-                <button type="submit" class="absolute right-1.5 bottom-1.5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none" id="chatbot-submit">
+                <button type="submit" class="absolute right-1.5 bottom-1.5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white shadow-md transition-all hover:scale-105 hover:shadow-lg active:scale-95 disabled:hover:scale-100 disabled:shadow-none" id="chatbot-submit">
                     <span class="material-symbols-outlined !text-[20px] ml-0.5">send</span>
                 </button>
             </form>

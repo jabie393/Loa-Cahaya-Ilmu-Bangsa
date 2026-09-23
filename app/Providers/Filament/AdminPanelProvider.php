@@ -84,6 +84,10 @@ class AdminPanelProvider extends PanelProvider
                     ->emptyPanelBackgroundImageUrl('https://assets.warunayama.org/assets/home-bg.jpg'),
             ])
             ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn(): string => Blade::render('@include("filament.partials.anti-flicker")'),
+            )
+            ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
                 fn(): string => Blade::render('@include("filament.partials.topbar-tutorial-button")'),
             )
@@ -91,9 +95,9 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn(): string => Blade::render('
                     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-                    <link rel="stylesheet" href="' . asset('css/mascot.css') . '">
+                    <link rel="stylesheet" href="' . asset('css/mascot.css') . '?v=' . filemtime(public_path('css/mascot.css')) . '">
                     <x-mascot />
-                    <script src="' . asset('js/mascot.js') . '" defer></script>
+                    <script src="' . asset('js/mascot.js') . '?v=' . filemtime(public_path('js/mascot.js')) . '" defer></script>
                 '),
             )
         ;

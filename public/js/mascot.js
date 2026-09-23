@@ -116,6 +116,28 @@ if (!window.Mascot) {
                     }
                 });
             }
+
+            // Click outside to close chatbot panel
+            document.addEventListener("click", (event) => {
+                if (!this.state.panelOpen || !this.dom.panel) return;
+
+                const avatar = document.getElementById("mascot-avatar");
+                if (
+                    this.dom.panel.contains(event.target) ||
+                    (avatar && avatar.contains(event.target))
+                ) {
+                    return;
+                }
+
+                this.closePanel();
+            });
+
+            // Close on Escape key press
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "Escape" && this.state.panelOpen) {
+                    this.closePanel();
+                }
+            });
         },
 
         setPose(pose) {
@@ -168,8 +190,7 @@ if (!window.Mascot) {
                 this.dom.maximizeTrigger.classList.remove("hidden");
                 this.dom.maximizeTrigger.classList.add("flex");
                 this.hideBubble();
-                this.dom.panel.classList.add("hidden");
-                this.dom.panel.classList.remove("flex");
+                this.closePanel();
             } else {
                 this.dom.container.classList.remove("hidden");
                 this.dom.maximizeTrigger.classList.add("hidden");
@@ -184,13 +205,26 @@ if (!window.Mascot) {
                 return;
             }
 
-            this.state.panelOpen = !this.state.panelOpen;
             if (this.state.panelOpen) {
+                this.closePanel();
+            } else {
+                this.openPanel();
+            }
+        },
+
+        openPanel() {
+            this.state.panelOpen = true;
+            if (this.dom.panel) {
                 this.dom.panel.classList.remove("hidden");
                 this.dom.panel.classList.add("flex");
-                this.hideBubble();
-                this.scrollToBottom();
-            } else {
+            }
+            this.hideBubble();
+            this.scrollToBottom();
+        },
+
+        closePanel() {
+            this.state.panelOpen = false;
+            if (this.dom.panel) {
                 this.dom.panel.classList.add("hidden");
                 this.dom.panel.classList.remove("flex");
             }

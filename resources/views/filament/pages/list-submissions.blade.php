@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     <style>
-        /* Specific only to table action buttons to prevent dimming on wire:poll without breaking header buttons/modals */
+        /* Specific only to table action buttons to prevent dimming on wire:poll */
         .fi-ta-actions button,
         .fi-ta-actions a {
             opacity: 1 !important;
@@ -8,6 +8,36 @@
 
         .fi-ta-row [wire\:loading] {
             opacity: 1 !important;
+        }
+
+        /* Prevent Livewire polling flicker on modal buttons and user dropdown */
+        .fi-modal-close-btn,
+        .fi-modal-close-btn:disabled,
+        .fi-modal-close-btn[disabled],
+        .fi-modal-header button,
+        .fi-modal-header button:disabled,
+        .fi-modal-header button[disabled],
+        .fi-modal-footer .fi-btn:not(.fi-processing),
+        .fi-modal-footer .fi-btn:not(.fi-processing):disabled,
+        .fi-modal-footer .fi-btn:not(.fi-processing)[disabled],
+        .fi-modal-window .fi-btn:not(.fi-processing),
+        .fi-modal-window .fi-btn:not(.fi-processing):disabled,
+        .fi-modal-window .fi-btn:not(.fi-processing)[disabled],
+        .fi-user-menu .fi-dropdown-list-item,
+        .fi-user-menu .fi-dropdown-list-item:disabled,
+        .fi-user-menu .fi-dropdown-list-item[disabled],
+        .fi-dropdown-panel .fi-dropdown-list-item,
+        .fi-dropdown-panel .fi-dropdown-list-item:disabled,
+        .fi-dropdown-panel .fi-dropdown-list-item[disabled] {
+            opacity: 1 !important;
+            transition: none !important;
+        }
+
+        .fi-modal-close-btn,
+        .fi-modal-close-btn:disabled,
+        .fi-user-menu .fi-dropdown-list-item,
+        .fi-user-menu .fi-dropdown-list-item:disabled {
+            pointer-events: auto !important;
         }
 
         /* Prevent table action dropdown from being clipped or flipping into navbar when few records exist */

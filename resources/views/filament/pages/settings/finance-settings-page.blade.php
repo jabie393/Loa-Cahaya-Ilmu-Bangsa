@@ -1,5 +1,6 @@
 <x-filament-panels::page>
-    <div class="space-y-6" wire:poll.5s="refreshBalances">
+    @include('filament.partials.anti-flicker')
+    <div class="space-y-6" @if(empty($this->mountedActions) && empty($this->mountedTableActions)) wire:poll.5s="refreshBalances" @endif>
 
         {{-- TOP STAT CARDS: FINANCIAL OVERVIEW --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">

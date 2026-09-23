@@ -37,7 +37,17 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
     public function table(Table $table): Table
     {
         return $table
-            ->poll('5s')
+            ->poll(function ($livewire) {
+                if (
+                    !empty($livewire->mountedActions) ||
+                    !empty($livewire->mountedTableActions) ||
+                    (method_exists($livewire, 'getMountedAction') && $livewire->getMountedAction() !== null)
+                ) {
+                    return null;
+                }
+
+                return '5s';
+            })
             ->query(DevPayout::query()->latest())
             ->headerActions([
                 Action::make('create_payout')
