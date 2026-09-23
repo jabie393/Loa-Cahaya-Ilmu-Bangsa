@@ -184,7 +184,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->label('Bayar via QRIS')
                     ->icon('heroicon-m-qr-code')
                     ->button()
-                    ->color('success')
+                    ->color('primary')
                     ->size('sm')
                     ->visible(fn (DevPayout $record): bool => 
                         $record->status === 'waiting_payout' && (bool) Auth::user()?->hasRole('super_admin')
@@ -192,7 +192,8 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->modalHeading(fn (DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
                     ->modalDescription('Scan kode QRIS di bawah ini dengan Mobile Banking atau E-Wallet untuk menyelesaikan transfer.')
                     ->modalSubmitActionLabel('Sudah Bayar via QRIS')
-                    ->modalWidth(Width::ExtraLarge)
+                    ->modalSubmitAction(fn (\Filament\Actions\Action $action) => $action->color('primary'))
+                    ->modalWidth(Width::ThreeExtraLarge)
                     ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
                         'record' => $record,
                     ]))
