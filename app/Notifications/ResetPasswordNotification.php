@@ -53,11 +53,11 @@ class ResetPasswordNotification extends Notification
 
         return (new MailMessage)
             ->subject('Atur Ulang Kata Sandi - LOA Cahaya Ilmu Bangsa')
-            ->greeting("Halo, {$name}!")
-            ->line('Kami menerima permintaan untuk mengatur ulang kata sandi akun Anda pada Portal LOA Cahaya Ilmu Bangsa.')
-            ->action('Atur Ulang Kata Sandi', $resetUrl)
-            ->line('Tautan pengaturan ulang kata sandi ini aman dan akan kedaluwarsa dalam 60 menit.')
-            ->line('Jika Anda tidak pernah meminta pengaturan ulang kata sandi, abaikan email ini dan akun Anda tetap aman.')
-            ->salutation("Salam hangat,\nTim LOA Cahaya Ilmu Bangsa");
+            ->view('filament.emails.password-reset', [
+                'user' => $notifiable,
+                'name' => $name,
+                'resetUrl' => $resetUrl,
+                'expire' => config('auth.passwords.users.expire', 60),
+            ]);
     }
 }

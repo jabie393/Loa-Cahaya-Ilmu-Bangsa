@@ -21,8 +21,16 @@ class PasswordResetFlowTest extends TestCase
         $mailMessage = $notification->toMail($user);
 
         $this->assertStringContainsString('Atur Ulang Kata Sandi', $mailMessage->subject);
-        $this->assertEquals('http://localhost/password-reset/reset?token=sample-token&email=fahd%40example.com', $mailMessage->actionUrl);
-        $this->assertEquals('Halo, Fahd Test!', $mailMessage->greeting);
-        $this->assertStringContainsString('LOA Cahaya Ilmu Bangsa', $mailMessage->salutation);
+        $this->assertEquals('filament.emails.password-reset', $mailMessage->view);
+        $this->assertEquals('http://localhost/password-reset/reset?token=sample-token&email=fahd%40example.com', $mailMessage->viewData['resetUrl']);
+        $this->assertEquals('Fahd Test', $mailMessage->viewData['name']);
+
+        // Verify the blade view renders properly with logo, content, and reset link
+        $renderedHtml = view($mailMessage->view, $mailMessage->viewData)->render();
+        $this->assertStringContainsString('https://aset.warunayama.org/images/logo.png', $renderedHtml);
+        $this->assertStringContainsString('Permintaan Atur Ulang Kata Sandi', $renderedHtml);
+        $this->assertStringContainsString('Halo <strong>Fahd Test</strong>', $renderedHtml);
+        $this->assertStringContainsString('http://localhost/password-reset/reset?token=sample-token&email=fahd%40example.com', $renderedHtml);
+        $this->assertStringContainsString('Tim LOA Cahaya Ilmu Bangsa', $renderedHtml);
     }
 }
