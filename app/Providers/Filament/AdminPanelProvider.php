@@ -42,7 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Pages\Auth\PasswordReset\ResetPassword::class,
             )
             ->spa()
-            ->registration()
+            ->registration(\App\Filament\Pages\Auth\Register::class)
             ->globalSearch(false)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([

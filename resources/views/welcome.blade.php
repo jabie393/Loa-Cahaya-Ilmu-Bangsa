@@ -261,14 +261,6 @@
                                     class="material-symbols-outlined text-lg sm:text-xl transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
                             </a>
 
-                            <div
-                                class="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                <span
-                                    class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                    <span class="material-symbols-outlined text-sm font-bold">check</span>
-                                </span>
-                                <span>Layanan Resmi &amp; Terverifikasi</span>
-                            </div>
                         </div>
                     </div>
                 </div>
