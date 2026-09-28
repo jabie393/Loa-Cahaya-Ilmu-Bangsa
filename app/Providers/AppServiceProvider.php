@@ -85,6 +85,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Http\Responses\LogoutResponse::class
         );
 
+        $this->app->bind(
+            \Filament\Auth\Notifications\ResetPassword::class,
+            \App\Notifications\ResetPasswordNotification::class
+        );
+
         FilamentView::registerRenderHook(
             'panels::body.end',
             fn () => view('components.sso-admin-check')

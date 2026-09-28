@@ -37,6 +37,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->homeUrl(fn () => auth()->user()?->hasAnyRole(['ryu_dev', 'dev', 'developer']) ? url('/dev-payouts') : url('/journal'))
             ->login(\App\Filament\Pages\Auth\Login::class)
+            ->passwordReset(
+                \App\Filament\Pages\Auth\PasswordReset\RequestPasswordReset::class,
+                \App\Filament\Pages\Auth\PasswordReset\ResetPassword::class,
+            )
             ->spa()
             ->registration()
             ->globalSearch(false)

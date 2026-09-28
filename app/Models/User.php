@@ -83,4 +83,16 @@ class User extends Authenticatable implements FilamentUser
 
         return true;
     }
+
+    /**
+     * Send password reset notification using the application's notification with Filament URL.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $notification = app(\App\Notifications\ResetPasswordNotification::class, ['token' => $token]);
+        if (class_exists(\Filament\Facades\Filament::class)) {
+            $notification->url = \Filament\Facades\Filament::getResetPasswordUrl($token, $this);
+        }
+        $this->notify($notification);
+    }
 }
