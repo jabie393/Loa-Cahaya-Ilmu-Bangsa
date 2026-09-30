@@ -106,21 +106,19 @@
     }
 
     /* 4. NEVER HIDE normal button icons during passive background polling */
-    button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    button:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator),
-    .fi-btn:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-btn:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator),
-    .fi-icon-btn:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-icon-btn:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator),
-    .fi-modal-window button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-modal-footer button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-modal-header button > svg,
-    .fi-modal-close-btn > svg,
-    .fi-modal button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    [role="dialog"] button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-ta-actions button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    .fi-ta-header-toolbar button:not(.fi-processing) > svg:not(.fi-loading-indicator),
-    #kanda-putra-mascot-root button > svg {
+    .fi-btn:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-btn:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-icon-btn:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-icon-btn:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-modal-window button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-modal-footer button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-modal-header button > svg:not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-modal-close-btn > svg:not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-modal button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    [role="dialog"] button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-ta-actions button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    .fi-ta-header-toolbar button:not(.fi-processing) > svg:not(.fi-loading-indicator):not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]),
+    #kanda-putra-mascot-root button > svg:not(.animate-spin):not([style*="display: none"]):not([style*="display:none"]):not(.hidden):not([hidden]) {
         display: inline-block !important;
         visibility: visible !important;
         opacity: 1 !important;
