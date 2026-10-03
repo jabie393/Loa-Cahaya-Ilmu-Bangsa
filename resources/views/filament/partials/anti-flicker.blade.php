@@ -88,6 +88,11 @@
         cursor: pointer !important;
     }
 
+    /* Ensure wire:loading elements are hidden by default before Livewire activates them */
+    [wire\:loading]:not([wire\:loading\.remove]) {
+        display: none;
+    }
+
     /* 3. NEVER SHOW blue spinning loading indicator unless the button has .fi-processing */
     button:not(.fi-processing) .fi-loading-indicator,
     .fi-btn:not(.fi-processing) .fi-loading-indicator,

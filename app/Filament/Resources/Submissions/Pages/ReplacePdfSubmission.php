@@ -78,6 +78,7 @@ class ReplacePdfSubmission extends Page implements HasForms
         }
 
         if (!$rawFile) {
+            $this->dispatch('submit-error');
             Notification::make()
                 ->title('File Tidak Ditemukan')
                 ->body('Mohon unggah file PDF naskah baru terlebih dahulu.')
@@ -171,6 +172,7 @@ class ReplacePdfSubmission extends Page implements HasForms
         }
 
         if (!$relativePublicPath || !$fullPath || !file_exists($fullPath)) {
+            $this->dispatch('submit-error');
             Notification::make()
                 ->title('File Tidak Ditemukan')
                 ->body('Berkas PDF tidak dapat diakses pada server. Silakan coba pilih dan unggah ulang berkas PDF Anda.')
@@ -232,6 +234,7 @@ class ReplacePdfSubmission extends Page implements HasForms
                     Storage::disk('public')->delete($relativePublicPath);
                 }
                 $this->form->fill(['new_manuscript_file' => null]);
+                $this->dispatch('submit-error');
                 Notification::make()
                     ->title('Format Template Tidak Sesuai')
                     ->body($e->getMessage())
@@ -263,6 +266,7 @@ class ReplacePdfSubmission extends Page implements HasForms
                 Storage::disk('public')->delete($relativePublicPath);
             }
             $this->form->fill(['new_manuscript_file' => null]);
+            $this->dispatch('submit-error');
             Notification::make()
                 ->title('Perubahan Jumlah Penulis Ditolak')
                 ->body("Jumlah penulis pada file PDF baru terdeteksi {$newAuthorCount} orang, sedangkan naskah awal memiliki {$currentAuthorCount} orang. Fitur Ganti PDF tidak mengizinkan penambahan atau pengurangan jumlah penulis.")
@@ -285,6 +289,7 @@ class ReplacePdfSubmission extends Page implements HasForms
 
             $this->redirect(SubmissionResource::getUrl('payment.replace_pdf', ['record' => $this->record]));
         } catch (\Throwable $e) {
+            $this->dispatch('submit-error');
             Notification::make()
                 ->title('Gagal Membuat Tagihan Pembayaran')
                 ->body($e->getMessage())

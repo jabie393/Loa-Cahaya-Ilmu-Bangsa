@@ -109,7 +109,11 @@
 
             <!-- Right Card: Standard Native Filament Form & Submit -->
             <div class="lg:col-span-7">
-                <form wire:submit.prevent="submit" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-sm space-y-6">
+                <form wire:submit.prevent="submit" 
+                    x-data="{ isSubmitting: false }" 
+                    @submit="isSubmitting = true"
+                    @submit-error.window="isSubmitting = false"
+                    class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-sm space-y-6">
                     <div class="border-b border-gray-100 dark:border-gray-800 pb-4">
                         <h3 class="text-base font-bold text-gray-900 dark:text-white">Unggah Berkas PDF Baru</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pilih atau unggah dokumen PDF hasil revisi Anda sesuai dengan template jurnal.</p>
@@ -137,23 +141,26 @@
                     <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
                         <button 
                             type="submit" 
-                            wire:loading.attr="disabled"
-                            wire:target="submit"
+                            :disabled="isSubmitting"
                             class="inline-flex items-center justify-center gap-2.5 px-4 py-2 h-9 whitespace-nowrap bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-lg shadow-sm hover:shadow transition-all disabled:opacity-75 disabled:cursor-wait cursor-pointer">
                             
-                            <!-- Credit Card Icon (Idle) -->
-                            <svg wire:loading.remove wire:target="submit" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-6-9.75h16.5a1.5 1.5 0 0 1 1.5 1.5v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 18V7.5a1.5 1.5 0 0 1 1.5-1.5Z" />
-                            </svg>
+                            <!-- Credit Card Icon (Idle - hanya muncul saat BELUM diklik) -->
+                            <template x-if="!isSubmitting">
+                                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-6-9.75h16.5a1.5 1.5 0 0 1 1.5 1.5v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75A1.5 1.5 0 0 1 2.25 18V7.5a1.5 1.5 0 0 1 1.5-1.5Z" />
+                                </svg>
+                            </template>
 
-                            <!-- Circular Spinner Icon (Loading) -->
-                            <svg wire:loading wire:target="submit" class="w-4 h-4 animate-spin text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3.5"></circle>
-                                <path class="opacity-100" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                            <!-- Circular Spinner Icon (Loading - HANYA MUNCUL DAN BERPUTAR KETIKA DIKLIK & MASIH DIPROSES) -->
+                            <template x-if="isSubmitting">
+                                <svg class="w-4 h-4 animate-spin text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3.5"></circle>
+                                    <path class="opacity-100" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </template>
 
                             <!-- Button Label -->
-                            <span class="whitespace-nowrap font-bold">Proceed to Payment</span>
+                            <span class="whitespace-nowrap font-bold" x-text="isSubmitting ? 'Memproses...' : 'Proceed to Payment'">Proceed to Payment</span>
                         </button>
                     </div>
                 </form>
