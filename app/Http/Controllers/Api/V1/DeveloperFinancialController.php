@@ -185,7 +185,33 @@ class DeveloperFinancialController extends Controller
         // 2. Type / Layanan Filter
         $type = $request->query('type');
         if ($type && $type !== 'all') {
-            $query->where('type', $type);
+            if ($type === 'replace_pdf' || $type === 'ganti_pdf') {
+                $query->where(function ($q) {
+                    $q->whereIn('type', ['replace_pdf', 'ganti_pdf'])
+                      ->orWhere('type', 'like', '%pdf%')
+                      ->orWhereHas('items', function ($iq) {
+                          $iq->where('item_name', 'like', '%pdf%')
+                            ->orWhere('item_type', 'like', '%pdf%');
+                      });
+                });
+            } elseif ($type === 'doi_addon' || $type === 'doi') {
+                $query->where(function ($q) {
+                    $q->whereIn('type', ['doi_addon', 'doi'])
+                      ->orWhere('type', 'like', '%doi%')
+                      ->orWhereHas('items', function ($iq) {
+                          $iq->where('item_name', 'like', '%doi%')
+                            ->orWhere('item_type', 'like', '%doi%');
+                      });
+                });
+            } elseif ($type === 'bulk_submission' || $type === 'bulk') {
+                $query->where(function ($q) {
+                    $q->where('type', 'bulk_submission')
+                      ->orWhere('order_id', 'like', '%BULK%')
+                      ->orWhere('invoice_number', 'like', '%BULK%');
+                });
+            } else {
+                $query->where('type', $type);
+            }
         }
 
         // 3. Search Filter
