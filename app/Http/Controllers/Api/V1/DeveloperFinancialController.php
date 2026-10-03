@@ -116,14 +116,106 @@ class DeveloperFinancialController extends Controller
 
         $perPage = min(50, max(10, (int) $request->query('per_page', 20)));
 
-        $payments = Payment::query()
-            ->where('payment_status', 'paid')
-            ->latest()
-            ->paginate($perPage);
+        $query = Payment::query()
+            ->with(['items:id,payment_id,item_name,item_type'])
+            ->where('payment_status', 'paid');
+
+        // 1. Period Filter (including custom Month & Year)
+        $period = $request->query('period', 'all');
+        $year = $request->query('year');
+        $month = $request->query('month');
+        $now = Carbon::now();
+
+        if ($period === 'month_year' || ($year && $month)) {
+            $query->where(function ($q) use ($year, $month) {
+                $q->whereYear('paid_at', $year)->whereMonth('paid_at', $month)
+                  ->orWhere(function ($sq) use ($year, $month) {
+                      $sq->whereNull('paid_at')->whereYear('created_at', $year)->whereMonth('created_at', $month);
+                  });
+            });
+        } elseif ($year) {
+            $query->where(function ($q) use ($year) {
+                $q->whereYear('paid_at', $year)
+                  ->orWhere(function ($sq) use ($year) {
+                      $sq->whereNull('paid_at')->whereYear('created_at', $year);
+                  });
+            });
+        } elseif ($period === 'today') {
+            $query->where(function ($q) use ($now) {
+                $q->whereDate('paid_at', $now->toDateString())
+                  ->orWhere(function ($sq) use ($now) {
+                      $sq->whereNull('paid_at')->whereDate('created_at', $now->toDateString());
+                  });
+            });
+        } elseif ($period === '7d') {
+            $startDate = $now->copy()->subDays(6)->startOfDay();
+            $query->where(function ($q) use ($startDate) {
+                $q->where('paid_at', '>=', $startDate)
+                  ->orWhere(function ($sq) use ($startDate) {
+                      $sq->whereNull('paid_at')->where('created_at', '>=', $startDate);
+                  });
+            });
+        } elseif ($period === 'month') {
+            $startDate = $now->copy()->startOfMonth()->startOfDay();
+            $query->where(function ($q) use ($startDate) {
+                $q->where('paid_at', '>=', $startDate)
+                  ->orWhere(function ($sq) use ($startDate) {
+                      $sq->whereNull('paid_at')->where('created_at', '>=', $startDate);
+                  });
+            });
+        } elseif ($period === 'prev_month') {
+            $startDate = $now->copy()->subMonth()->startOfMonth()->startOfDay();
+            $endDate = $now->copy()->subMonth()->endOfMonth()->endOfDay();
+            $query->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('paid_at', [$startDate, $endDate])
+                  ->orWhere(function ($sq) use ($startDate, $endDate) {
+                      $sq->whereNull('paid_at')->whereBetween('created_at', [$startDate, $endDate]);
+                  });
+            });
+        } elseif ($period === '30d') {
+            $startDate = $now->copy()->subDays(29)->startOfDay();
+            $query->where(function ($q) use ($startDate) {
+                $q->where('paid_at', '>=', $startDate)
+                  ->orWhere(function ($sq) use ($startDate) {
+                      $sq->whereNull('paid_at')->where('created_at', '>=', $startDate);
+                  });
+            });
+        }
+
+        // 2. Type / Layanan Filter
+        $type = $request->query('type');
+        if ($type && $type !== 'all') {
+            $query->where('type', $type);
+        }
+
+        // 3. Search Filter
+        $search = trim((string) $request->query('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_id', 'like', "%{$search}%")
+                  ->orWhere('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('payer_name', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhereHas('items', function ($iq) use ($search) {
+                      $iq->where('item_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // 4. Calculate aggregate summary for the current filtered query
+        $totalDevShare = (int) (clone $query)->sum('developer_net_share');
+        $totalTransactions = (int) (clone $query)->count();
+
+        $payments = $query->latest('id')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'data' => $payments,
+            'summary' => [
+                'total_dev_share' => $totalDevShare,
+                'total_transactions' => $totalTransactions,
+                'period' => $period,
+            ],
         ]);
     }
 
