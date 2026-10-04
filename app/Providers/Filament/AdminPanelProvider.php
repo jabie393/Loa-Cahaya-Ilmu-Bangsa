@@ -89,7 +89,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
-                fn(): string => Blade::render('@include("filament.partials.anti-flicker")'),
+                fn(): string => Blade::render('@include("filament.partials.anti-flicker") @vite(["resources/js/app.js"])'),
             )
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,

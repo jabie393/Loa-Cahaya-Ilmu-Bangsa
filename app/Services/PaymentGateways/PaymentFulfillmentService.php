@@ -67,6 +67,16 @@ class PaymentFulfillmentService
                 Log::info("PaymentFulfillment: Submission #{$submission->id} auto-approved after payment");
             }
         }
+
+        try {
+            broadcast(new \App\Events\DevFinancialUpdated(
+                userId: 0,
+                action: 'payment_received',
+                message: "Transaksi baru masuk: Order #{$payment->order_id}"
+            ));
+        } catch (\Throwable $e) {
+            Log::warning("Reverb broadcast failed for payment #{$payment->id}: " . $e->getMessage());
+        }
     }
 
     /**

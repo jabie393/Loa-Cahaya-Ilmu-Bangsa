@@ -38,4 +38,20 @@ class DevPayout extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    protected static function booted(): void
+    {
+        static::saved(function (DevPayout $payout) {
+            try {
+                broadcast(new \App\Events\DevFinancialUpdated(
+                    userId: (int) $payout->user_id,
+                    action: 'payout_updated',
+                    payoutId: (int) $payout->id,
+                    message: "Payout #{$payout->payout_no} status: {$payout->status}"
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Reverb broadcast failed for DevPayout #{$payout->id}: " . $e->getMessage());
+            }
+        });
+    }
 }

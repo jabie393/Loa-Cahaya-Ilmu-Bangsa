@@ -27,6 +27,7 @@ class DevPayoutsChartWidget extends ChartWidget
 
     #[On('payout-created')]
     #[On('payout-updated')]
+    #[On('echo:dev-financial,financial.updated')]
     public function refreshData(): void
     {
         $this->cachedData = null;

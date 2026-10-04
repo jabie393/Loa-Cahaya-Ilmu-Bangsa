@@ -35,6 +35,16 @@ class DevPayoutsPage extends Page
         return Auth::user()?->hasRole('ryu_dev') ?? false;
     }
 
+    protected $listeners = [
+        'echo:dev-financial,financial.updated' => 'handleFinancialUpdated',
+    ];
+
+    public function handleFinancialUpdated(): void
+    {
+        $this->refreshBalances();
+        $this->dispatch('$refresh');
+    }
+
     public function mount(): void
     {
         $this->refreshBalances();

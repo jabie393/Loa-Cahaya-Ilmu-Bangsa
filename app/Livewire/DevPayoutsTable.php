@@ -34,6 +34,10 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
     use InteractsWithForms;
     use InteractsWithActions;
 
+    protected $listeners = [
+        'echo:dev-financial,financial.updated' => '$refresh',
+    ];
+
     public function table(Table $table): Table
     {
         return $table
