@@ -21,9 +21,14 @@ class DevPayoutsPage extends Page
     // Dev balance tracking
     public float $devTotalEarned = 0;
     public float $devTotalPaid = 0;
+    public int $devPaidCount = 0;
     public float $devUnpaidBalance = 0;
     public int $unpaidPayoutCount = 0;
     public float $unpaidPayoutTotal = 0;
+    public int $waitingPayoutCount = 0;
+    public int $waitingConfirmationCount = 0;
+    public float $waitingPayoutAmount = 0;
+    public float $waitingConfirmationAmount = 0;
 
     public static function canAccess(): bool
     {
@@ -39,10 +44,18 @@ class DevPayoutsPage extends Page
     {
         $this->devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
         $this->devTotalPaid = (float) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
+        $this->devPaidCount = DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
+
         $devTotalCommitted = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
-        $this->unpaidPayoutCount = DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
-        $this->unpaidPayoutTotal = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
+
+        $this->waitingPayoutCount = DevPayout::where('status', 'waiting_payout')->count();
+        $this->waitingConfirmationCount = DevPayout::where('status', 'waiting_confirmation')->count();
+        $this->waitingPayoutAmount = (float) DevPayout::where('status', 'waiting_payout')->sum('amount');
+        $this->waitingConfirmationAmount = (float) DevPayout::where('status', 'waiting_confirmation')->sum('amount');
+
+        $this->unpaidPayoutCount = $this->waitingPayoutCount + $this->waitingConfirmationCount;
+        $this->unpaidPayoutTotal = $this->waitingPayoutAmount + $this->waitingConfirmationAmount;
     }
 
     #[On('payout-created')]

@@ -102,9 +102,14 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
     // Dev balance tracking
     public float $devTotalEarned = 0;
     public float $devTotalPaid = 0;
+    public int $devPaidCount = 0;
     public float $devUnpaidBalance = 0;
     public int $unpaidPayoutCount = 0;
     public float $unpaidPayoutTotal = 0;
+    public int $waitingPayoutCount = 0;
+    public int $waitingConfirmationCount = 0;
+    public float $waitingPayoutAmount = 0;
+    public float $waitingConfirmationAmount = 0;
 
     public static function canAccess(): bool
     {
@@ -133,11 +138,19 @@ class FinanceSettingsPage extends Page implements HasTable, HasForms
         $this->countPayments = Payment::where('payment_status', 'paid')->count();
 
         $this->devTotalEarned = $this->totalDev;
-        $this->devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $this->devTotalPaid = (float) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
+        $this->devPaidCount = \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
+
         $devTotalCommitted = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
-        $this->unpaidPayoutCount = \App\Models\DevPayout::where('status', 'waiting_payout')->count();
-        $this->unpaidPayoutTotal = (float) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
+
+        $this->waitingPayoutCount = \App\Models\DevPayout::where('status', 'waiting_payout')->count();
+        $this->waitingConfirmationCount = \App\Models\DevPayout::where('status', 'waiting_confirmation')->count();
+        $this->waitingPayoutAmount = (float) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
+        $this->waitingConfirmationAmount = (float) \App\Models\DevPayout::where('status', 'waiting_confirmation')->sum('amount');
+
+        $this->unpaidPayoutCount = $this->waitingPayoutCount + $this->waitingConfirmationCount;
+        $this->unpaidPayoutTotal = $this->waitingPayoutAmount + $this->waitingConfirmationAmount;
     }
 
     #[\Livewire\Attributes\On('payout-created')]
