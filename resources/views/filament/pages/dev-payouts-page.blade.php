@@ -67,13 +67,14 @@
                     <div class="font-mono text-2xl font-black tracking-tight text-amber-700 dark:text-amber-300">
                         Rp {{ number_format($unpaidPayoutTotal, 0, ',', '.') }}
                     </div>
-                    <span class="mt-1.5 block text-xs leading-relaxed text-amber-600/80 dark:text-amber-400/80">
+                    <span class="mt-1.5 block text-xs leading-relaxed text-amber-600/80 dark:text-amber-400/80 truncate"
+                        title="{{ $waitingPayoutCount }} antrean bayar (Rp {{ number_format($waitingPayoutAmount, 0, ',', '.') }}) · {{ $waitingConfirmationCount }} konfirmasi dev (Rp {{ number_format($waitingConfirmationAmount, 0, ',', '.') }})">
                         @if ($waitingConfirmationCount > 0 && $waitingPayoutCount > 0)
-                            {{ $waitingPayoutCount }} antrean bayar (Rp {{ number_format($waitingPayoutAmount, 0, ',', '.') }}) · {{ $waitingConfirmationCount }} konfirmasi dev (Rp {{ number_format($waitingConfirmationAmount, 0, ',', '.') }})
+                            {{ $waitingPayoutCount }} antrean bayar · {{ $waitingConfirmationCount }} konfirmasi dev
                         @elseif ($waitingPayoutCount > 0)
-                            {{ $waitingPayoutCount }} Tagihan siap dibayar via QRIS
+                            {{ $waitingPayoutCount }} tagihan siap dibayar
                         @elseif ($waitingConfirmationCount > 0)
-                            {{ $waitingConfirmationCount }} Tagihan menunggu konfirmasi developer
+                            {{ $waitingConfirmationCount }} tagihan menunggu konfirmasi
                         @else
                             Semua payout telah tuntas
                         @endif
