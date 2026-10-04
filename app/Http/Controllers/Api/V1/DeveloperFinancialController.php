@@ -28,18 +28,20 @@ class DeveloperFinancialController extends Controller
             ], 403);
         }
 
-        // 2. Financial Metrics Calculation (Identical to DevPayoutsPage.php)
+        // 2. Financial Metrics Calculation (Synchronized with strict developer confirmation lifecycle)
         $totalEarned = (int) Payment::where('payment_status', 'paid')->sum('developer_net_share');
-        $totalTransferred = (int) DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $totalTransferred = (int) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
         $totalCommitted = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
 
-        $pendingPayout = (int) DevPayout::where('status', 'waiting_payout')->sum('amount');
-        $unpaidPayoutCount = (int) DevPayout::where('status', 'waiting_payout')->count();
+        $pendingPayout = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
+        $unpaidPayoutCount = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+        $waitingPayoutCount = (int) DevPayout::where('status', 'waiting_payout')->count();
+        $waitingConfirmationCount = (int) DevPayout::where('status', 'waiting_confirmation')->count();
         $unpaidBalance = max(0, $totalEarned - $totalCommitted);
 
         // 3. Payout Statistics
-        $payoutSuccessful = (int) DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->count();
-        $payoutPending = (int) DevPayout::where('status', 'waiting_payout')->count();
+        $payoutSuccessful = (int) DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
+        $payoutPending = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
         $payoutFailed = (int) DevPayout::where('status', 'rejected')->count();
 
         // 4. Trend Chart Calculation (Identical to DevPayoutsChartWidget.php)
@@ -84,6 +86,8 @@ class DeveloperFinancialController extends Controller
                     'pending_payout' => $pendingPayout,
                     'today_earned' => $unpaidBalance, // Saldo Siap Cair
                     'unpaid_payout_count' => $unpaidPayoutCount,
+                    'waiting_payout_count' => $waitingPayoutCount,
+                    'waiting_confirmation_count' => $waitingConfirmationCount,
                 ],
                 'payout_statistics' => [
                     'successful' => $payoutSuccessful,

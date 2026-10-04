@@ -38,11 +38,11 @@ class DevPayoutsPage extends Page
     public function refreshBalances(): void
     {
         $this->devTotalEarned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
-        $this->devTotalPaid = (float) DevPayout::whereIn('status', ['waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $this->devTotalPaid = (float) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
         $devTotalCommitted = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
-        $this->unpaidPayoutCount = DevPayout::where('status', 'waiting_payout')->count();
-        $this->unpaidPayoutTotal = (float) DevPayout::where('status', 'waiting_payout')->sum('amount');
+        $this->unpaidPayoutCount = DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+        $this->unpaidPayoutTotal = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
     }
 
     #[On('payout-created')]
