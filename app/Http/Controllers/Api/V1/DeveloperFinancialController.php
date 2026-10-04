@@ -246,7 +246,7 @@ class DeveloperFinancialController extends Controller
     }
 
     /**
-     * Get paginated dev payout batches and records.
+     * Get paginated dev payout batches and records with filtering and aggregates.
      */
     public function payouts(Request $request): JsonResponse
     {
@@ -261,13 +261,148 @@ class DeveloperFinancialController extends Controller
 
         $perPage = min(50, max(10, (int) $request->query('per_page', 20)));
 
-        $payouts = DevPayout::query()
-            ->latest()
-            ->paginate($perPage);
+        $query = DevPayout::query();
+
+        // 1. Status filter
+        $status = $request->query('status');
+        if ($status && $status !== 'all') {
+            if ($status === 'completed' || $status === 'confirmed') {
+                $query->whereIn('status', ['confirmed', 'completed']);
+            } elseif ($status === 'pending') {
+                $query->whereNotIn('status', ['confirmed', 'completed']);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        // 2. Period filter
+        $period = $request->query('period', 'all');
+        $now = Carbon::now();
+        if ($period === 'today') {
+            $startDate = $now->copy()->startOfDay();
+            $endDate = $now->copy()->endOfDay();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } elseif ($period === '7d') {
+            $startDate = $now->copy()->subDays(6)->startOfDay();
+            $query->where('created_at', '>=', $startDate);
+        } elseif ($period === '30d') {
+            $startDate = $now->copy()->subDays(29)->startOfDay();
+            $query->where('created_at', '>=', $startDate);
+        } elseif ($period === 'month') {
+            $startDate = $now->copy()->startOfMonth();
+            $endDate = $now->copy()->endOfMonth();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } elseif ($period === 'prev_month') {
+            $startDate = $now->copy()->subMonthNoOverflow()->startOfMonth();
+            $endDate = $now->copy()->subMonthNoOverflow()->endOfMonth();
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        } elseif ($period === 'year') {
+            $targetYear = (int) $request->query('year', $now->year);
+            $query->whereYear('created_at', $targetYear);
+        } elseif ($period === 'month_year') {
+            $targetYear = (int) $request->query('year', $now->year);
+            $targetMonth = (int) $request->query('month', $now->month);
+            $query->whereYear('created_at', $targetYear)->whereMonth('created_at', $targetMonth);
+        }
+
+        // 3. Search filter
+        $search = trim((string) $request->query('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('payout_no', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhere('amount', 'like', "%{$search}%");
+            });
+        }
+
+        // 4. Calculate aggregates for this filter
+        $completedSum = (int) (clone $query)->whereIn('status', ['confirmed', 'completed'])->sum('amount');
+        $pendingSum = (int) (clone $query)->whereNotIn('status', ['confirmed', 'completed'])->sum('amount');
+        $completedCount = (int) (clone $query)->whereIn('status', ['confirmed', 'completed'])->count();
+        $totalCount = (int) (clone $query)->count();
+
+        $payouts = $query->latest('id')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'data' => $payouts,
+            'summary' => [
+                'total_completed_amount' => $completedSum,
+                'total_pending_amount' => $pendingSum,
+                'completed_count' => $completedCount,
+                'total_payouts' => $totalCount,
+            ],
+        ]);
+    }
+
+    /**
+     * Confirm payout receipt by developer.
+     */
+    public function confirmPayout(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->hasRole('ryu_dev')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak.',
+            ], 403);
+        }
+
+        $payout = DevPayout::find($id);
+        if (!$payout) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data payout tidak ditemukan.',
+            ], 404);
+        }
+
+        $payout->update(['status' => 'confirmed']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Payout {$payout->payout_no} telah berhasil Anda konfirmasi sebagai dana masuk.",
+            'data' => $payout,
+        ]);
+    }
+
+    /**
+     * Reject payout / report issue by developer.
+     */
+    public function rejectPayout(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user || !$user->hasRole('ryu_dev')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak.',
+            ], 403);
+        }
+
+        $reason = trim((string) $request->input('rejection_reason', ''));
+        if ($reason === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Alasan penolakan / masalah wajib diisi.',
+            ], 422);
+        }
+
+        $payout = DevPayout::find($id);
+        if (!$payout) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data payout tidak ditemukan.',
+            ], 404);
+        }
+
+        $payout->update([
+            'status' => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Payout {$payout->payout_no} ditandai sebagai belum diterima / ditolak.",
+            'data' => $payout,
         ]);
     }
 }

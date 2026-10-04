@@ -24,6 +24,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/dashboard', [DeveloperFinancialController::class, 'dashboard']);
             Route::get('/transactions', [DeveloperFinancialController::class, 'transactions']);
             Route::get('/payouts', [DeveloperFinancialController::class, 'payouts']);
+            Route::post('/payouts/{id}/confirm', [DeveloperFinancialController::class, 'confirmPayout']);
+            Route::post('/payouts/{id}/reject', [DeveloperFinancialController::class, 'rejectPayout']);
         });
     });
 });
