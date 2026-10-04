@@ -71,7 +71,21 @@ class DeveloperFinancialController extends Controller
             ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
             ->map(fn($group) => (float) $group->sum('amount'));
 
+        $todayKey = $now->format('Y-m-d');
+        $hasConfirmedPayoutToday = $payouts->has($todayKey) && $payouts->get($todayKey) > 0;
+
         foreach ($period as $date) {
+            // Jangan plot tanggal masa depan
+            if ($date->isFuture()) {
+                continue;
+            }
+
+            // Jika hari ini belum ada payout yang statusnya confirmed/completed,
+            // jangan tampilkan titik hari ini agar grafik tidak anjlok ke 0
+            if ($date->isToday() && !$hasConfirmedPayoutToday) {
+                continue;
+            }
+
             $key = $date->format('Y-m-d');
             $labels[] = $date->translatedFormat('d M');
             $values[] = (float) ($payouts->get($key) ?? 0);
