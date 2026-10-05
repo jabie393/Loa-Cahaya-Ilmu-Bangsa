@@ -57,9 +57,22 @@ class DevPayoutsChartWidget extends ChartWidget
         $labels = [];
         $data = [];
 
+        $todayStart = $now->copy()->startOfDay();
+        $todayEnd = $now->copy()->endOfDay();
+        $hasConfirmedPayoutToday = DevPayout::query()
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
+            ->where('amount', '>', 0)
+            ->exists();
+
         if ($activeFilter === '7d') {
-            $startDate = $now->copy()->subDays(6)->startOfDay();
-            $endDate = $now->copy()->endOfDay();
+            if ($hasConfirmedPayoutToday) {
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+            } else {
+                $startDate = $now->copy()->subDays(7)->startOfDay();
+                $endDate = $now->copy()->subDays(1)->endOfDay();
+            }
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
@@ -68,12 +81,9 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
-            $todayKey = $now->format('Y-m-d');
-            $hasConfirmedPayoutToday = $payouts->has($todayKey) && $payouts->get($todayKey) > 0;
-
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
-                if ($date->isFuture() || ($date->isToday() && !$hasConfirmedPayoutToday)) {
+                if ($date->isFuture()) {
                     continue;
                 }
                 $key = $date->format('Y-m-d');
@@ -81,8 +91,13 @@ class DevPayoutsChartWidget extends ChartWidget
                 $data[] = (float) ($payouts->get($key) ?? 0);
             }
         } elseif ($activeFilter === '30d') {
-            $startDate = $now->copy()->subDays(29)->startOfDay();
-            $endDate = $now->copy()->endOfDay();
+            if ($hasConfirmedPayoutToday) {
+                $startDate = $now->copy()->subDays(29)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+            } else {
+                $startDate = $now->copy()->subDays(30)->startOfDay();
+                $endDate = $now->copy()->subDays(1)->endOfDay();
+            }
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
@@ -91,12 +106,9 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
-            $todayKey = $now->format('Y-m-d');
-            $hasConfirmedPayoutToday = $payouts->has($todayKey) && $payouts->get($todayKey) > 0;
-
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
-                if ($date->isFuture() || ($date->isToday() && !$hasConfirmedPayoutToday)) {
+                if ($date->isFuture()) {
                     continue;
                 }
                 $key = $date->format('Y-m-d');
@@ -105,7 +117,10 @@ class DevPayoutsChartWidget extends ChartWidget
             }
         } elseif ($activeFilter === 'month') {
             $startDate = $now->copy()->startOfMonth()->startOfDay();
-            $endDate = $now->copy()->endOfMonth()->endOfDay();
+            $endDate = $hasConfirmedPayoutToday ? $now->copy()->endOfDay() : $now->copy()->subDays(1)->endOfDay();
+            if ($endDate < $startDate) {
+                $endDate = $now->copy()->endOfDay();
+            }
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
@@ -114,16 +129,13 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
-            $todayKey = $now->format('Y-m-d');
-            $hasConfirmedPayoutToday = $payouts->has($todayKey) && $payouts->get($todayKey) > 0;
-
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             foreach ($period as $date) {
-                if ($date->isFuture() || ($date->isToday() && !$hasConfirmedPayoutToday)) {
+                if ($date->isFuture()) {
                     continue;
                 }
                 $key = $date->format('Y-m-d');
-                $labels[] = $date->format('d M');
+                $labels[] = $date->translatedFormat('d M');
                 $data[] = (float) ($payouts->get($key) ?? 0);
             }
         } elseif ($activeFilter === 'year') {
@@ -140,7 +152,7 @@ class DevPayoutsChartWidget extends ChartWidget
             for ($m = 1; $m <= 12; $m++) {
                 $monthDate = Carbon::create($now->year, $m, 1);
                 $key = $monthDate->format('Y-m');
-                $labels[] = $monthDate->translatedFormat('M Y');
+                $labels[] = $monthDate->translatedFormat('M');
                 $data[] = (float) ($payouts->get($key) ?? 0);
             }
         } else {

@@ -45,50 +45,80 @@ class DeveloperFinancialController extends Controller
         $payoutFailed = (int) DevPayout::where('status', 'rejected')->count();
 
         // 4. Trend Chart Calculation (Identical to DevPayoutsChartWidget.php)
-        $filter = $request->query('period', '30d');
+        $filter = $request->query('period', '7d');
         $now = Carbon::now();
         $labels = [];
         $values = [];
 
-        if ($filter === '7d') {
-            $startDate = $now->copy()->subDays(6)->startOfDay();
-            $endDate = $now->copy()->endOfDay();
-            $period = CarbonPeriod::create($startDate, '1 day', $endDate);
-        } elseif ($filter === 'month') {
-            $startDate = $now->copy()->startOfMonth()->startOfDay();
-            $endDate = $now->copy()->endOfMonth()->endOfDay();
-            $period = CarbonPeriod::create($startDate, '1 day', $endDate);
-        } else { // default '30d'
-            $startDate = $now->copy()->subDays(29)->startOfDay();
-            $endDate = $now->copy()->endOfDay();
-            $period = CarbonPeriod::create($startDate, '1 day', $endDate);
-        }
-
-        $payouts = DevPayout::query()
+        $todayStart = $now->copy()->startOfDay();
+        $todayEnd = $now->copy()->endOfDay();
+        $hasConfirmedPayoutToday = DevPayout::query()
             ->whereIn('status', ['confirmed', 'completed'])
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->get(['amount', 'created_at'])
-            ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
-            ->map(fn($group) => (float) $group->sum('amount'));
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
+            ->where('amount', '>', 0)
+            ->exists();
 
-        $todayKey = $now->format('Y-m-d');
-        $hasConfirmedPayoutToday = $payouts->has($todayKey) && $payouts->get($todayKey) > 0;
+        if ($filter === 'year') {
+            $startDate = $now->copy()->startOfYear()->startOfDay();
+            $endDate = $now->copy()->endOfYear()->endOfDay();
 
-        foreach ($period as $date) {
-            // Jangan plot tanggal masa depan
-            if ($date->isFuture()) {
-                continue;
+            $payouts = DevPayout::query()
+                ->whereIn('status', ['confirmed', 'completed'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get(['amount', 'created_at'])
+                ->groupBy(fn($item) => $item->created_at->format('Y-m'))
+                ->map(fn($group) => (float) $group->sum('amount'));
+
+            for ($m = 1; $m <= 12; $m++) {
+                $monthDate = Carbon::create($now->year, $m, 1);
+                $key = $monthDate->format('Y-m');
+                $labels[] = $monthDate->translatedFormat('M');
+                $values[] = (float) ($payouts->get($key) ?? 0);
+            }
+        } else {
+            if ($filter === '7d') {
+                if ($hasConfirmedPayoutToday) {
+                    $startDate = $now->copy()->subDays(6)->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                } else {
+                    $startDate = $now->copy()->subDays(7)->startOfDay();
+                    $endDate = $now->copy()->subDays(1)->endOfDay();
+                }
+                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+            } elseif ($filter === 'month') {
+                $startDate = $now->copy()->startOfMonth()->startOfDay();
+                $endDate = $hasConfirmedPayoutToday ? $now->copy()->endOfDay() : $now->copy()->subDays(1)->endOfDay();
+                if ($endDate < $startDate) {
+                    $endDate = $now->copy()->endOfDay();
+                }
+                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
+            } else { // default '30d'
+                if ($hasConfirmedPayoutToday) {
+                    $startDate = $now->copy()->subDays(29)->startOfDay();
+                    $endDate = $now->copy()->endOfDay();
+                } else {
+                    $startDate = $now->copy()->subDays(30)->startOfDay();
+                    $endDate = $now->copy()->subDays(1)->endOfDay();
+                }
+                $period = CarbonPeriod::create($startDate, '1 day', $endDate);
             }
 
-            // Jika hari ini belum ada payout yang statusnya confirmed/completed,
-            // jangan tampilkan titik hari ini agar grafik tidak anjlok ke 0
-            if ($date->isToday() && !$hasConfirmedPayoutToday) {
-                continue;
-            }
+            $payouts = DevPayout::query()
+                ->whereIn('status', ['confirmed', 'completed'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get(['amount', 'created_at'])
+                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->map(fn($group) => (float) $group->sum('amount'));
 
-            $key = $date->format('Y-m-d');
-            $labels[] = $date->translatedFormat('d M');
-            $values[] = (float) ($payouts->get($key) ?? 0);
+            foreach ($period as $date) {
+                if ($date->isFuture()) {
+                    continue;
+                }
+
+                $key = $date->format('Y-m-d');
+                $labels[] = $date->translatedFormat('d M');
+                $values[] = (float) ($payouts->get($key) ?? 0);
+            }
         }
 
         return response()->json([
