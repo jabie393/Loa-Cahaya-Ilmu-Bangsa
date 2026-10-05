@@ -149,10 +149,15 @@ class DevPayoutsChartWidget extends ChartWidget
                 ->groupBy(fn($item) => $item->created_at->format('Y-m'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
+            $monthNames = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+                5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu',
+                9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+            ];
             for ($m = 1; $m <= 12; $m++) {
                 $monthDate = Carbon::create($now->year, $m, 1);
                 $key = $monthDate->format('Y-m');
-                $labels[] = $monthDate->translatedFormat('M');
+                $labels[] = $monthNames[$m];
                 $data[] = (float) ($payouts->get($key) ?? 0);
             }
         } else {
