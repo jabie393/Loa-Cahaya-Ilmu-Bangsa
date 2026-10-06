@@ -17,12 +17,12 @@ $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 use App\Events\DevFinancialUpdated;
 use App\Models\DevPayout;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-$options = getopt('', ['cleanup', 'ping', 'id::', 'amount::']);
+$options = getopt('', ['cleanup', 'ping', 'id::', 'amount::', 'status::']);
 $id = isset($options['id']) ? (int) $options['id'] : 99999;
 $amount = isset($options['amount']) ? (float) $options['amount'] : 50000;
+$status = isset($options['status']) ? (string) $options['status'] : 'waiting_payout';
 $isCleanup = isset($options['cleanup']);
 $isPing = isset($options['ping']);
 
@@ -38,11 +38,11 @@ if ($isPing) {
     try {
         broadcast(new DevFinancialUpdated(
             userId: 0,
-            action: 'test_ping',
+            action: 'payout_updated',
             payoutId: $id,
-            message: "Ping realtime test pada " . date('Y-m-d H:i:s')
+            message: "Ping realtime test payout pada " . date('Y-m-d H:i:s')
         ));
-        echo "✅ Sinyal ping berhasil dikirim ke Reverb WebSocket!\n";
+        echo "✅ Sinyal ping payout berhasil dikirim ke Reverb WebSocket!\n";
     } catch (\Throwable $e) {
         echo "❌ Gagal kirim broadcast: " . $e->getMessage() . "\n";
     }
@@ -74,7 +74,7 @@ if ($isCleanup) {
         echo "⚠️  Catatan reset auto-increment: " . $e->getMessage() . "\n";
     }
 
-    echo "Mengirim sinyal broadcast pembersihan agar aplikasi update...\n";
+    echo "Mengirim sinyal broadcast pembersihan ke Reverb (Channel: dev-financial)...\n";
     try {
         broadcast(new DevFinancialUpdated(
             userId: 0,
@@ -100,27 +100,24 @@ if ($existing) {
     $existing->delete();
 }
 
-$devUser = User::whereHas('roles', fn($q) => $q->where('name', 'ryu_dev'))->first() ?? User::first();
-$userId = $devUser?->id ?? 1;
 $payoutNo = 'PO-TEST-' . $id;
 
 echo "Menyimpan ke database (Tabel: dev_payouts):\n";
 echo "- ID        : {$id}\n";
 echo "- Payout No : {$payoutNo}\n";
-echo "- User ID   : {$userId}\n";
 echo "- Nominal   : Rp " . number_format($amount, 0, ',', '.') . "\n";
-echo "- Status    : waiting_payout\n";
+echo "- Status    : {$status}\n";
 
 try {
     DevPayout::forceCreate([
         'id' => $id,
         'payout_no' => $payoutNo,
-        'user_id' => $userId,
+        'user_id' => null,
         'amount' => $amount,
         'bank_name' => 'BCA (TEST REALTIME)',
         'account_no' => '9999999999',
         'notes' => 'Testing realtime broadcast Reverb production',
-        'status' => 'waiting_payout',
+        'status' => $status,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
@@ -130,17 +127,18 @@ try {
     exit(1);
 }
 
-echo "Mengirim sinyal broadcast ke Reverb WebSocket...\n";
+// Gunakan userId: 0 agar persis seperti transaksi (broadcast ke channel publik dev-financial)
+echo "Mengirim sinyal broadcast ke Reverb WebSocket (Channel: dev-financial)...\n";
 try {
     broadcast(new DevFinancialUpdated(
-        userId: $userId,
-        action: 'payout_created',
+        userId: 0,
+        action: 'payout_updated',
         payoutId: $id,
-        message: "TEST REALTIME: Payout dummy #{$payoutNo} dibuat"
+        message: "TEST REALTIME: Payout dummy #{$payoutNo} status: {$status}"
     ));
     echo "🚀 Sinyal broadcast BERHASIL terkirim!\n\n";
     echo "📱 CEK APLIKASI (floafinwatch):\n";
-    echo "1. Buka aplikasi di halaman Payout atau Dashboard.\n";
+    echo "1. Buka aplikasi di halaman Payout (pastikan filter chip di 'Semua' atau 'Pending') atau Dashboard.\n";
     echo "2. Item Payout #{$payoutNo} (Rp " . number_format($amount, 0, ',', '.') . ") akan langsung muncul otomatis di layar.\n\n";
     echo "🧹 CARA HAPUS SETELAH SELESAI TESTING:\n";
     echo "Jalankan perintah:\n";
