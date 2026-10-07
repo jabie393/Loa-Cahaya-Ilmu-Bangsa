@@ -18,8 +18,8 @@ use App\Models\PlagiarismCheck;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'is_member'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'is_member', 'pin'])]
+#[Hidden(['password', 'remember_token', 'pin'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */

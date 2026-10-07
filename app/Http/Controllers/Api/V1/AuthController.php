@@ -49,6 +49,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $roles,
+                'has_pin' => !empty($user->pin),
             ],
         ]);
     }
@@ -74,7 +75,60 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray(),
+                'has_pin' => !empty($user->pin),
             ],
+        ]);
+    }
+
+    /**
+     * Verify user PIN.
+     */
+    public function verifyPin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'pin' => 'required|digits:6',
+        ]);
+
+        $user = $request->user();
+
+        if (empty($user->pin)) {
+            return response()->json([
+                'success' => false,
+                'has_pin' => false,
+                'message' => 'Akun Anda belum memiliki PIN.',
+            ], 400);
+        }
+
+        if (!Hash::check($validated['pin'], $user->pin)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PIN salah, coba lagi',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PIN benar',
+        ]);
+    }
+
+    /**
+     * Set or update user PIN.
+     */
+    public function setPin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'pin' => 'required|digits:6',
+            'pin_confirmation' => 'required|digits:6|same:pin',
+        ]);
+
+        $user = $request->user();
+        $user->pin = Hash::make($validated['pin']);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PIN berhasil disimpan.',
         ]);
     }
 

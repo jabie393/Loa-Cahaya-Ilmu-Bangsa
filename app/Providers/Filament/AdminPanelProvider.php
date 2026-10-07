@@ -20,7 +20,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Enums\UserMenuPosition;
-use Filament\Auth\Pages\EditProfile;
+use App\Filament\Pages\Auth\EditProfile;
 use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\View\PanelsRenderHook;

@@ -18,6 +18,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('api.token')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::post('/auth/verify-pin', [AuthController::class, 'verifyPin']);
+        Route::post('/auth/set-pin', [AuthController::class, 'setPin']);
 
         // Developer Financial Endpoints (Role: ryu_dev)
         Route::prefix('developer')->group(function () {
