@@ -130,19 +130,50 @@
     }
 
     /* 5. Only when actually processing a submitted form, show the loading indicator cleanly */
-    button.fi-processing .fi-loading-indicator,
-    .fi-btn.fi-processing .fi-loading-indicator,
-    .fi-modal-window button.fi-processing .fi-loading-indicator,
-    .fi-modal-footer .fi-btn.fi-processing .fi-loading-indicator {
+    button.fi-processing .fi-loading-indicator:first-of-type,
+    .fi-btn.fi-processing .fi-loading-indicator:first-of-type,
+    .fi-modal-window button.fi-processing .fi-loading-indicator:first-of-type,
+    .fi-modal-footer .fi-btn.fi-processing .fi-loading-indicator:first-of-type {
         display: inline-block !important;
         visibility: visible !important;
         opacity: 0.8 !important;
         cursor: wait !important;
     }
+
+    /* Suppress duplicate loading indicators in the same button */
+    button .fi-loading-indicator ~ .fi-loading-indicator,
+    .fi-btn .fi-loading-indicator ~ .fi-loading-indicator {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin,
+    svg.animate-spin {
+        animation: spin 1s linear infinite !important;
+    }
 </style>
 <script>
     (function () {
         const stripWireLoadingFromNonLivewireActions = () => {
+            // Deduplicate multiple loading indicators inside the same button
+            document.querySelectorAll('button, .fi-btn').forEach(btn => {
+                const spinners = btn.querySelectorAll('.fi-loading-indicator');
+                if (spinners.length > 1) {
+                    for (let i = 1; i < spinners.length; i++) {
+                        spinners[i].remove();
+                    }
+                }
+            });
+
             // Strip wire:loading attributes from non-processing buttons
             document.querySelectorAll('button:not(.fi-processing), .fi-btn:not(.fi-processing), .fi-icon-btn:not(.fi-processing)').forEach(button => {
                 if (button.hasAttribute('wire:loading.attr') && !button.hasAttribute('wire:target')) {

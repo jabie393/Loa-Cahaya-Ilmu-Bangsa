@@ -367,12 +367,179 @@ button:not(.fi-processing) > .fi-icon:not(.fi-loading-indicator),
 }
 
 /* 5. Only when actually processing a submitted form, show the loading indicator cleanly */
-button.fi-processing .fi-loading-indicator,
-.fi-btn.fi-processing .fi-loading-indicator,
-.fi-modal-window button.fi-processing .fi-loading-indicator,
-.fi-modal-footer .fi-btn.fi-processing .fi-loading-indicator {
+button.fi-processing .fi-loading-indicator:first-of-type,
+.fi-btn.fi-processing .fi-loading-indicator:first-of-type,
+.fi-modal-window button.fi-processing .fi-loading-indicator:first-of-type,
+.fi-modal-footer .fi-btn.fi-processing .fi-loading-indicator:first-of-type {
     display: inline-block !important;
     visibility: visible !important;
     opacity: 0.8 !important;
     cursor: wait !important;
+}
+
+/* Hide duplicate / secondary loading indicators so only 1 spinner is ever visible */
+button .fi-loading-indicator ~ .fi-loading-indicator,
+.fi-btn .fi-loading-indicator ~ .fi-loading-indicator,
+.fi-loading-indicator + .fi-loading-indicator {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+
+/* ==========================================================================
+   Profile Avatar Centering & Cropper Modal Styling
+   ========================================================================== */
+
+/* Center Avatar Field & "Profile Photo" Label */
+.avatar-profile-wrapper,
+.avatar-profile-wrapper.fi-fo-field {
+    grid-column: 1 / -1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.avatar-profile-wrapper .fi-fo-field-label-col,
+.avatar-profile-wrapper .fi-fo-field-label-ctn,
+.avatar-profile-wrapper .fi-fo-field-label,
+.avatar-profile-wrapper label {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin: 0 auto 0.5rem auto !important;
+}
+
+.avatar-profile-wrapper .fi-fo-field-label-content {
+    display: inline-block !important;
+    text-align: center !important;
+    margin: 0 auto !important;
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+}
+
+.avatar-profile-wrapper .fi-fo-field-content-col,
+.avatar-profile-wrapper .fi-fo-field-content-ctn,
+.avatar-profile-wrapper .fi-fo-field-content {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+
+.avatar-profile-wrapper .fi-fo-file-upload,
+.avatar-profile-wrapper .fi-fo-file-upload-avatar,
+.avatar-profile-wrapper .filepond--root {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Enlarge avatar circle slightly (from default 8rem / 128px to 10rem / 160px) */
+.avatar-profile-wrapper .fi-fo-file-upload-avatar .fi-fo-file-upload-input-ctn,
+.avatar-profile-wrapper .fi-fo-file-upload-input-ctn,
+.avatar-profile-wrapper .filepond--root,
+.avatar-profile-wrapper .filepond--root[data-style-panel-layout='compact circle'] {
+    width: 10rem !important;
+    height: 10rem !important;
+}
+
+
+/* Modal Outside Click & Overlay */
+.fi-fo-file-upload-editor {
+    cursor: pointer !important;
+}
+
+.fi-fo-file-upload-editor-window {
+    cursor: default !important;
+}
+
+.fi-fo-file-upload-editor-overlay {
+    cursor: pointer !important;
+}
+
+/* File Upload Editor Save Button - System Blue */
+.fi-fo-file-upload-editor-control-panel-save-action,
+.fi-fo-file-upload-editor-control-panel-footer button.fi-fo-file-upload-editor-control-panel-save-action {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    font-weight: 500 !important;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out !important;
+}
+
+.fi-fo-file-upload-editor-control-panel-save-action:hover,
+.fi-fo-file-upload-editor-control-panel-footer button.fi-fo-file-upload-editor-control-panel-save-action:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}
+
+/* Avatar Drop Label Styling - Prevent overlapping text */
+.fi-fo-file-upload-avatar .filepond--drop-label,
+.avatar-profile-wrapper .filepond--drop-label {
+    min-height: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.25rem !important;
+}
+
+.fi-fo-file-upload-avatar .filepond--drop-label label,
+.avatar-profile-wrapper .filepond--drop-label label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: auto !important;
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
+    max-width: 90% !important;
+    cursor: pointer !important;
+    white-space: normal !important;
+}
+
+.fi-fo-file-upload-avatar .filepond--label-action,
+.avatar-profile-wrapper .filepond--label-action {
+    display: inline-block !important;
+    font-weight: 500 !important;
+    color: inherit !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+}
+
+.fi-fo-file-upload-avatar .filepond--label-action:hover,
+.avatar-profile-wrapper .filepond--label-action:hover {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+/* ==========================================================================
+   Spin Animation Utility
+   ========================================================================== */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin,
+svg.animate-spin {
+    animation: spin 1s linear infinite !important;
 }

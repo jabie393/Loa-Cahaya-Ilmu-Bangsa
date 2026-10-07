@@ -307,7 +307,15 @@ class GeminiReviewService implements AiReviewContract
                     }
                 }
 
-                if ($heuristicIsValid && (empty($cleanedAuthors) || count($heuristicAuthors) > count($cleanedAuthors))) {
+                // Heuristic fallback: Only override if Gemini returned empty authors,
+                // or in extreme cases where Gemini truncated a massive author list (e.g. Gemini returned >= 15 authors but heuristic found even more valid authors).
+                // Never override normal Gemini detections (1-10 authors) because LLM semantic understanding is far superior to regex string heuristics.
+                $shouldUseHeuristic = $heuristicIsValid && (
+                    empty($cleanedAuthors) || 
+                    (count($cleanedAuthors) >= 15 && count($heuristicAuthors) > count($cleanedAuthors))
+                );
+
+                if ($shouldUseHeuristic) {
                     $geminiAffilMap = [];
                     foreach ($cleanedAuthors as $ga) {
                         $lower = strtolower(trim($ga['name'] ?? ''));
@@ -369,9 +377,9 @@ class GeminiReviewService implements AiReviewContract
     {
         $text = str_replace(["\r\n", "\r"], "\n", $text);
 
-        // Limit to first section up to Abstrak / Abstract / ملخص
+        // Limit to first section up to Abstrak / Abstract / Pendahuluan / Introduction / ملخص
         $target = $text;
-        if (preg_match('/\b(abstrak|abstract)\b|ملخص|المستخلص/iu', $text, $m, PREG_OFFSET_CAPTURE)) {
+        if (preg_match('/\b(abstrak|abstract|pendahuluan|introduction)\b|ملخص|المستخلص/iu', $text, $m, PREG_OFFSET_CAPTURE)) {
             $target = substr($text, 0, $m[0][1]);
         }
 
@@ -402,12 +410,11 @@ class GeminiReviewService implements AiReviewContract
         }
 
         $affilPatterns = [
-            '/jurusan/i', '/fakultas/i', '/universitas/i', '/prodi/i', '/program studi/i',
-            '/institut/i', '/sekolah tinggi/i', '/politeknik/i', '/akademi/i',
-            '/uin/i', '/iain/i', '/stain/i', '/pesantren/i', '/ma\'?had/i',
-            '/department/i', '/faculty/i', '/university/i', '/institute/i', '/college/i',
-            '/school of/i', '/center for/i', '/laboratory/i',
-            '/جامعة/u', '/كلية/u', '/قسم/u', '/معهد/u',
+            '/\b(stba|stmik|stie|stikes|stis|stt|stkip|akbid|akper|poltek|poltekes|poltekkes|polman|polban|polmed)\b/i',
+            '/\b(jurusan|fakultas|universitas|prodi|program studi|institut|sekolah tinggi|politeknik|akademi|uin|iain|stain|pesantren|ma\'?had)\b/i',
+            '/\b(department|faculty|university|institute|college|school of|center for|laboratory)\b/i',
+            '/\b(sastra|bahasa|pendidikan|informatika|manajemen|akuntansi|hukum|kedokteran)\b/i',
+            '/جامعة|كلية|قسم|معهد/u',
             '/e-?mail/i', '/@/'
         ];
 
@@ -515,6 +522,11 @@ class GeminiReviewService implements AiReviewContract
 
             // 3. Cannot contain academic title stop words / prepositions
             if (preg_match('/\b(of|at|the|for|using|with|from|between|toward|towards|berbasis|terhadap|berdasarkan|menggunakan)\b/iu', $name)) {
+                continue;
+            }
+
+            // 4. Cannot contain institution or department keywords (e.g. "Stba Jia", "Sastra Inggris", "Fakultas Hukum")
+            if (preg_match('/\b(stba|stmik|stie|stikes|stis|stt|stkip|akbid|akper|poltek|poltekes|poltekkes|universitas|institut|fakultas|jurusan|prodi|program studi|department|faculty|university|institute|college|school of)\b/iu', $name)) {
                 continue;
             }
 

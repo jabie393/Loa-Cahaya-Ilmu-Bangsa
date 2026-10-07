@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -50,6 +51,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'roles' => $roles,
                 'has_pin' => !empty($user->pin),
+                'avatar_url' => $user->avatar_url ? Storage::disk('public')->url($user->avatar_url) : null,
             ],
         ]);
     }
@@ -76,6 +78,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray(),
                 'has_pin' => !empty($user->pin),
+                'avatar_url' => $user->avatar_url ? Storage::disk('public')->url($user->avatar_url) : null,
             ],
         ]);
     }

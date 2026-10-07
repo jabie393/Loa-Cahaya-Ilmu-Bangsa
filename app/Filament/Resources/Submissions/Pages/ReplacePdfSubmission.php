@@ -63,6 +63,7 @@ class ReplacePdfSubmission extends Page implements HasForms
                     ->directory('temp_replace_pdf')
                     ->preserveFilenames()
                     ->required()
+                    ->uploadingMessage('Uploading file...')
                     ->helperText('Format PDF saja. Pastikan naskah sesuai dengan template jurnal yang ditentukan dan jumlah penulis sama dengan naskah awal.'),
             ])
             ->statePath('data');

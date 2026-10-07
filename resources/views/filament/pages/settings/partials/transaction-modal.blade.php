@@ -10,10 +10,14 @@
     };
 
     $payerUser = $record->user ?? $record->submission?->user;
+    if ($payerUser) {
+        $payerUser->refresh();
+    }
     $payerName = $payerUser?->name ?: ($record->payer_name ?: 'Author');
     $payerEmail = $payerUser?->email ?: ($record->payer_email ?: '-');
+    $payerAvatar = $payerUser?->getFilamentAvatarUrl();
 
-    // Initials for avatar circle (e.g. "TU" for "Test User")
+    // Initials for avatar circle fallback (e.g. "TU" for "Test User")
     $words = preg_split('/\s+/', trim($payerName));
     $initials = '';
     foreach (array_slice($words, 0, 2) as $w) {
@@ -262,9 +266,13 @@
                 </div>
 
                 <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
-                        {{ $initials }}
-                    </div>
+                    @if(!empty($payerAvatar))
+                        <img src="{{ $payerAvatar }}" alt="{{ $payerName }}" class="w-8 h-8 rounded-full object-cover shrink-0 border border-gray-200 dark:border-gray-700 shadow-xs">
+                    @else
+                        <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
+                            {{ $initials }}
+                        </div>
+                    @endif
                     <div class="min-w-0 flex-1">
                         <div class="font-bold text-gray-900 dark:text-white text-xs truncate">
                             {{ $payerName }}
