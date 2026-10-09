@@ -66,9 +66,10 @@ class FirebaseNotificationService
 
         $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
-        // Pastikan action sync_widgets selalu terlampir agar widget homescreen otomatis refresh
+        // Pastikan action sync_widgets dan route tujuan selalu terlampir
         $dataPayload = array_merge([
             'action' => 'sync_widgets',
+            'route' => '/dev/payouts',
             'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
         ], array_map('strval', $dataPayload));
 
@@ -84,8 +85,11 @@ class FirebaseNotificationService
                     'priority' => 'HIGH',
                     'notification' => [
                         'channel_id' => 'floafinwatch_channel',
+                        'icon' => 'ic_notification',
+                        'color' => '#0284C7',
                         'sound' => 'default',
                         'default_vibrate_timings' => true,
+                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
                     ],
                 ],
             ],
