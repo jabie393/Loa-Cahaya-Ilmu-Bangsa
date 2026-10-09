@@ -135,6 +135,19 @@ class EditProfile extends BaseEditProfile
         $this->data['pinConfirmation'] = null;
         $this->data['currentPassword'] = null;
 
+        $user = $this->getUser();
+        if ($user) {
+            try {
+                broadcast(new \App\Events\DevFinancialUpdated(
+                    userId: $user->id,
+                    action: 'profile_updated',
+                    message: 'Profil dan foto akun telah diperbarui.'
+                ));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to broadcast EditProfile update: ' . $e->getMessage());
+            }
+        }
+
         $this->redirect(static::getUrl(), navigate: false);
     }
 }

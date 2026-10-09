@@ -55,6 +55,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         static::created(function (User $user) {
             $user->assignRole('panel_user');
         });
+
+        static::updated(function (User $user) {
+            if ($user->wasChanged(['avatar_url', 'name', 'email', 'pin'])) {
+                try {
+                    broadcast(new \App\Events\DevFinancialUpdated(
+                        userId: $user->id,
+                        action: 'profile_updated',
+                        message: 'Profil telah diperbarui.'
+                    ));
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to broadcast profile update: ' . $e->getMessage());
+                }
+            }
+        });
     }
 
     public function submissions(): HasMany

@@ -51,7 +51,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'roles' => $roles,
                 'has_pin' => !empty($user->pin),
-                'avatar_url' => $user->avatar_url ? Storage::disk('public')->url($user->avatar_url) : null,
+                'avatar_url' => $this->formatAvatarUrl($user),
             ],
         ]);
     }
@@ -78,9 +78,25 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'roles' => $user->roles->pluck('name')->toArray(),
                 'has_pin' => !empty($user->pin),
-                'avatar_url' => $user->avatar_url ? Storage::disk('public')->url($user->avatar_url) : null,
+                'avatar_url' => $this->formatAvatarUrl($user),
             ],
         ]);
+    }
+
+    /**
+     * Format user avatar URL reliably.
+     */
+    private function formatAvatarUrl(?User $user): ?string
+    {
+        if (!$user || empty($user->avatar_url)) {
+            return null;
+        }
+
+        if (str_starts_with($user->avatar_url, 'http://') || str_starts_with($user->avatar_url, 'https://')) {
+            return $user->avatar_url;
+        }
+
+        return url('storage/' . ltrim($user->avatar_url, '/'));
     }
 
     /**
