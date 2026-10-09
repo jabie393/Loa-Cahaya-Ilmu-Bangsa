@@ -456,4 +456,32 @@ class DeveloperFinancialController extends Controller
             'data' => $payout,
         ]);
     }
+
+    /**
+     * Store or update device FCM token for push notifications and widget synchronization.
+     */
+    public function updateFcmToken(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.',
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $user->update([
+            'fcm_token' => $validated['fcm_token'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'FCM Token berhasil diperbarui.',
+        ]);
+    }
 }

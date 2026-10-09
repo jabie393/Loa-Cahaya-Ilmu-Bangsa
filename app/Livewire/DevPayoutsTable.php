@@ -218,6 +218,17 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             Auth::user()?->name ?? 'Admin'
                         );
 
+                        // Kirim push notification ke Flutter app & trigger background sync widget
+                        try {
+                            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
+                                '💰 Payout Siap Dikonfirmasi!',
+                                "Dana Rp " . number_format($record->amount, 0, ',', '.') . " telah ditransfer via QRIS ({$record->payout_no}). Silakan konfirmasi di F Loafinwatch.",
+                                ['action' => 'sync_widgets']
+                            );
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('[FCM] Error notifying developer: ' . $e->getMessage());
+                        }
+
                         $this->dispatch('payout-created');
 
                         Notification::make()

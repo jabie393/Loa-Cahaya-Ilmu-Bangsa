@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'is_member', 'pin', 'avatar_url'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'is_member', 'pin', 'avatar_url', 'fcm_token'])]
 #[Hidden(['password', 'remember_token', 'pin'])]
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {

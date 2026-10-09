@@ -28,6 +28,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/payouts', [DeveloperFinancialController::class, 'payouts']);
             Route::post('/payouts/{id}/confirm', [DeveloperFinancialController::class, 'confirmPayout']);
             Route::post('/payouts/{id}/reject', [DeveloperFinancialController::class, 'rejectPayout']);
+            Route::post('/fcm-token', [DeveloperFinancialController::class, 'updateFcmToken']);
         });
     });
 });

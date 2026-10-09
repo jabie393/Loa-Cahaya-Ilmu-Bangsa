@@ -41,6 +41,43 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## 🔔 Konfigurasi Push Notifikasi & Real-time Widget (F Loafinwatch)
+
+Backend ini terintegrasi dengan Firebase Cloud Messaging (**FCM HTTP v1**) untuk mengirim push notifikasi dan memperbarui Android Homescreen Widget di aplikasi pendamping **F Loafinwatch** secara otomatis saat pembayaran payout QRIS developer selesai diproses.
+
+### 1. Download Service Account Key
+1. Buka [Firebase Console](https://console.firebase.google.com/) &rarr; pilih project **floafinwatch**.
+2. Masuk ke **Project Settings (ikon Gear)** &rarr; tab **Service accounts**.
+3. Klik tombol **Generate new private key** &rarr; simpan file JSON yang terunduh.
+4. Rename dan tempatkan file tersebut di:
+   ```
+   storage/app/firebase/service-account.json
+   ```
+   *(File ini sudah otomatis diabaikan oleh `.gitignore` sehingga aman dan tidak akan terunggah ke repositori Git)*.
+
+### 2. Migrasi Database
+Pastikan kolom `fcm_token` sudah terdaftar pada tabel `users`:
+```bash
+php artisan migrate
+```
+
+### 3. Menguji Pengiriman Notifikasi & Sinkronisasi Widget
+Setelah developer login di aplikasi F Loafinwatch (sehingga token FCM terdaftar di database), Anda dapat menguji pengiriman push notifikasi dengan perintah Artisan berikut:
+```bash
+# Kirim notifikasi uji coba
+php artisan dev:test-fcm
+
+# Kustomisasi judul dan pesan
+php artisan dev:test-fcm --title="Judul Notif" --body="Isi pesan notifikasi"
+```
+
+### 4. Trigger Otomatis di Sistem
+Notifikasi dan sinkronisasi widget dikirim secara otomatis oleh sistem saat:
+* Admin mengonfirmasi pembayaran payout developer via QRIS pada halaman Filament **Dev Payouts** (`App\Livewire\DevPayoutsTable`).
+* Service `FirebaseNotificationService::notifyDeveloper()` akan mengirim sinyal `action: 'sync_widgets'` ke perangkat developer untuk mengupdate status saldo dan grafik tren widget di homescreen HP secara realtime di background.
+
+---
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
