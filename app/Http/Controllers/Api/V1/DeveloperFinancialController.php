@@ -250,10 +250,8 @@ class DeveloperFinancialController extends Controller
             } elseif ($type === 'doi_addon' || $type === 'doi') {
                 $query->where(function ($q) {
                     $q->whereIn('type', ['doi_addon', 'doi'])
-                      ->orWhere('type', 'like', '%doi%')
                       ->orWhereHas('items', function ($iq) {
-                          $iq->where('item_name', 'like', '%doi%')
-                            ->orWhere('item_type', 'like', '%doi%');
+                          $iq->where('item_type', 'doi_addon');
                       });
                 });
             } elseif ($type === 'bulk_submission' || $type === 'bulk') {
