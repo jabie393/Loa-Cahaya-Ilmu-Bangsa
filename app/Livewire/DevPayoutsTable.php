@@ -55,7 +55,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
             ->query(DevPayout::query()->latest())
             ->headerActions([
                 Action::make('create_payout')
-                    ->visible(fn () => (bool) Auth::user()?->hasRole('super_admin'))
+                    ->visible(fn() => (bool) Auth::user()?->hasRole('super_admin'))
                     ->label('Buat Payout Manual (Draf)')
                     ->icon('heroicon-o-banknotes')
                     ->color('info')
@@ -167,14 +167,14 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'waiting_payout' => 'warning',
                         'waiting_confirmation' => 'info',
                         'confirmed', 'completed' => 'success',
                         'rejected' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
                         'waiting_payout' => 'Menunggu Payout',
                         'waiting_confirmation' => 'Menunggu Konfirmasi',
                         'confirmed' => 'Dikonfirmasi',
@@ -190,15 +190,16 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                     ->button()
                     ->color('primary')
                     ->size('sm')
-                    ->visible(fn (DevPayout $record): bool => 
-                        $record->status === 'waiting_payout' && (bool) Auth::user()?->hasRole('super_admin')
+                    ->visible(
+                        fn(DevPayout $record): bool =>
+                            $record->status === 'waiting_payout' && (bool) Auth::user()?->hasRole('super_admin')
                     )
-                    ->modalHeading(fn (DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
+                    ->modalHeading(fn(DevPayout $record): string => "Bayar Payout {$record->payout_no} via QRIS")
                     ->modalDescription('Scan kode QRIS di bawah ini dengan Mobile Banking atau E-Wallet untuk menyelesaikan transfer.')
                     ->modalSubmitActionLabel('Sudah Bayar via QRIS')
-                    ->modalSubmitAction(fn (\Filament\Actions\Action $action) => $action->color('primary'))
+                    ->modalSubmitAction(fn(\Filament\Actions\Action $action) => $action->color('primary'))
                     ->modalWidth(Width::ThreeExtraLarge)
-                    ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
+                    ->modalContent(fn(DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
                         'record' => $record,
                     ]))
                     ->action(function (DevPayout $record) {
@@ -221,7 +222,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         // Kirim push notification ke Flutter app & trigger background sync widget
                         try {
                             app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
-                                '💰 Payout Siap Dikonfirmasi!',
+                                '💸 Payout Siap Dikonfirmasi!',
                                 "Dana Rp " . number_format($record->amount, 0, ',', '.') . " telah ditransfer via QRIS ({$record->payout_no}). Silakan konfirmasi di F Loafinwatch.",
                                 ['action' => 'sync_widgets']
                             );
@@ -243,14 +244,16 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->label('Konfirmasi Diterima')
                         ->icon('heroicon-m-check-circle')
                         ->color('success')
-                        ->visible(fn (DevPayout $record): bool => 
-                            $record->status === 'waiting_confirmation' && (bool) Auth::user()?->hasRole('ryu_dev')
+                        ->visible(
+                            fn(DevPayout $record): bool =>
+                                $record->status === 'waiting_confirmation' && (bool) Auth::user()?->hasRole('ryu_dev')
                         )
                         ->requiresConfirmation()
                         ->modalHeading('Konfirmasi Penerimaan Dana Payout')
                         ->modalWidth(Width::Large)
-                        ->modalDescription(fn (DevPayout $record): string => 
-                            "Apakah Anda yakin telah menerima transfer dana sebesar Rp " . number_format($record->amount, 0, ',', '.') . " ke rekening Anda?"
+                        ->modalDescription(
+                            fn(DevPayout $record): string =>
+                                "Apakah Anda yakin telah menerima transfer dana sebesar Rp " . number_format($record->amount, 0, ',', '.') . " ke rekening Anda?"
                         )
                         ->modalSubmitActionLabel('Ya, Dana Sudah Diterima')
                         ->action(function (DevPayout $record) {
@@ -268,8 +271,9 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->label('Tolak / Belum Masuk')
                         ->icon('heroicon-m-x-circle')
                         ->color('danger')
-                        ->visible(fn (DevPayout $record): bool => 
-                            $record->status === 'waiting_confirmation' && (bool) Auth::user()?->hasRole('ryu_dev')
+                        ->visible(
+                            fn(DevPayout $record): bool =>
+                                $record->status === 'waiting_confirmation' && (bool) Auth::user()?->hasRole('ryu_dev')
                         )
                         ->modalHeading('Laporkan Payout Belum Diterima / Bermasalah')
                         ->modalDescription('Dana akan dikembalikan ke saldo hak developer yang belum dicairkan.')
@@ -302,7 +306,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ->color('gray')
                         ->modalHeading('Kuitansi Pencairan Hak Developer')
                         ->modalWidth(Width::ExtraLarge)
-                        ->modalContent(fn (DevPayout $record) => view('filament.pages.settings.partials.payout-receipt-modal', ['record' => $record]))
+                        ->modalContent(fn(DevPayout $record) => view('filament.pages.settings.partials.payout-receipt-modal', ['record' => $record]))
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Tutup'),
                 ]),

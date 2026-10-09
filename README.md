@@ -62,7 +62,22 @@ php artisan migrate
 ```
 
 ### 3. Menguji Pengiriman Notifikasi & Sinkronisasi Widget
-Setelah developer login di aplikasi F Loafinwatch (sehingga token FCM terdaftar di database), Anda dapat menguji pengiriman push notifikasi dengan perintah Artisan berikut:
+Ada 2 cara untuk menguji integrasi:
+
+#### A. Menggunakan Skrip Simulasi Payout Lengkap (Reverb + FCM + Auto Cleanup)
+Skrip ini akan membuat data dummy payout, mengirim event WebSocket Reverb, memicu push notifikasi FCM, dan dapat dibersihkan (*clean up*) kembali:
+```bash
+# 1. Buat dummy payout & kirim notifikasi FCM + Reverb
+php scripts/test_realtime_payout.php
+
+# Kustomisasi nominal dan ID (opsional)
+php scripts/test_realtime_payout.php --amount=100000 --id=99999
+
+# 2. Bersihkan (Cleanup) data dummy setelah selesai testing
+php scripts/test_realtime_payout.php --cleanup
+```
+
+#### B. Menggunakan Artisan Command (FCM Langsung)
 ```bash
 # Kirim notifikasi uji coba
 php artisan dev:test-fcm
