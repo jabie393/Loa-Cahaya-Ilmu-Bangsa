@@ -77,6 +77,22 @@ class PaymentFulfillmentService
         } catch (\Throwable $e) {
             Log::warning("Reverb broadcast failed for payment #{$payment->id}: " . $e->getMessage());
         }
+
+        try {
+            $fcm = app(\App\Services\FirebaseNotificationService::class);
+            $amountFormatted = number_format($payment->developer_net_share, 0, ',', '.');
+            $fcm->notifyDeveloper(
+                "💰 Transaksi Masuk!",
+                "Hak dev Rp {$amountFormatted} dari Order #{$payment->order_id}",
+                [
+                    'action' => 'sync_widgets',
+                    'payment_id' => (string) $payment->id,
+                    'order_id' => (string) $payment->order_id,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning("FCM notification failed for payment #{$payment->id}: " . $e->getMessage());
+        }
     }
 
     /**

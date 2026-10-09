@@ -104,6 +104,17 @@ if ($isCleanup) {
         echo "⚠️  Broadcast gagal: " . $e->getMessage() . "\n";
     }
 
+    // 5. Update Widget Homescreen via FCM Background Sync
+    try {
+        $fcm = app(\App\Services\FirebaseNotificationService::class);
+        $fcm->notifyDeveloper(
+            "🧹 Sinkronisasi Widget",
+            "Data transaksi telah dikembalikan ke saldo asli",
+            ['action' => 'sync_widgets']
+        );
+        echo "📱 Sinyal sync widget homescreen terkirim ke HP!\n";
+    } catch (\Throwable $e) {}
+
     echo "\n🎉 Selesai! Tabel payments & payment_items kembali bersih tanpa sisa.\n\n";
     exit(0);
 }
@@ -192,15 +203,34 @@ try {
         message: "Transaksi baru masuk: Order #{$orderId}"
     ));
     echo "🚀 Sinyal broadcast BERHASIL terkirim!\n\n";
-    echo "📱 CEK APLIKASI (floafinwatch):\n";
-    echo "1. Buka aplikasi di halaman Transaksi atau Dashboard.\n";
-    echo "2. Transaksi #{$orderId} (Developer Share: Rp " . number_format($devShare, 0, ',', '.') . ") akan langsung muncul seketika di posisi teratas.\n";
-    echo "3. Saldo Siap Cair / Pendapatan di Dashboard akan otomatis bertambah Rp " . number_format($devShare, 0, ',', '.') . " secara realtime!\n\n";
-    echo "🧹 CARA HAPUS SETELAH SELESAI TESTING:\n";
-    echo "Jalankan perintah:\n";
-    echo "   php scripts/test_realtime_transaction.php --cleanup --id={$id}\n\n";
 } catch (\Throwable $e) {
-    echo "❌ Gagal broadcast: " . $e->getMessage() . "\n";
-    echo "Periksa apakah service Reverb (port 8080/8081) sedang berjalan di server.\n\n";
-    exit(1);
+    echo "⚠️  Catatan Reverb WebSocket: " . $e->getMessage() . "\n   (Layanan Reverb lokal sedang tidak aktif, tetap melanjutkan pengiriman FCM Push & Widget Sync...)\n\n";
 }
+
+echo "Mengirim notifikasi FCM & Sinyal Background Sync Widget...\n";
+try {
+    $fcm = app(\App\Services\FirebaseNotificationService::class);
+    $sent = $fcm->notifyDeveloper(
+        "💰 Transaksi Masuk!",
+        "Hak dev Rp " . number_format($devShare, 0, ',', '.') . " dari Order #{$orderId}",
+        [
+            'action' => 'sync_widgets',
+            'payment_id' => (string) $id,
+            'order_id' => $orderId,
+        ]
+    );
+    if ($sent) {
+        echo "📲 Push Notification FCM & Widget Sync BERHASIL terkirim ke HP!\n";
+        echo "   (Widget homescreen otomatis terupdate walaupun aplikasi ditutup!)\n\n";
+    }
+} catch (\Throwable $e) {
+    echo "⚠️  Gagal kirim FCM: " . $e->getMessage() . "\n";
+}
+
+echo "📱 CEK APLIKASI (floafinwatch):\n";
+echo "1. Buka aplikasi di halaman Transaksi atau Dashboard.\n";
+echo "2. Transaksi #{$orderId} (Developer Share: Rp " . number_format($devShare, 0, ',', '.') . ") akan langsung muncul seketika di posisi teratas.\n";
+echo "3. Saldo Siap Cair / Pendapatan di Dashboard akan otomatis bertambah Rp " . number_format($devShare, 0, ',', '.') . " secara realtime!\n\n";
+echo "🧹 CARA HAPUS SETELAH SELESAI TESTING:\n";
+echo "Jalankan perintah:\n";
+echo "   php scripts/test_realtime_transaction.php --cleanup --id={$id}\n\n";

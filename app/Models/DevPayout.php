@@ -52,6 +52,29 @@ class DevPayout extends Model
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning("Reverb broadcast failed for DevPayout #{$payout->id}: " . $e->getMessage());
             }
+
+            try {
+                $fcm = app(\App\Services\FirebaseNotificationService::class);
+                $statusText = match ($payout->status) {
+                    'waiting_confirmation' => 'Siap dikonfirmasi',
+                    'confirmed', 'completed' => 'Berhasil ditransfer',
+                    'rejected' => 'Ditolak',
+                    default => $payout->status,
+                };
+                $amountFormatted = number_format($payout->amount, 0, ',', '.');
+                $fcm->notifyDeveloper(
+                    "💸 Update Payout #{$payout->payout_no}",
+                    "Payout Rp {$amountFormatted} status: {$statusText}",
+                    [
+                        'action' => 'sync_widgets',
+                        'payout_id' => (string) $payout->id,
+                        'payout_no' => (string) $payout->payout_no,
+                        'status' => (string) $payout->status,
+                    ]
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("FCM notification failed for DevPayout #{$payout->id}: " . $e->getMessage());
+            }
         });
     }
 }

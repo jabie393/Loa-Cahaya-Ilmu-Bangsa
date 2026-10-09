@@ -33,6 +33,13 @@ class FirebaseNotificationService
      */
     public function notifyDeveloper(string $title, string $body, array $dataPayload = []): bool
     {
+        if (empty($dataPayload['payload'])) {
+            $dashboardPayload = $this->getDashboardPayload();
+            if (!empty($dashboardPayload)) {
+                $dataPayload['payload'] = $dashboardPayload;
+            }
+        }
+
         $developers = User::role('ryu_dev')
             ->whereNotNull('fcm_token')
             ->where('fcm_token', '!=', '')
@@ -54,7 +61,69 @@ class FirebaseNotificationService
     }
 
     /**
-     * Kirim notifikasi ke token perangkat tertentu via FCM HTTP v1
+     * Generate fresh DeveloperDashboardData payload JSON for instant widget update without extra HTTP request.
+     */
+    public function getDashboardPayload(): string
+    {
+        try {
+            $totalEarned = (int) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+            $totalTransferred = (int) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
+            $totalCommitted = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+
+            $pendingPayout = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
+            $unpaidPayoutCount = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+            $waitingPayoutCount = (int) \App\Models\DevPayout::where('status', 'waiting_payout')->count();
+            $waitingConfirmationCount = (int) \App\Models\DevPayout::where('status', 'waiting_confirmation')->count();
+            $unpaidBalance = max(0, $totalEarned - $totalCommitted);
+
+            $payoutSuccessful = (int) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
+            $payoutPending = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+            $payoutFailed = (int) \App\Models\DevPayout::where('status', 'rejected')->count();
+
+            // 7 Days Chart
+            $labels = [];
+            $values = [];
+            $period = \Carbon\CarbonPeriod::create(now()->subDays(6)->startOfDay(), now()->endOfDay());
+            foreach ($period as $date) {
+                $labels[] = $date->format('d M');
+                $start = $date->copy()->startOfDay();
+                $end = $date->copy()->endOfDay();
+                $amount = (float) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])
+                    ->whereBetween('created_at', [$start, $end])
+                    ->sum('amount');
+                $values[] = $amount;
+            }
+
+            return json_encode([
+                'summary' => [
+                    'total_earned' => $totalEarned,
+                    'total_transferred' => $totalTransferred,
+                    'pending_payout' => $pendingPayout,
+                    'today_earned' => $unpaidBalance,
+                    'unpaid_payout_count' => $unpaidPayoutCount,
+                    'waiting_payout_count' => $waitingPayoutCount,
+                    'waiting_confirmation_count' => $waitingConfirmationCount,
+                ],
+                'payout_statistics' => [
+                    'successful' => $payoutSuccessful,
+                    'pending' => $payoutPending,
+                    'failed' => $payoutFailed,
+                ],
+                'chart' => [
+                    'period' => '7d',
+                    'labels' => $labels,
+                    'values' => $values,
+                ],
+                'last_updated' => now()->toIso8601String(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('[FCM] Error generating dashboard payload: ' . $e->getMessage());
+            return '';
+        }
+    }
+
+    /**
+     * Kirim notifikasi ke token perangkat tertentu via FCM HTTP v1 (High-Priority Data Message)
      */
     public function sendToToken(string $fcmToken, string $title, string $body, array $dataPayload = []): bool
     {
@@ -66,31 +135,23 @@ class FirebaseNotificationService
 
         $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
-        // Pastikan action sync_widgets dan route tujuan selalu terlampir
+        // Pastikan action sync_widgets, title, body, dan route tujuan selalu terlampir dalam data payload
         $dataPayload = array_merge([
             'action' => 'sync_widgets',
             'route' => '/dev/payouts',
             'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+            'title' => $title,
+            'body' => $body,
         ], array_map('strval', $dataPayload));
 
+        // Mengirimkan high-priority data message murni tanpa top-level notification
+        // agar OS Android selalu memanggil onBackgroundMessage handler saat aplikasi mati total
         $payload = [
             'message' => [
                 'token' => $fcmToken,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                ],
                 'data' => $dataPayload,
                 'android' => [
                     'priority' => 'HIGH',
-                    'notification' => [
-                        'channel_id' => 'floafinwatch_channel',
-                        'icon' => 'ic_notification',
-                        'color' => '#0284C7',
-                        'sound' => 'default',
-                        'default_vibrate_timings' => true,
-                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                    ],
                 ],
             ],
         ];
@@ -101,7 +162,7 @@ class FirebaseNotificationService
                 ->post($url, $payload);
 
             if ($response->successful()) {
-                Log::info("[FCM] Notifikasi berhasil dikirim ke token: " . substr($fcmToken, 0, 15) . '...');
+                Log::info("[FCM] Notifikasi data berhasil dikirim ke token: " . substr($fcmToken, 0, 15) . '...');
                 return true;
             } else {
                 Log::error("[FCM] Gagal mengirim pesan: " . $response->body());
