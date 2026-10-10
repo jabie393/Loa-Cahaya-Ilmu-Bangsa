@@ -63,6 +63,7 @@ class DevPayout extends Model
                         '💸 Antrean Payout Terbit!',
                         "Dana Rp {$amountFormatted} telah masuk antrean payout ({$payout->payout_no}). Menunggu pembayaran oleh admin.",
                         [
+                            'type' => 'payout',
                             'action' => 'sync_widgets',
                             'payout_id' => (string) $payout->id,
                             'payout_no' => (string) $payout->payout_no,

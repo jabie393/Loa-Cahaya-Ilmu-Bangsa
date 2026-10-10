@@ -224,7 +224,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
                                 '💸 Payout Siap Dikonfirmasi!',
                                 "Dana Rp " . number_format($record->amount, 0, ',', '.') . " telah ditransfer via QRIS ({$record->payout_no}). Silakan konfirmasi di F Loafinwatch.",
-                                ['action' => 'sync_widgets']
+                                ['action' => 'sync_widgets', 'type' => 'payout']
                             );
                         } catch (\Throwable $e) {
                             \Illuminate\Support\Facades\Log::error('[FCM] Error notifying developer: ' . $e->getMessage());
@@ -281,7 +281,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
                                 '🔄 Payout Telah Dibayar Ulang!',
                                 "Dana Rp " . number_format($record->amount, 0, ',', '.') . " telah ditransfer ulang via QRIS ({$record->payout_no}). Silakan periksa rekening dan konfirmasi di F Loafinwatch.",
-                                ['action' => 'sync_widgets']
+                                ['action' => 'sync_widgets', 'type' => 'payout']
                             );
                         } catch (\Throwable $e) {
                             \Illuminate\Support\Facades\Log::error('[FCM] Error notifying developer on retry: ' . $e->getMessage());
