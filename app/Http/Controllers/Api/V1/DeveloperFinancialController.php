@@ -54,7 +54,13 @@ class DeveloperFinancialController extends Controller
         $todayEnd = $now->copy()->endOfDay();
         $hasConfirmedPayoutToday = DevPayout::query()
             ->whereIn('status', ['confirmed', 'completed'])
-            ->whereBetween('created_at', [$todayStart, $todayEnd])
+            ->where(function ($q) use ($todayStart, $todayEnd) {
+                $q->whereBetween('updated_at', [$todayStart, $todayEnd])
+                  ->orWhere(function ($q2) use ($todayStart, $todayEnd) {
+                      $q2->whereNull('updated_at')
+                         ->whereBetween('created_at', [$todayStart, $todayEnd]);
+                  });
+            })
             ->where('amount', '>', 0)
             ->exists();
 
@@ -64,9 +70,15 @@ class DeveloperFinancialController extends Controller
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             $monthNames = [
@@ -110,9 +122,15 @@ class DeveloperFinancialController extends Controller
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             foreach ($period as $date) {

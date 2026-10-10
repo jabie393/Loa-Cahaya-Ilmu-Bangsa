@@ -76,9 +76,15 @@ class DevPayoutsChartWidget extends ChartWidget
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
@@ -101,9 +107,15 @@ class DevPayoutsChartWidget extends ChartWidget
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
@@ -124,9 +136,15 @@ class DevPayoutsChartWidget extends ChartWidget
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             $period = CarbonPeriod::create($startDate, '1 day', $endDate);
@@ -144,9 +162,15 @@ class DevPayoutsChartWidget extends ChartWidget
 
             $payouts = DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->get(['amount', 'created_at'])
-                ->groupBy(fn($item) => $item->created_at->format('Y-m'))
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             $monthNames = [

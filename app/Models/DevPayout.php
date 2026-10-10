@@ -55,23 +55,39 @@ class DevPayout extends Model
 
             try {
                 $fcm = app(\App\Services\FirebaseNotificationService::class);
-                $statusText = match ($payout->status) {
-                    'waiting_confirmation' => 'Siap dikonfirmasi',
-                    'confirmed', 'completed' => 'Berhasil ditransfer',
-                    'rejected' => 'Ditolak',
-                    default => $payout->status,
-                };
                 $amountFormatted = number_format($payout->amount, 0, ',', '.');
-                $fcm->notifyDeveloper(
-                    "💸 Update Payout #{$payout->payout_no}",
-                    "Payout Rp {$amountFormatted} status: {$statusText}",
-                    [
-                        'action' => 'sync_widgets',
-                        'payout_id' => (string) $payout->id,
-                        'payout_no' => (string) $payout->payout_no,
-                        'status' => (string) $payout->status,
-                    ]
-                );
+
+                // 1. Gambar 1: Jika status waiting_payout (antrean payout baru dibuat), gunakan gaya penulisan elegan & informatif
+                if ($payout->status === 'waiting_payout') {
+                    $fcm->notifyDeveloper(
+                        '💸 Antrean Payout Terbit!',
+                        "Dana Rp {$amountFormatted} telah masuk antrean payout ({$payout->payout_no}). Menunggu pembayaran oleh admin.",
+                        [
+                            'action' => 'sync_widgets',
+                            'payout_id' => (string) $payout->id,
+                            'payout_no' => (string) $payout->payout_no,
+                            'status' => (string) $payout->status,
+                        ]
+                    );
+                }
+                // 2. Gambar 2: Jika waiting_confirmation, notifikasi sudah dikirim langsung oleh DevPayoutsTable ("Payout Siap Dikonfirmasi!"),
+                //    sehingga di sini TIDAK dikirim lagi agar tidak duplikat.
+                //
+                // 3. Gambar 3: Jika confirmed, completed, atau rejected, tidak perlu push notification sistem HP
+                //    (cukup notifikasi approve/reject di dalam aplikasi yang sudah ada).
+                //    Kirim silent payload kosong agar widget di background tetap sinkron tanpa menampilkan banner pop-up di HP.
+                elseif (in_array($payout->status, ['confirmed', 'completed', 'rejected'])) {
+                    $fcm->notifyDeveloper(
+                        '',
+                        '',
+                        [
+                            'action' => 'sync_widgets',
+                            'payout_id' => (string) $payout->id,
+                            'payout_no' => (string) $payout->payout_no,
+                            'status' => (string) $payout->status,
+                        ]
+                    );
+                }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning("FCM notification failed for DevPayout #{$payout->id}: " . $e->getMessage());
             }
