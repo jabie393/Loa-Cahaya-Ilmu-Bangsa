@@ -156,6 +156,11 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user) {
+            $user->update(['fcm_token' => null]);
+        }
+
         $header = $request->header('Authorization');
 
         if ($header && str_starts_with($header, 'Bearer ')) {

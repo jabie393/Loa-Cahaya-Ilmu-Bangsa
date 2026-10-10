@@ -489,17 +489,28 @@ class DeveloperFinancialController extends Controller
             ], 401);
         }
 
+        // Pastikan hanya role ryu_dev yang dapat mendaftarkan notifikasi
+        if (!$user->hasRole('ryu_dev')) {
+            $user->update(['fcm_token' => null]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Fitur notifikasi hanya untuk role developer (ryu_dev).',
+            ], 403);
+        }
+
         $validated = $request->validate([
-            'fcm_token' => 'required|string',
+            'fcm_token' => 'nullable|string',
         ]);
 
+        $tokenVal = !empty($validated['fcm_token']) ? $validated['fcm_token'] : null;
+
         $user->update([
-            'fcm_token' => $validated['fcm_token'],
+            'fcm_token' => $tokenVal,
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'FCM Token berhasil diperbarui.',
+            'message' => $tokenVal ? 'FCM Token berhasil diperbarui.' : 'FCM Token berhasil dihapus.',
         ]);
     }
 }
