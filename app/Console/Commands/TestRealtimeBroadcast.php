@@ -233,6 +233,16 @@ class TestRealtimeBroadcast extends Command
             $this->warn("⚠️  Broadcast pembersihan gagal: " . $e->getMessage());
         }
 
+        // Silent background sync widget ke HP developer
+        try {
+            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper('', '', [
+                'type' => 'transaction',
+                'action' => 'sync_widgets',
+                'payment_id' => (string) $id,
+            ]);
+            $this->info("📱 Sinyal silent sync widget homescreen terkirim ke HP!");
+        } catch (\Throwable $e) {}
+
         $this->newLine();
         $this->info("🎉 Selesai! Server production Anda bersih kembali.");
         return self::SUCCESS;
@@ -349,6 +359,16 @@ class TestRealtimeBroadcast extends Command
         } catch (\Throwable $e) {
             $this->warn("⚠️  Broadcast pembersihan gagal: " . $e->getMessage());
         }
+
+        // Silent background sync widget ke HP developer
+        try {
+            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper('', '', [
+                'type' => 'payout',
+                'action' => 'sync_widgets',
+                'payout_id' => (string) $id,
+            ]);
+            $this->info("📱 Sinyal silent sync widget homescreen terkirim ke HP!");
+        } catch (\Throwable $e) {}
 
         $this->newLine();
         $this->info("🎉 Selesai! Server production Anda bersih kembali.");
