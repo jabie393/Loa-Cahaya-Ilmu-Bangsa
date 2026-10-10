@@ -57,7 +57,7 @@ class DevPayout extends Model
                 $fcm = app(\App\Services\FirebaseNotificationService::class);
                 $amountFormatted = number_format($payout->amount, 0, ',', '.');
 
-                // 1. Gambar 1: Jika status waiting_payout (antrean payout baru dibuat), gunakan gaya penulisan elegan & informatif
+                // Jika status waiting_payout (antrean payout baru dibuat), gunakan gaya penulisan elegan & informatif
                 if ($payout->status === 'waiting_payout') {
                     $fcm->notifyDeveloper(
                         '💸 Antrean Payout Terbit!',
@@ -71,10 +71,10 @@ class DevPayout extends Model
                         ]
                     );
                 }
-                // 2. Gambar 2: Jika waiting_confirmation, notifikasi sudah dikirim langsung oleh DevPayoutsTable ("Payout Siap Dikonfirmasi!"),
+                // Jika waiting_confirmation, notifikasi sudah dikirim langsung oleh DevPayoutsTable ("Payout Siap Dikonfirmasi!"),
                 //    sehingga di sini TIDAK dikirim lagi agar tidak duplikat.
-                //
-                // 3. Gambar 3: Jika confirmed, completed, atau rejected, tidak perlu push notification sistem HP
+
+                // Jika confirmed, completed, atau rejected, tidak perlu push notification sistem HP
                 //    (cukup notifikasi approve/reject di dalam aplikasi yang sudah ada).
                 //    Kirim silent payload kosong agar widget di background tetap sinkron tanpa menampilkan banner pop-up di HP.
                 elseif (in_array($payout->status, ['confirmed', 'completed', 'rejected'])) {
