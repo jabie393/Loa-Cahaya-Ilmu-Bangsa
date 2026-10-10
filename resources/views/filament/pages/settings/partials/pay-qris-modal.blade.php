@@ -6,6 +6,32 @@
 @endphp
 
 <div class="py-1">
+    @if (!empty($record->rejection_reason))
+        <div class="mb-4 p-4 rounded-2xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200/90 dark:border-rose-800/70 shadow-xs">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-xl shrink-0 mt-0.5">
+                    <x-filament::icon icon="heroicon-o-exclamation-triangle" class="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div class="space-y-1.5 text-left flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+                            Alasan Penolakan Sebelumnya
+                        </span>
+                        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-200/80 dark:bg-rose-900 text-rose-800 dark:text-rose-200 border border-rose-300/60 dark:border-rose-800">
+                            Perlu Bayar Ulang
+                        </span>
+                    </div>
+                    <div class="text-xs sm:text-sm font-semibold text-rose-900 dark:text-rose-100 leading-relaxed bg-white/80 dark:bg-gray-900/70 p-3 rounded-xl border border-rose-200/70 dark:border-rose-900/50 break-words">
+                        "{{ $record->rejection_reason }}"
+                    </div>
+                    <p class="text-[11px] text-rose-600/90 dark:text-rose-400/90 leading-tight">
+                        Silakan scan kode QRIS di bawah untuk melakukan transfer ulang dana ke Developer. Setelah konfirmasi, status akan diperbarui ke <strong>Menunggu Konfirmasi</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($qrSvg && $qrPng)
         <div x-data="{
             isDownloading: false,

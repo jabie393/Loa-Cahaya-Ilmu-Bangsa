@@ -68,7 +68,7 @@ class FirebaseNotificationService
         try {
             $totalEarned = (int) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
             $totalTransferred = (int) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
-            $totalCommitted = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+            $totalCommitted = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
 
             $pendingPayout = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
             $unpaidPayoutCount = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();

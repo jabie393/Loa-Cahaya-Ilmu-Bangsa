@@ -31,7 +31,7 @@ class GenerateDailyDevPayout extends Command
         $this->info('Checking remaining developer share balance...');
 
         $earned = (float) Payment::where('payment_status', 'paid')->sum('developer_net_share');
-        $locked = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $locked = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
         $available = max(0, $earned - $locked);
 
         if ($available <= 0) {

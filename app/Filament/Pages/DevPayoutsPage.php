@@ -29,6 +29,8 @@ class DevPayoutsPage extends Page
     public int $waitingConfirmationCount = 0;
     public float $waitingPayoutAmount = 0;
     public float $waitingConfirmationAmount = 0;
+    public int $rejectedPayoutCount = 0;
+    public float $rejectedPayoutAmount = 0;
 
     public static function canAccess(): bool
     {
@@ -56,16 +58,18 @@ class DevPayoutsPage extends Page
         $this->devTotalPaid = (float) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
         $this->devPaidCount = DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
 
-        $devTotalCommitted = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $devTotalCommitted = (float) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
         $this->devUnpaidBalance = max(0, $this->devTotalEarned - $devTotalCommitted);
 
         $this->waitingPayoutCount = DevPayout::where('status', 'waiting_payout')->count();
         $this->waitingConfirmationCount = DevPayout::where('status', 'waiting_confirmation')->count();
         $this->waitingPayoutAmount = (float) DevPayout::where('status', 'waiting_payout')->sum('amount');
         $this->waitingConfirmationAmount = (float) DevPayout::where('status', 'waiting_confirmation')->sum('amount');
+        $this->rejectedPayoutCount = DevPayout::where('status', 'rejected')->count();
+        $this->rejectedPayoutAmount = (float) DevPayout::where('status', 'rejected')->sum('amount');
 
-        $this->unpaidPayoutCount = $this->waitingPayoutCount + $this->waitingConfirmationCount;
-        $this->unpaidPayoutTotal = $this->waitingPayoutAmount + $this->waitingConfirmationAmount;
+        $this->unpaidPayoutCount = $this->waitingPayoutCount + $this->waitingConfirmationCount + $this->rejectedPayoutCount;
+        $this->unpaidPayoutTotal = $this->waitingPayoutAmount + $this->waitingConfirmationAmount + $this->rejectedPayoutAmount;
     }
 
     #[On('payout-created')]

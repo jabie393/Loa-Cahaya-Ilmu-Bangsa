@@ -67,18 +67,77 @@
                     <div class="font-mono text-2xl font-black tracking-tight text-amber-700 dark:text-amber-300">
                         Rp {{ number_format($unpaidPayoutTotal, 0, ',', '.') }}
                     </div>
-                    <span class="mt-1.5 block text-xs leading-relaxed text-amber-600/80 dark:text-amber-400/80 truncate"
-                        title="{{ $waitingPayoutCount }} antrean bayar (Rp {{ number_format($waitingPayoutAmount, 0, ',', '.') }}) · {{ $waitingConfirmationCount }} konfirmasi dev (Rp {{ number_format($waitingConfirmationAmount, 0, ',', '.') }})">
-                        @if ($waitingConfirmationCount > 0 && $waitingPayoutCount > 0)
-                            {{ $waitingPayoutCount }} antrean bayar · {{ $waitingConfirmationCount }} konfirmasi dev
-                        @elseif ($waitingPayoutCount > 0)
-                            {{ $waitingPayoutCount }} tagihan siap dibayar
-                        @elseif ($waitingConfirmationCount > 0)
-                            {{ $waitingConfirmationCount }} tagihan menunggu konfirmasi
-                        @else
-                            Semua payout telah tuntas
-                        @endif
-                    </span>
+                    @php
+                        $hasActivePayouts = ($waitingPayoutCount > 0 || $waitingConfirmationCount > 0 || $rejectedPayoutCount > 0);
+
+                        $tooltipParts = [];
+                        if ($waitingPayoutCount > 0) {
+                            $tooltipParts[] = "{$waitingPayoutCount} antrean bayar (Rp " . number_format($waitingPayoutAmount, 0, ',', '.') . ")";
+                        }
+                        if ($waitingConfirmationCount > 0) {
+                            $tooltipParts[] = "{$waitingConfirmationCount} konfirmasi dev (Rp " . number_format($waitingConfirmationAmount, 0, ',', '.') . ")";
+                        }
+                        if ($rejectedPayoutCount > 0) {
+                            $tooltipParts[] = "{$rejectedPayoutCount} perlu bayar ulang (Rp " . number_format($rejectedPayoutAmount, 0, ',', '.') . ")";
+                        }
+                        $tooltipText = !empty($tooltipParts) ? implode(' · ', $tooltipParts) : 'Semua payout telah tuntas';
+                    @endphp
+
+                    @if ($hasActivePayouts)
+                        <div class="mt-2 relative w-full overflow-hidden select-none py-0.5" 
+                             style="mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);"
+                             title="{{ $tooltipText }}">
+                            <div class="marquee-ticker flex items-center w-max cursor-default">
+                                <div class="flex items-center gap-2 pr-2 shrink-0">
+                                    @if ($waitingPayoutCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber-200/90 bg-amber-50 px-2 py-0.5 text-[10.5px] font-bold text-amber-800 dark:border-amber-800/80 dark:bg-amber-950/70 dark:text-amber-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                            {{ $waitingPayoutCount }} Menunggu Payout
+                                        </span>
+                                    @endif
+                                    @if ($waitingConfirmationCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-200/90 bg-sky-50 px-2 py-0.5 text-[10.5px] font-bold text-sky-800 dark:border-sky-800/80 dark:bg-sky-950/70 dark:text-sky-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                                            {{ $waitingConfirmationCount }} Menunggu Konfirmasi
+                                        </span>
+                                    @endif
+                                    @if ($rejectedPayoutCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-rose-200/90 bg-rose-50 px-2 py-0.5 text-[10.5px] font-bold text-rose-800 dark:border-rose-800/80 dark:bg-rose-950/70 dark:text-rose-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                            {{ $rejectedPayoutCount }} Perlu Bayar Ulang
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2 pr-2 shrink-0" aria-hidden="true">
+                                    @if ($waitingPayoutCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-amber-200/90 bg-amber-50 px-2 py-0.5 text-[10.5px] font-bold text-amber-800 dark:border-amber-800/80 dark:bg-amber-950/70 dark:text-amber-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                            {{ $waitingPayoutCount }} Menunggu Payout
+                                        </span>
+                                    @endif
+                                    @if ($waitingConfirmationCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-sky-200/90 bg-sky-50 px-2 py-0.5 text-[10.5px] font-bold text-sky-800 dark:border-sky-800/80 dark:bg-sky-950/70 dark:text-sky-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+                                            {{ $waitingConfirmationCount }} Menunggu Konfirmasi
+                                        </span>
+                                    @endif
+                                    @if ($rejectedPayoutCount > 0)
+                                        <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-rose-200/90 bg-rose-50 px-2 py-0.5 text-[10.5px] font-bold text-rose-800 dark:border-rose-800/80 dark:bg-rose-950/70 dark:text-rose-300 shadow-2xs">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                            {{ $rejectedPayoutCount }} Perlu Bayar Ulang
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mt-2 flex items-center gap-1.5 text-xs text-amber-600/80 dark:text-amber-400/80">
+                            <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200/80 bg-emerald-50 px-2 py-0.5 text-[10.5px] font-bold text-emerald-800 dark:border-emerald-800/80 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                Semua payout telah tuntas
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -118,4 +177,18 @@
             @livewire(\App\Livewire\DevPayoutsTable::class)
         </div>
     </div>
+
+    <style>
+        @keyframes payoutMarqueeScroll {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .marquee-ticker {
+            display: inline-flex;
+            animation: payoutMarqueeScroll 14s linear infinite;
+        }
+        .marquee-ticker:hover {
+            animation-play-state: paused;
+        }
+    </style>
 </x-filament-panels::page>

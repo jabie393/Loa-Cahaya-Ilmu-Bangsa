@@ -71,12 +71,12 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             ->required()
                             ->default(function () {
                                 $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
                                 return max(0, $earned - $locked);
                             })
                             ->helperText(function () {
                                 $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                                $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
                                 $unpaid = max(0, $earned - $locked);
                                 return 'Sisa saldo hak Dev yang belum ditahan/dicairkan: Rp ' . number_format($unpaid, 0, ',', '.');
                             }),
@@ -99,7 +99,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         }
 
                         $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
                         $unpaid = max(0, $earned - $locked);
 
                         if ($amount > $unpaid) {
@@ -210,7 +210,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                         ]);
 
                         $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
                         $remainingBalance = max(0, $earned - $locked);
 
                         app(TelegramService::class)->sendDevPayoutNotification(
@@ -234,6 +234,63 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
 
                         Notification::make()
                             ->title('Pembayaran QRIS Berhasil!')
+                            ->body("Status payout {$record->payout_no} kini 'Menunggu Konfirmasi'. Notifikasi telah dikirim ke Developer.")
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('retry_payout')
+                    ->label('Bayar Ulang')
+                    ->icon('heroicon-m-arrow-path')
+                    ->button()
+                    ->color('danger')
+                    ->size('sm')
+                    ->visible(
+                        fn(DevPayout $record): bool =>
+                            $record->status === 'rejected' && (bool) Auth::user()?->hasRole('super_admin')
+                    )
+                    ->modalHeading(fn(DevPayout $record): string => "Bayar Ulang Payout {$record->payout_no} via QRIS")
+                    ->modalDescription('Periksa alasan penolakan dan scan kode QRIS di bawah ini untuk mentransfer ulang ke Developer.')
+                    ->modalSubmitActionLabel('Sudah Bayar Ulang via QRIS')
+                    ->modalSubmitAction(fn(\Filament\Actions\Action $action) => $action->color('primary'))
+                    ->modalWidth(Width::ThreeExtraLarge)
+                    ->modalContent(fn(DevPayout $record) => view('filament.pages.settings.partials.pay-qris-modal', [
+                        'record' => $record,
+                        'isRepay' => true,
+                    ]))
+                    ->action(function (DevPayout $record) {
+                        $newRefNo = 'QRIS-' . now()->format('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(2)));
+                        $record->update([
+                            'status' => 'waiting_confirmation',
+                            'reference_no' => $newRefNo,
+                            'rejection_reason' => null,
+                        ]);
+
+                        $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
+                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
+                        $remainingBalance = max(0, $earned - $locked);
+
+                        app(TelegramService::class)->sendDevPayoutNotification(
+                            $record,
+                            $remainingBalance,
+                            Auth::user()?->name ?? 'Admin'
+                        );
+
+                        // Kirim push notification ke Flutter app & trigger background sync widget
+                        try {
+                            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
+                                '🔄 Payout Telah Dibayar Ulang!',
+                                "Dana Rp " . number_format($record->amount, 0, ',', '.') . " telah ditransfer ulang via QRIS ({$record->payout_no}). Silakan periksa rekening dan konfirmasi di F Loafinwatch.",
+                                ['action' => 'sync_widgets']
+                            );
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('[FCM] Error notifying developer on retry: ' . $e->getMessage());
+                        }
+
+                        $this->dispatch('payout-created');
+
+                        Notification::make()
+                            ->title('Pembayaran Ulang Berhasil!')
                             ->body("Status payout {$record->payout_no} kini 'Menunggu Konfirmasi'. Notifikasi telah dikirim ke Developer.")
                             ->success()
                             ->send();
@@ -276,7 +333,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                                 $record->status === 'waiting_confirmation' && (bool) Auth::user()?->hasRole('ryu_dev')
                         )
                         ->modalHeading('Laporkan Payout Belum Diterima / Bermasalah')
-                        ->modalDescription('Dana akan dikembalikan ke saldo hak developer yang belum dicairkan.')
+                        ->modalDescription('Dana payout tetap ditahan pada tagihan ini dan Admin akan melakukan pembayaran ulang via QRIS.')
                         ->modalSubmitActionLabel('Kirim Laporan Penolakan')
                         ->modalWidth(Width::Large)
                         ->form([
@@ -295,7 +352,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
 
                             Notification::make()
                                 ->title('Payout Ditolak')
-                                ->body("Payout {$record->payout_no} ditandai sebagai belum diterima. Saldo telah dikembalikan ke hak dev belum cair.")
+                                ->body("Payout {$record->payout_no} ditandai sebagai belum diterima. Dana tetap ditahan untuk proses pembayaran ulang oleh Admin.")
                                 ->warning()
                                 ->send();
                         }),

@@ -31,7 +31,7 @@ class DeveloperFinancialController extends Controller
         // 2. Financial Metrics Calculation (Synchronized with strict developer confirmation lifecycle)
         $totalEarned = (int) Payment::where('payment_status', 'paid')->sum('developer_net_share');
         $totalTransferred = (int) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
-        $totalCommitted = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed'])->sum('amount');
+        $totalCommitted = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
 
         $pendingPayout = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
         $unpaidPayoutCount = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
