@@ -260,6 +260,7 @@ if ($sendFcm) {
             "Hak dev Rp " . number_format($devShare, 0, ',', '.') . " dari Order #{$orderId}",
             [
                 'type' => 'transaction',
+                'route' => '/dev/transactions',
                 'action' => 'sync_widgets',
                 'payment_id' => (string) $id,
                 'order_id' => $orderId,

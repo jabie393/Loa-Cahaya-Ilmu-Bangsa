@@ -47,8 +47,8 @@ $userId = 1;
 
 if (!$isPing) {
     try {
-        $devUser = User::role('ryu_dev')->first() 
-            ?? User::whereHas('roles', fn($q) => $q->where('name', 'ryu_dev'))->first() 
+        $devUser = User::role('ryu_dev')->first()
+            ?? User::whereHas('roles', fn($q) => $q->where('name', 'ryu_dev'))->first()
             ?? User::first();
         $userId = $devUser?->id ?? 1;
     } catch (\Throwable $e) {
@@ -202,7 +202,7 @@ if ($sendFcm) {
         $amountFormatted = number_format($amount, 0, ',', '.');
 
         if ($isRepay) {
-            $title = '🔄 Payout Telah Dibayar Ulang!';
+            $title = '💸 Payout Telah Dibayar Ulang!';
             $body = "Dana Rp {$amountFormatted} telah ditransfer ulang via QRIS ({$payoutNo}). Silakan periksa rekening dan konfirmasi di F Loafinwatch.";
         } elseif ($status === 'waiting_confirmation') {
             $title = '💸 Payout Siap Dikonfirmasi!';
@@ -221,6 +221,7 @@ if ($sendFcm) {
         if ($title !== '') {
             $sent = $fcm->notifyDeveloper($title, $body, [
                 'type' => 'payout',
+                'route' => '/dev/payouts',
                 'action' => 'sync_widgets',
                 'payout_id' => (string) $id,
                 'payout_no' => $payoutNo,

@@ -86,6 +86,7 @@ class PaymentFulfillmentService
                 "Hak dev Rp {$amountFormatted} dari Order #{$payment->order_id}",
                 [
                     'type' => 'transaction',
+                    'route' => '/dev/transactions',
                     'action' => 'sync_widgets',
                     'payment_id' => (string) $payment->id,
                     'order_id' => (string) $payment->order_id,
