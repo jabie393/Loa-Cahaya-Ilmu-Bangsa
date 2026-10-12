@@ -153,14 +153,30 @@ class FirebaseNotificationService
             'body' => $body,
         ], array_map('strval', $dataPayload));
 
-        $payload = [
-            'message' => [
-                'token' => $fcmToken,
-                'data' => $dataPayload,
-                'android' => [
-                    'priority' => 'HIGH',
-                ],
+        $message = [
+            'token' => $fcmToken,
+            'data' => $dataPayload,
+            'android' => [
+                'priority' => 'HIGH',
             ],
+        ];
+
+        if (!empty($title)) {
+            $message['notification'] = [
+                'title' => $title,
+                'body' => $body,
+            ];
+            $message['android']['notification'] = [
+                'channel_id' => 'floafinwatch_v2_channel',
+                'sound' => 'floafinwatch',
+                'notification_priority' => 'PRIORITY_MAX',
+                'icon' => 'ic_notification',
+                'color' => '#0284C7',
+            ];
+        }
+
+        $payload = [
+            'message' => $message,
         ];
 
         try {
