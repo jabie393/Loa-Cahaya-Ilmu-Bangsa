@@ -295,7 +295,19 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             'rejection_reason' => null,
                         ]);
 
-                        // Kirim push notification ke Flutter app & trigger background sync widget
+                        // 1. Broadcast Reverb WebSocket realtime secara eksplisit
+                        try {
+                            broadcast(new \App\Events\DevFinancialUpdated(
+                                userId: (int) $record->user_id,
+                                action: 'payout_updated',
+                                payoutId: (int) $record->id,
+                                message: "Payout #{$record->payout_no} telah dibayar ulang via QRIS."
+                            ));
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('[Reverb] Error on retry payout: ' . $e->getMessage());
+                        }
+
+                        // 2. Kirim push notification ke Flutter app & trigger background sync widget
                         try {
                             app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
                                 '💸 Payout Telah Dibayar Ulang!',
@@ -306,6 +318,7 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                                     'action' => 'sync_widgets',
                                     'payout_id' => (string) $record->id,
                                     'payout_no' => (string) $record->payout_no,
+                                    'status' => 'waiting_confirmation',
                                 ]
                             );
                         } catch (\Throwable $e) {
