@@ -208,11 +208,11 @@ if ($sendFcm) {
             $title = '💸 Payout Siap Dikonfirmasi!';
             $body = "Dana Rp {$amountFormatted} telah ditransfer via QRIS ({$payoutNo}). Silakan konfirmasi di F Loafinwatch.";
         } elseif ($status === 'waiting_payout') {
-            // Untuk waiting_payout, static::saved di DevPayout sudah mengirim notifikasi antrean terbit.
-            // Di sini kita infokan statusnya
-            $title = '';
-            $body = '';
-            echo "ℹ️  Notifikasi 'Antrean Payout Terbit' telah dikirim otomatis oleh model event DevPayout.\n";
+            $title = '💸 Antrean Payout Terbit!';
+            $body = "Dana Rp {$amountFormatted} telah masuk antrean payout manual ({$payoutNo}). Menunggu pembayaran oleh admin.";
+        } elseif ($status === 'rejected') {
+            $title = '⚠️ Payout Ditolak / Perlu Bayar Ulang';
+            $body = "Payout {$payoutNo} sebesar Rp {$amountFormatted} perlu dibayar ulang oleh admin.";
         } else {
             $title = '';
             $body = '';

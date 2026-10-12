@@ -119,9 +119,13 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             $payoutNo = 'PO-DEV-' . now()->format('Ym') . '-' . sprintf('%03d', $payoutCount);
                         }
 
+                        $devUser = \App\Models\User::role('ryu_dev')->first()
+                            ?? \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'ryu_dev'))->first();
+                        $targetUserId = $devUser?->id ?? Auth::id();
+
                         $payout = DevPayout::create([
                             'payout_no' => $payoutNo,
-                            'user_id' => Auth::id(),
+                            'user_id' => $targetUserId,
                             'amount' => $amount,
                             'notes' => $data['notes'] ?? 'Pencairan Hak Developer (Manual)',
                             'status' => 'waiting_payout',
@@ -129,9 +133,39 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
 
                         $this->dispatch('payout-created');
 
+                        // 1. Trigger Reverb WebSocket Broadcast
+                        try {
+                            broadcast(new \App\Events\DevFinancialUpdated(
+                                userId: (int) $payout->user_id,
+                                action: 'payout_created',
+                                payoutId: (int) $payout->id,
+                                message: "Antrean payout #{$payout->payout_no} sebesar Rp " . number_format($amount, 0, ',', '.') . " telah dibuat."
+                            ));
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('[Reverb] Error on manual payout create: ' . $e->getMessage());
+                        }
+
+                        // 2. Trigger FCM Push Notification & Realtime Widget Sync
+                        try {
+                            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
+                                '💸 Antrean Payout Terbit!',
+                                "Dana Rp " . number_format($amount, 0, ',', '.') . " telah masuk antrean payout ({$payout->payout_no}). Menunggu pembayaran oleh admin.",
+                                [
+                                    'type' => 'payout',
+                                    'route' => '/dev/payouts',
+                                    'action' => 'sync_widgets',
+                                    'payout_id' => (string) $payout->id,
+                                    'payout_no' => (string) $payout->payout_no,
+                                    'status' => 'waiting_payout',
+                                ]
+                            );
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::error('[FCM] Error notifying developer on manual payout create: ' . $e->getMessage());
+                        }
+
                         Notification::make()
                             ->title('Draf Payout Dibuat!')
-                            ->body("Payout {$payout->payout_no} sebesar Rp " . number_format($amount, 0, ',', '.') . " berhasil dibuat. Silakan klik 'Bayar via QRIS' pada tabel untuk membayar.")
+                            ->body("Payout {$payout->payout_no} sebesar Rp " . number_format($amount, 0, ',', '.') . " berhasil dibuat. Notifikasi telah dikirim ke developer.")
                             ->success()
                             ->send();
                     }),

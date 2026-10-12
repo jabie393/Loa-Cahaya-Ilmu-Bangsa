@@ -70,15 +70,20 @@ class FirebaseNotificationService
             $totalTransferred = (int) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
             $totalCommitted = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
 
-            $pendingPayout = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
-            $unpaidPayoutCount = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+            $waitingPayoutAmount = (int) \App\Models\DevPayout::where('status', 'waiting_payout')->sum('amount');
+            $waitingConfirmationAmount = (int) \App\Models\DevPayout::where('status', 'waiting_confirmation')->sum('amount');
+            $rejectedPayoutAmount = (int) \App\Models\DevPayout::where('status', 'rejected')->sum('amount');
+            $pendingPayout = $waitingPayoutAmount + $waitingConfirmationAmount + $rejectedPayoutAmount;
+
             $waitingPayoutCount = (int) \App\Models\DevPayout::where('status', 'waiting_payout')->count();
             $waitingConfirmationCount = (int) \App\Models\DevPayout::where('status', 'waiting_confirmation')->count();
+            $rejectedPayoutCount = (int) \App\Models\DevPayout::where('status', 'rejected')->count();
+            $unpaidPayoutCount = $waitingPayoutCount + $waitingConfirmationCount + $rejectedPayoutCount;
             $unpaidBalance = max(0, $totalEarned - $totalCommitted);
 
             $payoutSuccessful = (int) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
-            $payoutPending = (int) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
-            $payoutFailed = (int) \App\Models\DevPayout::where('status', 'rejected')->count();
+            $payoutPending = $unpaidPayoutCount;
+            $payoutFailed = $rejectedPayoutCount;
 
             // 7 Days Chart
             $labels = [];
@@ -103,6 +108,8 @@ class FirebaseNotificationService
                     'unpaid_payout_count' => $unpaidPayoutCount,
                     'waiting_payout_count' => $waitingPayoutCount,
                     'waiting_confirmation_count' => $waitingConfirmationCount,
+                    'rejected_payout_count' => $rejectedPayoutCount,
+                    'rejected_payout_amount' => $rejectedPayoutAmount,
                 ],
                 'payout_statistics' => [
                     'successful' => $payoutSuccessful,

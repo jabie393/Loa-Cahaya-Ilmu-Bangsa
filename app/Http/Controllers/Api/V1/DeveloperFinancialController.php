@@ -33,16 +33,21 @@ class DeveloperFinancialController extends Controller
         $totalTransferred = (int) DevPayout::whereIn('status', ['confirmed', 'completed'])->sum('amount');
         $totalCommitted = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
 
-        $pendingPayout = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->sum('amount');
-        $unpaidPayoutCount = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
+        $waitingPayoutAmount = (int) DevPayout::where('status', 'waiting_payout')->sum('amount');
+        $waitingConfirmationAmount = (int) DevPayout::where('status', 'waiting_confirmation')->sum('amount');
+        $rejectedPayoutAmount = (int) DevPayout::where('status', 'rejected')->sum('amount');
+        $pendingPayout = $waitingPayoutAmount + $waitingConfirmationAmount + $rejectedPayoutAmount;
+
         $waitingPayoutCount = (int) DevPayout::where('status', 'waiting_payout')->count();
         $waitingConfirmationCount = (int) DevPayout::where('status', 'waiting_confirmation')->count();
+        $rejectedPayoutCount = (int) DevPayout::where('status', 'rejected')->count();
+        $unpaidPayoutCount = $waitingPayoutCount + $waitingConfirmationCount + $rejectedPayoutCount;
         $unpaidBalance = max(0, $totalEarned - $totalCommitted);
 
         // 3. Payout Statistics
         $payoutSuccessful = (int) DevPayout::whereIn('status', ['confirmed', 'completed'])->count();
-        $payoutPending = (int) DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation'])->count();
-        $payoutFailed = (int) DevPayout::where('status', 'rejected')->count();
+        $payoutPending = $unpaidPayoutCount;
+        $payoutFailed = $rejectedPayoutCount;
 
         // 4. Trend Chart Calculation (Identical to DevPayoutsChartWidget.php)
         $filter = $request->query('period', '7d');
@@ -155,6 +160,8 @@ class DeveloperFinancialController extends Controller
                     'unpaid_payout_count' => $unpaidPayoutCount,
                     'waiting_payout_count' => $waitingPayoutCount,
                     'waiting_confirmation_count' => $waitingConfirmationCount,
+                    'rejected_payout_count' => $rejectedPayoutCount,
+                    'rejected_payout_amount' => $rejectedPayoutAmount,
                 ],
                 'payout_statistics' => [
                     'successful' => $payoutSuccessful,
