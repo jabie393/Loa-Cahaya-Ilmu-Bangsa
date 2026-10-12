@@ -3,7 +3,6 @@
 namespace App\Livewire;
 
 use App\Models\DevPayout;
-use App\Services\TelegramService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -209,16 +208,6 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             'reference_no' => $refNo,
                         ]);
 
-                        $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
-                        $remainingBalance = max(0, $earned - $locked);
-
-                        app(TelegramService::class)->sendDevPayoutNotification(
-                            $record,
-                            $remainingBalance,
-                            Auth::user()?->name ?? 'Admin'
-                        );
-
                         // Kirim push notification ke Flutter app & trigger background sync widget
                         try {
                             app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
@@ -265,16 +254,6 @@ class DevPayoutsTable extends Component implements HasTable, HasForms, HasAction
                             'reference_no' => $newRefNo,
                             'rejection_reason' => null,
                         ]);
-
-                        $earned = (float) \App\Models\Payment::where('payment_status', 'paid')->sum('developer_net_share');
-                        $locked = (float) \App\Models\DevPayout::whereIn('status', ['waiting_payout', 'waiting_confirmation', 'confirmed', 'completed', 'rejected'])->sum('amount');
-                        $remainingBalance = max(0, $earned - $locked);
-
-                        app(TelegramService::class)->sendDevPayoutNotification(
-                            $record,
-                            $remainingBalance,
-                            Auth::user()?->name ?? 'Admin'
-                        );
 
                         // Kirim push notification ke Flutter app & trigger background sync widget
                         try {
