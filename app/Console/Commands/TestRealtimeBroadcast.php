@@ -159,6 +159,23 @@ class TestRealtimeBroadcast extends Command
             ));
 
             $this->info("🚀 Sinyal broadcast BERHASIL dikirim ke Reverb!");
+
+            // Kirim FCM Push & Widget Sync
+            try {
+                app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper(
+                    "💰 Transaksi Masuk!",
+                    "Hak dev Rp " . number_format($amount, 0, ',', '.') . " dari Order #{$orderId}",
+                    [
+                        'type' => 'transaction',
+                        'route' => '/dev/transactions',
+                        'action' => 'sync_widgets',
+                        'payment_id' => (string) $id,
+                        'order_id' => $orderId,
+                    ]
+                );
+                $this->info("📲 Push Notification FCM & Widget Sync BERHASIL dikirim ke HP!");
+            } catch (\Throwable $e) {}
+
             $this->newLine();
             $this->comment("📱 CEK APLIKASI (floafinwatch):");
             $this->line("1. Buka halaman Riwayat Transaksi atau Dashboard.");
@@ -232,6 +249,16 @@ class TestRealtimeBroadcast extends Command
         } catch (\Throwable $e) {
             $this->warn("⚠️  Broadcast pembersihan gagal: " . $e->getMessage());
         }
+
+        // Silent background sync widget ke HP developer
+        try {
+            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper('', '', [
+                'type' => 'transaction',
+                'action' => 'sync_widgets',
+                'payment_id' => (string) $id,
+            ]);
+            $this->info("📱 Sinyal silent sync widget homescreen terkirim ke HP!");
+        } catch (\Throwable $e) {}
 
         $this->newLine();
         $this->info("🎉 Selesai! Server production Anda bersih kembali.");
@@ -349,6 +376,16 @@ class TestRealtimeBroadcast extends Command
         } catch (\Throwable $e) {
             $this->warn("⚠️  Broadcast pembersihan gagal: " . $e->getMessage());
         }
+
+        // Silent background sync widget ke HP developer
+        try {
+            app(\App\Services\FirebaseNotificationService::class)->notifyDeveloper('', '', [
+                'type' => 'payout',
+                'action' => 'sync_widgets',
+                'payout_id' => (string) $id,
+            ]);
+            $this->info("📱 Sinyal silent sync widget homescreen terkirim ke HP!");
+        } catch (\Throwable $e) {}
 
         $this->newLine();
         $this->info("🎉 Selesai! Server production Anda bersih kembali.");
