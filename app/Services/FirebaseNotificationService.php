@@ -153,34 +153,14 @@ class FirebaseNotificationService
             'body' => $body,
         ], array_map('strval', $dataPayload));
 
-        $message = [
-            'token' => $fcmToken,
-            'data' => $dataPayload,
-            'android' => [
-                'priority' => 'HIGH',
-            ],
-        ];
-
-        // Jika notifikasi memiliki judul (bukan silent sync kosong),
-        // sertakan payload notification resmi FCM agar Google Play Services di OS Android (terutama HyperOS / MIUI)
-        // secara native langsung memunculkan pop-up banner & membunyikan sound kustom pada aplikasi versi RELEASE
-        if (!empty($title)) {
-            $message['notification'] = [
-                'title' => $title,
-                'body' => $body,
-            ];
-            $message['android']['notification'] = [
-                'channel_id' => 'floafinwatch_v2_channel',
-                'sound' => 'floafinwatch',
-                'default_sound' => false,
-                'notification_priority' => 'PRIORITY_MAX',
-                'icon' => 'ic_notification',
-                'color' => '#0284C7',
-            ];
-        }
-
         $payload = [
-            'message' => $message,
+            'message' => [
+                'token' => $fcmToken,
+                'data' => $dataPayload,
+                'android' => [
+                    'priority' => 'HIGH',
+                ],
+            ],
         ];
 
         try {
