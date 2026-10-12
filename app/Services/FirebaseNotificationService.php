@@ -45,14 +45,16 @@ class FirebaseNotificationService
             ->where('fcm_token', '!=', '')
             ->get();
 
-        if ($developers->isEmpty()) {
+        $tokens = $developers->pluck('fcm_token')->unique()->filter()->values();
+
+        if ($tokens->isEmpty()) {
             Log::info('[FCM] Tidak ada developer dengan fcm_token terdaftar.');
             return false;
         }
 
         $success = false;
-        foreach ($developers as $dev) {
-            if ($this->sendToToken($dev->fcm_token, $title, $body, $dataPayload)) {
+        foreach ($tokens as $token) {
+            if ($this->sendToToken($token, $title, $body, $dataPayload)) {
                 $success = true;
             }
         }
