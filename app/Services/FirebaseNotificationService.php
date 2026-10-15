@@ -104,13 +104,7 @@ class FirebaseNotificationService
             $todayEnd = $now->copy()->endOfDay();
             $hasConfirmedPayoutToday = \App\Models\DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->where(function ($q) use ($todayStart, $todayEnd) {
-                    $q->whereBetween('updated_at', [$todayStart, $todayEnd])
-                      ->orWhere(function ($q2) use ($todayStart, $todayEnd) {
-                          $q2->whereNull('updated_at')
-                             ->whereBetween('created_at', [$todayStart, $todayEnd]);
-                      });
-                })
+                ->whereBetween('created_at', [$todayStart, $todayEnd])
                 ->where('amount', '>', 0)
                 ->exists();
 
@@ -125,15 +119,9 @@ class FirebaseNotificationService
 
             $payouts = \App\Models\DevPayout::query()
                 ->whereIn('status', ['confirmed', 'completed'])
-                ->where(function ($q) use ($startDate, $endDate) {
-                    $q->whereBetween('updated_at', [$startDate, $endDate])
-                      ->orWhere(function ($q2) use ($startDate, $endDate) {
-                          $q2->whereNull('updated_at')
-                             ->whereBetween('created_at', [$startDate, $endDate]);
-                      });
-                })
-                ->get(['amount', 'updated_at', 'created_at'])
-                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get(['amount', 'created_at'])
+                ->groupBy(fn($item) => $item->created_at->format('Y-m-d'))
                 ->map(fn($group) => (float) $group->sum('amount'));
 
             foreach ($period as $date) {
@@ -141,7 +129,7 @@ class FirebaseNotificationService
                     continue;
                 }
                 $key = $date->format('Y-m-d');
-                $labels[] = $date->translatedFormat('d M');
+                $labels[] = $date->format('d M');
                 $values[] = (float) ($payouts->get($key) ?? 0);
             }
 
