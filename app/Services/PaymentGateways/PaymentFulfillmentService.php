@@ -4,6 +4,7 @@ namespace App\Services\PaymentGateways;
 
 use App\Models\Payment;
 use App\Models\Submission;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,86 +15,99 @@ class PaymentFulfillmentService
      */
     public function markAsPaid(Payment $payment, string $transStatus = 'settlement', array $rawResponse = []): void
     {
-        $wasAlreadyPaid = ($payment->payment_status === 'paid');
-
-        $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
-        $mergedRaw = array_merge($existingRaw, $rawResponse);
-        if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
-            $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
-        }
-
-        $payment->update([
-            'payment_status' => 'paid',
-            'transaction_status' => $transStatus,
-            'paid_at' => $payment->paid_at ?: now(),
-            'raw_response' => $mergedRaw,
-        ]);
-
-        $payment->ensureInvoiceNumber();
-
-        // Idempotency: If this transaction was already fulfilled, skip redundant processing
-        if ($wasAlreadyPaid) {
-            Log::info("PaymentFulfillment: Payment #{$payment->id} ({$payment->order_id}) was already fulfilled. Skipping redundant processing.");
-            return;
-        }
-
-        if ($payment->type === 'bulk_submission') {
-            $submissions = !empty($payment->submission_ids)
-                ? Submission::whereIn('id', $payment->submission_ids)->get()
-                : ($payment->submission ? collect([$payment->submission]) : collect());
-
-            foreach ($submissions as $sub) {
-                $sub->update(['payment_status' => 'paid']);
-                $sub->approveAndProcess();
-            }
-            Log::info("PaymentFulfillment: Bulk Submissions auto-approved for Payment #{$payment->id}");
-        } elseif ($payment->type === 'doi_addon') {
-            $submission = $payment->submission;
-            if ($submission) {
-                $this->activateDoiForSubmission($submission);
-                Log::info("PaymentFulfillment: Submission #{$submission->id} DOI activated successfully");
-            }
-        } elseif ($payment->type === 'replace_pdf') {
-            $submission = $payment->submission;
-            if ($submission) {
-                $this->applyReplacePdfForSubmission($submission, $payment);
-                Log::info("PaymentFulfillment: Submission #{$submission->id} PDF replaced and synced to OJS successfully");
-            }
-        } else {
-            $submission = $payment->submission;
-            if ($submission) {
-                $submission->update(['payment_status' => 'paid']);
-                $submission->approveAndProcess();
-                Log::info("PaymentFulfillment: Submission #{$submission->id} auto-approved after payment");
-            }
-        }
+        $lockKey = "payment_fulfillment_{$payment->id}";
+        $lock = Cache::lock($lockKey, 15);
 
         try {
-            broadcast(new \App\Events\DevFinancialUpdated(
-                userId: 0,
-                action: 'payment_received',
-                message: "Transaksi baru masuk: Order #{$payment->order_id}"
-            ));
-        } catch (\Throwable $e) {
-            Log::warning("Reverb broadcast failed for payment #{$payment->id}: " . $e->getMessage());
-        }
+            // Wait up to 5 seconds for lock in case of concurrent webhook / status poll
+            $lock->block(5);
 
-        try {
-            $fcm = app(\App\Services\FirebaseNotificationService::class);
-            $amountFormatted = number_format($payment->developer_net_share, 0, ',', '.');
-            $fcm->notifyDeveloper(
-                "💰 Transaksi Masuk!",
-                "Hak dev Rp {$amountFormatted} dari Order #{$payment->order_id}",
-                [
-                    'type' => 'transaction',
-                    'route' => '/dev/transactions',
-                    'action' => 'sync_widgets',
-                    'payment_id' => (string) $payment->id,
-                    'order_id' => (string) $payment->order_id,
-                ]
-            );
-        } catch (\Throwable $e) {
-            Log::warning("FCM notification failed for payment #{$payment->id}: " . $e->getMessage());
+            // Refresh from database to ensure latest committed status
+            $payment->refresh();
+
+            $wasAlreadyPaid = ($payment->payment_status === 'paid');
+
+            $existingRaw = is_array($payment->raw_response) ? $payment->raw_response : [];
+            $mergedRaw = array_merge($existingRaw, $rawResponse);
+            if (!empty($existingRaw['new_pdf_path']) && empty($mergedRaw['new_pdf_path'])) {
+                $mergedRaw['new_pdf_path'] = $existingRaw['new_pdf_path'];
+            }
+
+            $payment->update([
+                'payment_status' => 'paid',
+                'transaction_status' => $transStatus,
+                'paid_at' => $payment->paid_at ?: now(),
+                'raw_response' => $mergedRaw,
+            ]);
+
+            $payment->ensureInvoiceNumber();
+
+            // Idempotency: If this transaction was already fulfilled, skip redundant processing
+            if ($wasAlreadyPaid) {
+                Log::info("PaymentFulfillment: Payment #{$payment->id} ({$payment->order_id}) was already fulfilled. Skipping redundant processing.");
+                return;
+            }
+
+            if ($payment->type === 'bulk_submission') {
+                $submissions = !empty($payment->submission_ids)
+                    ? Submission::whereIn('id', $payment->submission_ids)->get()
+                    : ($payment->submission ? collect([$payment->submission]) : collect());
+
+                foreach ($submissions as $sub) {
+                    $sub->update(['payment_status' => 'paid']);
+                    $sub->approveAndProcess();
+                }
+                Log::info("PaymentFulfillment: Bulk Submissions auto-approved for Payment #{$payment->id}");
+            } elseif ($payment->type === 'doi_addon') {
+                $submission = $payment->submission;
+                if ($submission) {
+                    $this->activateDoiForSubmission($submission);
+                    Log::info("PaymentFulfillment: Submission #{$submission->id} DOI activated successfully");
+                }
+            } elseif ($payment->type === 'replace_pdf') {
+                $submission = $payment->submission;
+                if ($submission) {
+                    $this->applyReplacePdfForSubmission($submission, $payment);
+                    Log::info("PaymentFulfillment: Submission #{$submission->id} PDF replaced and synced to OJS successfully");
+                }
+            } else {
+                $submission = $payment->submission;
+                if ($submission) {
+                    $submission->update(['payment_status' => 'paid']);
+                    $submission->approveAndProcess();
+                    Log::info("PaymentFulfillment: Submission #{$submission->id} auto-approved after payment");
+                }
+            }
+
+            try {
+                broadcast(new \App\Events\DevFinancialUpdated(
+                    userId: 0,
+                    action: 'payment_received',
+                    message: "Transaksi baru masuk: Order #{$payment->order_id}"
+                ));
+            } catch (\Throwable $e) {
+                Log::warning("Reverb broadcast failed for payment #{$payment->id}: " . $e->getMessage());
+            }
+
+            try {
+                $fcm = app(\App\Services\FirebaseNotificationService::class);
+                $amountFormatted = number_format($payment->developer_net_share, 0, ',', '.');
+                $fcm->notifyDeveloper(
+                    "💰 Transaksi Masuk!",
+                    "Hak dev Rp {$amountFormatted} dari Order #{$payment->order_id}",
+                    [
+                        'type' => 'transaction',
+                        'route' => '/dev/transactions',
+                        'action' => 'sync_widgets',
+                        'payment_id' => (string) $payment->id,
+                        'order_id' => (string) $payment->order_id,
+                    ]
+                );
+            } catch (\Throwable $e) {
+                Log::warning("FCM notification failed for payment #{$payment->id}: " . $e->getMessage());
+            }
+        } finally {
+            $lock?->release();
         }
     }
 

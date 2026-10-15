@@ -33,6 +33,14 @@ class FirebaseNotificationService
      */
     public function notifyDeveloper(string $title, string $body, array $dataPayload = []): bool
     {
+        // Deduplication guard: cegah pengiriman ganda untuk event yang sama dalam selang 10 detik
+        $dedupId = $dataPayload['order_id'] ?? $dataPayload['payment_id'] ?? $dataPayload['payout_id'] ?? $body;
+        $dedupKey = 'fcm_notif_dedup_' . md5($title . '|' . $dedupId);
+        if (!Cache::add($dedupKey, true, 10)) {
+            Log::info("[FCM] Duplicate notification suppressed within 10s: {$title} ({$dedupKey})");
+            return true;
+        }
+
         if (empty($dataPayload['payload'])) {
             $dashboardPayload = $this->getDashboardPayload();
             if (!empty($dashboardPayload)) {
@@ -87,18 +95,54 @@ class FirebaseNotificationService
             $payoutPending = $unpaidPayoutCount;
             $payoutFailed = $rejectedPayoutCount;
 
-            // 7 Days Chart
+            // 7 Days Chart (Synchronized with DeveloperFinancialController & DevPayoutsChartWidget)
             $labels = [];
             $values = [];
-            $period = \Carbon\CarbonPeriod::create(now()->subDays(6)->startOfDay(), now()->endOfDay());
+
+            $now = \Carbon\Carbon::now();
+            $todayStart = $now->copy()->startOfDay();
+            $todayEnd = $now->copy()->endOfDay();
+            $hasConfirmedPayoutToday = \App\Models\DevPayout::query()
+                ->whereIn('status', ['confirmed', 'completed'])
+                ->where(function ($q) use ($todayStart, $todayEnd) {
+                    $q->whereBetween('updated_at', [$todayStart, $todayEnd])
+                      ->orWhere(function ($q2) use ($todayStart, $todayEnd) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$todayStart, $todayEnd]);
+                      });
+                })
+                ->where('amount', '>', 0)
+                ->exists();
+
+            if ($hasConfirmedPayoutToday) {
+                $startDate = $now->copy()->subDays(6)->startOfDay();
+                $endDate = $now->copy()->endOfDay();
+            } else {
+                $startDate = $now->copy()->subDays(7)->startOfDay();
+                $endDate = $now->copy()->subDays(1)->endOfDay();
+            }
+            $period = \Carbon\CarbonPeriod::create($startDate, '1 day', $endDate);
+
+            $payouts = \App\Models\DevPayout::query()
+                ->whereIn('status', ['confirmed', 'completed'])
+                ->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('updated_at', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('updated_at')
+                             ->whereBetween('created_at', [$startDate, $endDate]);
+                      });
+                })
+                ->get(['amount', 'updated_at', 'created_at'])
+                ->groupBy(fn($item) => ($item->updated_at ?? $item->created_at)->format('Y-m-d'))
+                ->map(fn($group) => (float) $group->sum('amount'));
+
             foreach ($period as $date) {
-                $labels[] = $date->format('d M');
-                $start = $date->copy()->startOfDay();
-                $end = $date->copy()->endOfDay();
-                $amount = (float) \App\Models\DevPayout::whereIn('status', ['confirmed', 'completed'])
-                    ->whereBetween('created_at', [$start, $end])
-                    ->sum('amount');
-                $values[] = $amount;
+                if ($date->isFuture()) {
+                    continue;
+                }
+                $key = $date->format('Y-m-d');
+                $labels[] = $date->translatedFormat('d M');
+                $values[] = (float) ($payouts->get($key) ?? 0);
             }
 
             return json_encode([
@@ -153,11 +197,14 @@ class FirebaseNotificationService
             'body' => $body,
         ], array_map('strval', $dataPayload));
 
+        $tag = (string) ($dataPayload['order_id'] ?? $dataPayload['payment_id'] ?? $dataPayload['payout_id'] ?? ('floafin_' . substr(md5($title . $body), 0, 10)));
+
         $message = [
             'token' => $fcmToken,
             'data' => $dataPayload,
             'android' => [
                 'priority' => 'HIGH',
+                'collapse_key' => $tag,
             ],
         ];
 
@@ -172,6 +219,7 @@ class FirebaseNotificationService
                 'notification_priority' => 'PRIORITY_MAX',
                 'icon' => 'ic_notification',
                 'color' => '#0284C7',
+                'tag' => $tag,
             ];
         }
 
