@@ -187,6 +187,8 @@ class FirebaseNotificationService
 
         $tag = (string) ($dataPayload['order_id'] ?? $dataPayload['payment_id'] ?? $dataPayload['payout_id'] ?? ('floafin_' . substr(md5($title . $body), 0, 10)));
 
+        $dataPayload['tag'] = $tag;
+
         $message = [
             'token' => $fcmToken,
             'data' => $dataPayload,
@@ -196,20 +198,11 @@ class FirebaseNotificationService
             ],
         ];
 
-        if (!empty($title)) {
-            $message['notification'] = [
-                'title' => $title,
-                'body' => $body,
-            ];
-            $message['android']['notification'] = [
-                'channel_id' => 'floafinwatch_v2_channel',
-                'sound' => 'floafinwatch',
-                'notification_priority' => 'PRIORITY_MAX',
-                'icon' => 'ic_notification',
-                'color' => '#0284C7',
-                'tag' => $tag,
-            ];
-        }
+        // Catatan: Sengaja TIDAK menyertakan $message['notification'] di top-level FCM payload.
+        // Jika top-level notification disertakan, Google Play Services Android akan langsung
+        // merender banner di status bar saat app background/closed tanpa mengecek preferensi switch pengguna.
+        // Dengan High-Priority Data Message murni, background handler di Flutter yang akan memutuskan
+        // apakah perlu menampilkan banner suara kustom atau sekadar update widget secara silent.
 
         $payload = [
             'message' => $message,
