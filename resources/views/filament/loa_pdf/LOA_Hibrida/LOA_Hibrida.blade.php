@@ -216,7 +216,7 @@
                     </p>
                 </div>
             </div>
-            <div class="mb-5 flex">
+            <div class="mb-5 gap-5 flex">
                 <div class="flex w-full flex-col">
                     <div class="w-full align-top">
                         <p class="text-left">
@@ -253,7 +253,7 @@
             </div>
 
 
-            <div class="mb-5 flex">
+            <div class="mb-5 gap-5 flex">
                 <div class="flex w-full flex-col">
                     <div class="w-full align-top">
                         <p class="text-left">
